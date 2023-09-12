@@ -18,11 +18,11 @@ bash plink2VCF.sh
 Output VCFs will only contaion SNPs. 
 * outmtDNA_C.vcf: Only mtDNA (chr26)
 * outntDNA_C.vcf: Only autosomes (Chrs 1-22)
-*Same for outmtDNA_M.vcf and outntDNA_M.vcf
+* Same for outmtDNA_M.vcf and outntDNA_M.vcf
 
 
 ## Run Haplogrep3 online server. 
-Use "rCRS PhyloTree 17.2" and  Kulczynski Distance function. Run this on outmtDNA.vcf. Makes haplogroups folder.
+Use "rCRS PhyloTree 17.2" and  Kulczynski Distance function. Run this on outmtDNA_C/M.vcf. Makes haplogroups folder.
 
 
 
