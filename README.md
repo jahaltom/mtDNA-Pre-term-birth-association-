@@ -17,12 +17,22 @@ bash plink2VCF.sh
 ```
 Output VCFs will only contaion SNPs. 
 * outmtDNA.vcf: Only mtDNA (chr26)
-* outntDNA_C.vcf and outntDNA_M.vcf: Only autosomes (Chrs 1-22)
+* outntDNA_C.vcf and outntDNA_M.vcf: Only autosomes (chr 1-22)
   
 
 
-## Run Haplogrep3 online server. 
-Use "rCRS PhyloTree 17.2" and  Kulczynski Distance function. Run this on outmtDNA.vcf. Makes haplogroups folder.
+## Run Haplogrep3. 
+Install Haplogrep3
+```
+wget https://github.com/genepi/haplogrep3/releases/download/v3.2.1/haplogrep3-3.2.1-linux.zip
+unzip haplogrep3-3.2.1-linux.zip
+./haplogrep3
+```
 
+Use tree "rCRS PhyloTree 17.2" and  Kulczynski Distance function. Run this on outmtDNA.vcf. Outputs haplogroups to haplogrep3OUT. 
+
+```
+/scr1/users/haltomj/tools/haplogrep3/haplogrep3 classify --tree phylotree-rcrs@17.2 --in outmtDNA.vcf --out haplogrep3OUT
+```
 
 
