@@ -21,7 +21,7 @@ Output VCFs will only contaion SNPs.
   
 
 
-## Run Haplogrep3.
+## Run Haplogrep3 to assign haplogroups to samples.
 (Doing this on the online Haplogrep3 server gives errors.) Do I need the --chip param? https://haplogrep.readthedocs.io/en/latest/parameters/#parameters
 
 Install Haplogrep3
@@ -39,5 +39,8 @@ Use tree "rCRS PhyloTree 17.2" and  Kulczynski Distance function. Run this on ou
 
 ## Metadata curration
 ### MetadataMerge.py: 
-Makes MetadataFinal.tsv which is african and south asian combined containg all haplogroup info (Main and Sub). Samples with a main or sub haplogroup <10 are marked in the "IsAtLeast10MainHap" and "IsAtLeast10SubHap" columns.
+Combines Haplogrep3 output and momi5.pheno metadata.  Main and sub haplogroups are reported. The result is divided into 2 datasets (mother and child). Samples associated with a main and/or sub haplogroup <10 are marked in the "IsAtLeast10MainHap" and "IsAtLeast10SubHap" columns as False.
  
+Outputs MetadataFinal.M.tsv for mother and MetadataFinal.M.tsv for child.
+
+
