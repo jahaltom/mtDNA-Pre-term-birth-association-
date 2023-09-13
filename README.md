@@ -38,6 +38,6 @@ Use tree "rCRS PhyloTree 17.2" and  Kulczynski Distance function. Run this on ou
 ```
 
 ## Metadata curration
-MetadataMergeAndStats.py: Makes files in Stuff folder which contains files for african and south asian (at main and sub haplotype level) stats files that contain totalbirths, total ptb, total non-ptb. 
-Also makes MetadataFinal.tsv which is african and south asian combined containg all haplogroup info. Samples with a main or sub haplogroup <10 are marked other.
+### MetadataMergeAndStats.py: 
+Makes MetadataFinal.tsv which is african and south asian combined containg all haplogroup info (Main and Sub). Samples with a main or sub haplogroup <10 are marked in the "IsAtLeast10MainHap" and "IsAtLeast10SubHap" columns.
  
