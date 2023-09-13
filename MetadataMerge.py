@@ -40,8 +40,9 @@ md2=md2[['ORIG_ID', 'site_name', 'age', 'sex', 'ht', 'gday', 'ptb', 'bwt',
     
 #Subset South Asian and African from data set   
 afr=md2[(md2["site_name"]=="GAPPS-Zambia") | (md2["site_name"]=="AMANHI-Tanzania") ]
+afr["Population"]="African"
 sa =md2[(md2["site_name"]=="AMANHI-Bangladesh") | (md2["site_name"]=="GAPPS-Bangladesh") | (md2["site_name"]=="AMANHI-Pakistan") ]
-
+sa["Population"]="South_Asian"
 
 
 def isAtLeast10(df):
