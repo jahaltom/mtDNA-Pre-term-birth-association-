@@ -38,34 +38,52 @@ md2=md2[['ORIG_ID', 'site_name', 'age', 'sex', 'ht', 'gday', 'ptb', 'bwt',
 
 
     
-#Subset South Asian and African from data set   
-afr=md2[(md2["site_name"]=="GAPPS-Zambia") | (md2["site_name"]=="AMANHI-Tanzania") ]
-afr["Population"]="African"
-sa =md2[(md2["site_name"]=="AMANHI-Bangladesh") | (md2["site_name"]=="GAPPS-Bangladesh") | (md2["site_name"]=="AMANHI-Pakistan") ]
-sa["Population"]="South_Asian"
+#Break md2 up by child and mother
+dfM = md2[md2['SampleID'].str.contains('_M')]
+dfC = md2[md2['SampleID'].str.contains('_C')]
 
 
-def isAtLeast10(df):
-    #Make a df that marks a main haplogroup that has at least 10 samples.
-    x=(df["MainHap"].value_counts() >= 10).to_frame()
-    x= x.rename(columns={'MainHap': 'IsAtLeast10MainHap'})
-    x.index.name = "MainHap"
-    x.reset_index(inplace=True)
-    #Merge
-    df=pd.merge(df,x,on=["MainHap"])
-    #Make a df that marks a sub haplogroup that has at least 10 samples.
-    x=(df["SubHap"].value_counts() >= 10).to_frame()
-    x= x.rename(columns={'SubHap': 'IsAtLeast10SubHap'})
-    x.index.name = "SubHap"
-    x.reset_index(inplace=True)
-    #Merge
-    return pd.merge(df,x,on=["SubHap"])
+def makemetadata(d,string):
+    #Subset South Asian and African from data set   
+    afr=d[(d["site_name"]=="GAPPS-Zambia") | (d["site_name"]=="AMANHI-Tanzania") ].copy()
+    afr["Population"]="African"
+    sa =d[(d["site_name"]=="AMANHI-Bangladesh") | (d["site_name"]=="GAPPS-Bangladesh") | (d["site_name"]=="AMANHI-Pakistan") ].copy()
+    sa["Population"]="South_Asian"
+    
+    
+    def isAtLeast10(df):
+        #Make a df that marks a main haplogroup that has at least 10 samples.
+        x=(df["MainHap"].value_counts() >= 10).to_frame()
+        x= x.rename(columns={'MainHap': 'IsAtLeast10MainHap'})
+        x.index.name = "MainHap"
+        x.reset_index(inplace=True)
+        #Merge
+        df=pd.merge(df,x,on=["MainHap"])
+        #Make a df that marks a sub haplogroup that has at least 10 samples.
+        x=(df["SubHap"].value_counts() >= 10).to_frame()
+        x= x.rename(columns={'SubHap': 'IsAtLeast10SubHap'})
+        x.index.name = "SubHap"
+        x.reset_index(inplace=True)
+        #Merge
+        return pd.merge(df,x,on=["SubHap"])
+    
+    
+    
+    AFR=isAtLeast10(afr)
+    SA=isAtLeast10(sa)
+    
+    dfFinal=pd.concat([AFR,SA])
+    
+    dfFinal.to_csv("MetadataFinal."+string+".tsv", index=False, sep='\t')  
 
 
 
-AFR=isAtLeast10(afr)
-SA=isAtLeast10(sa)
+makemetadata(dfM, "M")
+makemetadata(dfC, "C") 
 
-dfFinal=pd.concat([AFR,SA])
 
-dfFinal.to_csv("MetadataFinal.tsv", index=False, sep='\t')  
+
+
+
+
+
