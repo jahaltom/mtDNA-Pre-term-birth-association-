@@ -39,7 +39,7 @@ Use tree "rCRS PhyloTree 17.2" and  Kulczynski Distance function. Run this on ou
 
 ## Metadata curration
 ### MetadataMerge.py: 
-Combines Haplogrep3 output and momi5.pheno metadata.  Main and sub haplogroups are reported. The result is divided into 2 datasets (mother and child). For each population (African,South Asian), samples associated with a main and/or sub haplogroup <10 are marked in the "IsAtLeast10MainHap" and "IsAtLeast10SubHap" columns as False.
+Combines Haplogrep3 output and momi5.pheno metadata.  Main and sub haplogroups are reported. The result is divided into 2 datasets (mother and child). For each population separately (African,South Asian), samples associated with a main and/or sub haplogroup <10 are marked in the "IsAtLeast10MainHap" and "IsAtLeast10SubHap" columns as False.
  
 Outputs MetadataFinal.M.tsv for mother and MetadataFinal.M.tsv for child.
 
