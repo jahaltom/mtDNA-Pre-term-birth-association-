@@ -104,4 +104,8 @@ plink --vcf outntDNA.All.C.vcf --pca --double-id --out All_C
 plink --vcf outntDNA.All.C.vcf --cluster --mds-plot 5 --double-id --out All_C
 ```
 
-   
+## Combinbe MDS/PCA data with mother and child metadata.
+### Combine.py:
+Takes MDS/PCS files generated above and adds it into the metadata for mother and child. Outputs MetadataFinal.C.2.tsv and MetadataFinal.M.2.tsv.
+
+## Multiple logistic linear regression
