@@ -7,11 +7,11 @@ cm=["M","C"]
 
  
 for j in cm:   
+    #Read in metadata
+    df=pd.read_csv('MetadataFinal.'+j+'.tsv',sep='\t')  
     for i in pops:
         ###Combine metadata and haplogroup data
-        
-        #Read in metadata
-        df=pd.read_csv('MetadataFinal.'+j+'.tsv',sep='\t')  
+    
         
         #Read in MDS clusters and combine
         mds=pd.read_csv(i +'_'+ j +'.mds',sep="\s+")
@@ -30,7 +30,7 @@ for j in cm:
         pca=pca.rename(columns={"PC0."+j+'_'+i: 'SampleID'})
         df=pd.merge(df,pca,on=["SampleID"],how="left")
         
-        df.to_csv("MetadataFinal."+j+".2.tsv", index=False, sep='\t')  
+    df.to_csv("MetadataFinal."+j+".2.tsv", index=False, sep='\t')  
     
     
     
