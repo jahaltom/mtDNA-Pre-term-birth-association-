@@ -46,17 +46,19 @@ Outputs MetadataFinal.M.tsv for mother and MetadataFinal.C.tsv for child.
 
 ## PCA and MDS 
 
-Starting with the mother dataset, remove any samples with a main and/or sub haplogroup <10. These are marked "False". Then garther PCA/MDS components for eact populaton separately and then together. 
+Starting with the mother dataset, remove any samples with a main and/or sub haplogroup <10. These are marked "False". Then garther PCA/MDS components for each populaton separately and then together. 
 
 ```
 #Run plink PCA and MDS African
 cat MetadataFinal.M.tsv | grep -v "False" | grep "African" | awk -F'\t' '{print $11}'  > list
+#Extract nt DNA SNPs for each sample in list
 bcftools view -S list outntDNA_M.vcf > outntDNA_M.Africa.vcf
 plink --vcf outntDNA_M.Africa.vcf --pca --double-id --out Africa_M
 plink --vcf outntDNA_M.Africa.vcf --cluster --mds-plot 5 --double-id --out Africa_M
 
 #Run plink PCA and MDS South Asian
 cat MetadataFinal.M.tsv | grep -v "False" | grep "South_Asian" | awk -F'\t' '{print $11}'  > list
+#Extract nt DNA SNPs for each sample in list
 bcftools view -S list outntDNA_M.vcf > outntDNA_M.SouthAsian.vcf
 plink --vcf outntDNA_M.SouthAsian.vcf --pca --double-id --out SouthAsian_M
 plink --vcf outntDNA_M.SouthAsian.vcf --cluster --mds-plot 5 --double-id --out SouthAsian_M
@@ -66,6 +68,7 @@ plink --vcf outntDNA_M.SouthAsian.vcf --cluster --mds-plot 5 --double-id --out S
 #######################
 #Run plink PCA and MDS all populations
 cat MetadataFinal.M.tsv | grep -v "False" | grep -v "SampleID" | awk -F'\t' '{print $11}' > list
+#Extract nt DNA SNPs for each sample in list
 bcftools view -S list outntDNA_M.vcf > outntDNA.All.M.vcf
 plink --vcf outntDNA.All.M.vcf --pca --double-id --out All_M
 plink --vcf outntDNA.All.M.vcf --cluster --mds-plot 5 --double-id --out All_M
@@ -78,12 +81,14 @@ Do the same for the children
 ```
 #Run plink PCA and MDS African
 cat MetadataFinal.C.tsv | grep -v "False" | grep "African" | awk -F'\t' '{print $11}'  > list
+#Extract nt DNA SNPs for each sample in list
 bcftools view -S list outntDNA_C.vcf > outntDNA_C.Africa.vcf
 plink --vcf outntDNA_C.Africa.vcf --pca --double-id --out Africa_C
 plink --vcf outntDNA_C.Africa.vcf --cluster --mds-plot 5 --double-id --out Africa_C
 
 #Run plink PCA and MDS South Asian
 cat MetadataFinal.C.tsv | grep -v "False" | grep "South_Asian" | awk -F'\t' '{print $11}'  > list
+#Extract nt DNA SNPs for each sample in list
 bcftools view -S list outntDNA_C.vcf > outntDNA_C.SouthAsian.vcf
 plink --vcf outntDNA_C.SouthAsian.vcf --pca --double-id --out SouthAsian_C
 plink --vcf outntDNA_C.SouthAsian.vcf --cluster --mds-plot 5 --double-id --out SouthAsian_C
@@ -93,6 +98,7 @@ plink --vcf outntDNA_C.SouthAsian.vcf --cluster --mds-plot 5 --double-id --out S
 #######################
 #Run plink PCA and MDS all populations
 cat MetadataFinal.C.tsv | grep -v "False" | grep -v "SampleID" | awk -F'\t' '{print $11}' > list
+#Extract nt DNA SNPs for each sample in list
 bcftools view -S list outntDNA_C.vcf > outntDNA.All.C.vcf
 plink --vcf outntDNA.All.C.vcf --pca --double-id --out All_C
 plink --vcf outntDNA.All.C.vcf --cluster --mds-plot 5 --double-id --out All_C
