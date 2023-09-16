@@ -128,7 +128,7 @@ Below is an example using the mother dataset, but the child dataset can be done 
 > df$SubHap= relevel(factor(df$SubHap), ref="H2")
 > 
 ```
-Fit models predicting gestational age using maim/sub haplogroups, PCA/MDS comps calculated from all populations, and sex. 
+Fit models predicting gestational age using main/sub haplogroups, PCA/MDS comps calculated from all populations, and sex. 
 ```
 > glm.fit=glm(gday~MainHap + sex + PC1.M_All  + PC2.M_All  + PC3.M_All  + PC4.M_All  + PC5.M_All , data=df  )
 > summary (glm.fit )
@@ -334,11 +334,11 @@ Number of Fisher Scoring iterations: 2
 
 ```
 
-Subset to South Asian and run same models. Use PCA/MDS comps specific to South Asian.
+Subset to South Asian and run same models. Fit models predicting gestational age using maim/sub haplogroups, PCA/MDS comps, and sex. Use PCA/MDS comps specific to South Asian.
 ```
 > dfSA=df[grepl("South_Asian", df$Population),]
 > 
-> #Fit models predicting gestational age using maim/sub haplogroups, PCA/MDS comps, and sex. 
+> 
 > 
 > glm.fit=glm(gday~MainHap + sex + PC1.M_SouthAsian  + PC2.M_SouthAsian  + PC3.M_SouthAsian  + PC4.M_SouthAsian  + PC5.M_SouthAsian , data=dfSA  )
 > summary (glm.fit )
@@ -515,11 +515,11 @@ Number of Fisher Scoring iterations: 2
 ```
 
 
-Subset to African and run same models. Use PCA/MDS comps specific to African.
+Subset to African and run same models.  Fit models predicting gestational age using main/sub haplogroups, PCA/MDS comps, and sex. Use PCA/MDS comps specific to African.
 ```
 > dfAFR=df[grepl("African", df$Population),]
 > 
-> #Fit models predicting gestational age using maim/sub haplogroups, PCA/MDS comps, and sex. 
+> 
 > 
 > glm.fit=glm(gday~MainHap + sex + PC1.M_Africa  + PC2.M_Africa  + PC3.M_Africa  + PC4.M_Africa  + PC5.M_Africa , data=dfAFR  )
 > summary (glm.fit )
