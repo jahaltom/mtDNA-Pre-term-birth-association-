@@ -128,9 +128,9 @@ Below is an example using the mother dataset, but the child dataset can be done 
 > df$SubHap= relevel(factor(df$SubHap), ref="H2")
 > 
 ```
-Fit models predicting gestational age using main/sub haplogroups, PCA/MDS comps calculated from all populations, and sex. 
+Fit models predicting gestational age (days) using main/sub haplogroups, PCA/MDS comps calculated from all populations, and sex. 
 
-### Predicting gestational age using (PCA All Populations, Main Haplogropup, and sex)
+### Predicting gestational age (days) using (PCA All Populations, Main Haplogropup, and sex)
 ```
 > glm.fit=glm(gday~MainHap + sex + PC1.M_All  + PC2.M_All  + PC3.M_All  + PC4.M_All  + PC5.M_All , data=df  )
 > summary (glm.fit )
@@ -176,7 +176,7 @@ AIC: 16835
 Number of Fisher Scoring iterations: 2
 
 ```
-### Predicting gestational age using (PCA All Populations, Sub Haplogropup, and sex)
+### Predicting gestational age (days) using (PCA All Populations, Sub Haplogropup, and sex)
 
 ```
 > glm.fit=glm(gday~SubHap + sex  + PC1.M_All  + PC2.M_All  + PC3.M_All  + PC4.M_All  + PC5.M_All , data=df  )
@@ -235,7 +235,7 @@ AIC: 16840
 Number of Fisher Scoring iterations: 2
 
 ```
-### Predicting gestational age using (MDS All Populations, Main Haplogropup, and sex)
+### Predicting gestational age (days) using (MDS All Populations, Main Haplogropup, and sex)
 ```
 > glm.fit=glm(gday~MainHap + sex + C1.M_All  + C2.M_All  + C3.M_All  + C4.M_All  + C5.M_All , data=df  )
 > summary (glm.fit )
@@ -281,7 +281,7 @@ AIC: 16831
 Number of Fisher Scoring iterations: 2
 
 ```
-### Predicting gestational age using (MDS All Populations, Sub Haplogropup, and sex)
+### Predicting gestational age (days) using (MDS All Populations, Sub Haplogropup, and sex)
 ```
 > glm.fit=glm(gday~SubHap + sex  + C1.M_All  + C2.M_All  + C3.M_All  + C4.M_All  + C5.M_All  , data=df  )
 > summary (glm.fit )
@@ -344,7 +344,7 @@ Subset to South Asian and run same models. Use PCA/MDS comps specific to South A
 ```
 > dfSA=df[grepl("South_Asian", df$Population),]
 ```
-### Predicting gestational age using (PCA South Asian Populations, Main Haplogropup, and sex)
+### Predicting gestational age (days) using (PCA South Asian Populations, Main Haplogropup, and sex)
 ```
 > glm.fit=glm(gday~MainHap + sex + PC1.M_SouthAsian  + PC2.M_SouthAsian  + PC3.M_SouthAsian  + PC4.M_SouthAsian  + PC5.M_SouthAsian , data=dfSA  )
 > summary (glm.fit )
@@ -386,7 +386,7 @@ Number of Fisher Scoring iterations: 2
 
 ```
 
-### Predicting gestational age using (PCA South Asian Populations, Sub Haplogropup, and sex)
+### Predicting gestational age (days) using (PCA South Asian Populations, Sub Haplogropup, and sex)
 ```
 > glm.fit=glm(gday~SubHap + sex  + PC1.M_SouthAsian  + PC2.M_SouthAsian  + PC3.M_SouthAsian  + PC4.M_SouthAsian  + PC5.M_SouthAsian , data=dfSA  )
 > summary (glm.fit )
@@ -434,7 +434,7 @@ AIC: 10606
 Number of Fisher Scoring iterations: 2
 
 ```
-### Predicting gestational age using (MDS South Asian Populations, Main Haplogropup, and sex)
+### Predicting gestational age (days) using (MDS South Asian Populations, Main Haplogropup, and sex)
 ```
 > glm.fit=glm(gday~MainHap + sex + C1.M_SouthAsian  + C2.M_SouthAsian  + C3.M_SouthAsian  + C4.M_SouthAsian  + C5.M_SouthAsian , data=dfSA  )
 > summary (glm.fit )
@@ -475,7 +475,7 @@ AIC: 10588
 Number of Fisher Scoring iterations: 2
 
 ```
-### Predicting gestational age using (MDS South Asian Populations, Sub Haplogropup, and sex)
+### Predicting gestational age (days) using (MDS South Asian Populations, Sub Haplogropup, and sex)
 
 ```
 > glm.fit=glm(gday~SubHap + sex  + C1.M_SouthAsian  + C2.M_SouthAsian  + C3.M_SouthAsian  + C4.M_SouthAsian  + C5.M_SouthAsian  , data=dfSA  )
@@ -530,7 +530,7 @@ Subset to African and run same models.  Use PCA/MDS comps specific to African.
 ```
 > dfAFR=df[grepl("African", df$Population),]
 ```
-### Predicting gestational age using (PCA African Populations, Main Haplogropup, and sex)
+### Predicting gestational age (days) using (PCA African Populations, Main Haplogropup, and sex)
 ```
 > glm.fit=glm(gday~MainHap + sex + PC1.M_Africa  + PC2.M_Africa  + PC3.M_Africa  + PC4.M_Africa  + PC5.M_Africa , data=dfAFR  )
 > summary (glm.fit )
@@ -571,7 +571,7 @@ AIC: 6208.8
 Number of Fisher Scoring iterations: 2
 
 ```
-### Predicting gestational age using (PCA African Populations, Sub Haplogropup, and sex)
+### Predicting gestational age (days) using (PCA African Populations, Sub Haplogropup, and sex)
 
 ```
 > glm.fit=glm(gday~SubHap + sex  + PC1.M_Africa  + PC2.M_Africa  + PC3.M_Africa  + PC4.M_Africa  + PC5.M_Africa , data=dfAFR  )
@@ -618,7 +618,7 @@ AIC: 6214.1
 Number of Fisher Scoring iterations: 2
 
 ```
-### Predicting gestational age using (MDS African Populations, Main Haplogropup, and sex)
+### Predicting gestational age (days) using (MDS African Populations, Main Haplogropup, and sex)
 
 ```
 
@@ -661,7 +661,7 @@ AIC: 6203.2
 Number of Fisher Scoring iterations: 2
 
 ```
-### Predicting gestational age using (MDS African Populations, Sub Haplogropup, and sex)
+### Predicting gestational age (days) using (MDS African Populations, Sub Haplogropup, and sex)
 
 ```
 > glm.fit=glm(gday~SubHap + sex  + C1.M_Africa  + C2.M_Africa  + C3.M_Africa  + C4.M_Africa  + C5.M_Africa  , data=dfAFR  )
@@ -708,4 +708,31 @@ AIC: 6208.6
 Number of Fisher Scoring iterations: 2
 ```
 
+#Make plots for South Asian data. Main haplogroup vs (maternal height in cm, birth weight in gram, sex, maternal age, gestational duration in days).
+```
+
+
+png(paste("MainHaplogroupVSHeight.C.png",sep=""),width=10,height=5,units="in",res=1200)
+ggplot(dfSA, aes(x = MainHap, y= ht)) + geom_boxplot()
+dev.off() 
+
+png(paste("MainHaplogroupVSBirthWeight.C.png",sep=""),width=10,height=5,units="in",res=1200)
+ggplot(dfSA, aes(x = MainHap, y= bwt)) + geom_boxplot()
+dev.off() 
+
+png(paste("MainHaplogroupVSSex.C.png",sep=""),width=10,height=5,units="in",res=1200)
+ggplot(dfSA, aes(x = MainHap, y= sex)) + geom_boxplot()
+dev.off() 
+
+png(paste("MainHaplogroupVSAge.C.png",sep=""),width=10,height=5,units="in",res=1200)
+ggplot(dfSA, aes(x = MainHap, y= age)) + geom_boxplot()
+dev.off() 
+
+png(paste("MainHaplogroupVSGday.C.png",sep=""),width=10,height=5,units="in",res=1200)
+ggplot(dfSA, aes(x = MainHap, y= gday)) + geom_boxplot()
+dev.off() 
+
+```
+
+# The MLR.C.r script generates the above for the child data. 
 
