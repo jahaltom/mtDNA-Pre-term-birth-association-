@@ -708,31 +708,31 @@ AIC: 6208.6
 Number of Fisher Scoring iterations: 2
 ```
 
-#Make plots for South Asian data. Main haplogroup vs (maternal height in cm, birth weight in gram, sex, maternal age, gestational duration in days).
+Make plots for South Asian data. Main haplogroup vs (maternal height in cm, birth weight in gram, sex, maternal age, gestational duration in days).
 ```
 
 
-png(paste("MainHaplogroupVSHeight.C.png",sep=""),width=10,height=5,units="in",res=1200)
+png(paste("MainHaplogroupVSHeight.M.png",sep=""),width=10,height=5,units="in",res=1200)
 ggplot(dfSA, aes(x = MainHap, y= ht)) + geom_boxplot()
 dev.off() 
 
-png(paste("MainHaplogroupVSBirthWeight.C.png",sep=""),width=10,height=5,units="in",res=1200)
+png(paste("MainHaplogroupVSBirthWeight.M.png",sep=""),width=10,height=5,units="in",res=1200)
 ggplot(dfSA, aes(x = MainHap, y= bwt)) + geom_boxplot()
 dev.off() 
 
-png(paste("MainHaplogroupVSSex.C.png",sep=""),width=10,height=5,units="in",res=1200)
+png(paste("MainHaplogroupVSSex.M.png",sep=""),width=10,height=5,units="in",res=1200)
 ggplot(dfSA, aes(x = MainHap, y= sex)) + geom_boxplot()
 dev.off() 
 
-png(paste("MainHaplogroupVSAge.C.png",sep=""),width=10,height=5,units="in",res=1200)
+png(paste("MainHaplogroupVSAge.M.png",sep=""),width=10,height=5,units="in",res=1200)
 ggplot(dfSA, aes(x = MainHap, y= age)) + geom_boxplot()
 dev.off() 
 
-png(paste("MainHaplogroupVSGday.C.png",sep=""),width=10,height=5,units="in",res=1200)
+png(paste("MainHaplogroupVSGday.M.png",sep=""),width=10,height=5,units="in",res=1200)
 ggplot(dfSA, aes(x = MainHap, y= gday)) + geom_boxplot()
 dev.off() 
 
 ```
 
-# The MLR.C.r script generates the above for the child data. 
+### The MLR.C.r script generates the above for the child data. 
 
