@@ -17,7 +17,7 @@ bash plink2VCF.sh
 ```
 Output VCFs will only contaion SNPs. 
 * outmtDNA.vcf: Only mtDNA (chr26)
-* outntDNA_C.vcf and outntDNA_M.vcf: Only autosomes (chr 1-22)
+* outntDNA_C.vcf for child and outntDNA_M.vcf for mother: Only autosomes (chr 1-22)
   
 
 
