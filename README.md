@@ -109,7 +109,7 @@ plink --vcf outntDNA.All.C.vcf --cluster --mds-plot 5 --double-id --out All_C
 Takes MDS/PCS files generated above and adds it into the metadata for mother and child. Outputs MetadataFinal.C.2.tsv and MetadataFinal.M.2.tsv.
 
 ## Multiple linear regression (MLR)
-Use MetadataFinal.M.2.tsv (mother) and MetadataFinal.C.2.tsv child) for the MLR. 
+Use MetadataFinal.M.2.tsv (mother) and MetadataFinal.C.2.tsv (child) for the MLR. 
 
 Below is an example using the mother dataset, but the child dataset can be done the exact same way. Just simply swap the ".M" for ".C" .  
 ```
