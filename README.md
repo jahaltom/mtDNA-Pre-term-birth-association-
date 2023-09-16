@@ -109,12 +109,10 @@ plink --vcf outntDNA.All.C.vcf --cluster --mds-plot 5 --double-id --out All_C
 Takes MDS/PCS files generated above and adds it into the metadata for mother and child. Outputs MetadataFinal.C.2.tsv and MetadataFinal.M.2.tsv.
 
 ## Multiple linear regression
-
+Use MetadataFinal.M.2.tsv and MetadataFinal.C.2.tsv for the MLR.
 
 ```
 > library(ISLR)
-Warning message:
-package ‘ISLR’ was built under R version 4.2.3 
 > library(ggplot2)
 > 
 > #Read in mother dataset of south asian and african 
@@ -132,7 +130,8 @@ package ‘ISLR’ was built under R version 4.2.3
 > 
 > glm.fit=glm(gday~MainHap + sex + PC1.M_All  + PC2.M_All  + PC3.M_All  + PC4.M_All  + PC5.M_All , data=df  )
 > summary (glm.fit )
-
+```
+```
 Call:
 glm(formula = gday ~ MainHap + sex + PC1.M_All + PC2.M_All + 
     PC3.M_All + PC4.M_All + PC5.M_All, data = df)
@@ -171,13 +170,12 @@ Residual deviance: 584838  on 1952  degrees of freedom
 AIC: 16835
 
 Number of Fisher Scoring iterations: 2
-
-> 
-> 
-> 
+```
+```
 > glm.fit=glm(gday~SubHap + sex  + PC1.M_All  + PC2.M_All  + PC3.M_All  + PC4.M_All  + PC5.M_All , data=df  )
 > summary (glm.fit )
-
+```
+```
 Call:
 glm(formula = gday ~ SubHap + sex + PC1.M_All + PC2.M_All + PC3.M_All + 
     PC4.M_All + PC5.M_All, data = df)
@@ -229,13 +227,12 @@ AIC: 16840
 
 Number of Fisher Scoring iterations: 2
 
-> 
-> 
-> 
-> 
+```
+```
 > glm.fit=glm(gday~MainHap + sex + C1.M_All  + C2.M_All  + C3.M_All  + C4.M_All  + C5.M_All , data=df  )
 > summary (glm.fit )
-
+```
+```
 Call:
 glm(formula = gday ~ MainHap + sex + C1.M_All + C2.M_All + C3.M_All + 
     C4.M_All + C5.M_All, data = df)
@@ -275,12 +272,12 @@ AIC: 16831
 
 Number of Fisher Scoring iterations: 2
 
-> 
-> 
-> 
+```
+```
 > glm.fit=glm(gday~SubHap + sex  + C1.M_All  + C2.M_All  + C3.M_All  + C4.M_All  + C5.M_All  , data=df  )
 > summary (glm.fit )
-
+```
+```
 Call:
 glm(formula = gday ~ SubHap + sex + C1.M_All + C2.M_All + C3.M_All + 
     C4.M_All + C5.M_All, data = df)
@@ -332,20 +329,17 @@ AIC: 16836
 
 Number of Fisher Scoring iterations: 2
 
-> 
-> 
-> 
-> 
-> #Subset to south asian
-> 
-> 
+```
+Subset to south asian
+```
 > dfSA=df[grepl("South_Asian", df$Population),]
 > 
 > #Fit models predicting gestational age using maim/sub haplogroups, PCA/MDS comps, and sex. 
 > 
 > glm.fit=glm(gday~MainHap + sex + PC1.M_All  + PC2.M_All  + PC3.M_All  + PC4.M_All  + PC5.M_All , data=dfSA  )
 > summary (glm.fit )
-
+```
+```
 Call:
 glm(formula = gday ~ MainHap + sex + PC1.M_All + PC2.M_All + 
     PC3.M_All + PC4.M_All + PC5.M_All, data = dfSA)
@@ -380,11 +374,12 @@ AIC: 10604
 
 Number of Fisher Scoring iterations: 2
 
-> 
-> 
+```
+```
 > glm.fit=glm(gday~SubHap + sex  + PC1.M_All  + PC2.M_All  + PC3.M_All  + PC4.M_All  + PC5.M_All , data=dfSA  )
 > summary (glm.fit )
-
+```
+```
 Call:
 glm(formula = gday ~ SubHap + sex + PC1.M_All + PC2.M_All + PC3.M_All + 
     PC4.M_All + PC5.M_All, data = dfSA)
@@ -426,13 +421,13 @@ AIC: 10606
 
 Number of Fisher Scoring iterations: 2
 
-> 
-> 
-> 
-> 
+```
+```
+
 > glm.fit=glm(gday~MainHap + sex + C1.M_All  + C2.M_All  + C3.M_All  + C4.M_All  + C5.M_All , data=dfSA  )
 > summary (glm.fit )
-
+```
+```
 Call:
 glm(formula = gday ~ MainHap + sex + C1.M_All + C2.M_All + C3.M_All + 
     C4.M_All + C5.M_All, data = dfSA)
