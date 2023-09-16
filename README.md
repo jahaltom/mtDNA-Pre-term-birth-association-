@@ -334,7 +334,7 @@ Number of Fisher Scoring iterations: 2
 
 ```
 
-Subset to South Asian and run same models. Fit models predicting gestational age using maim/sub haplogroups, PCA/MDS comps, and sex. Use PCA/MDS comps specific to South Asian.
+Subset to South Asian and run same models. Use PCA/MDS comps specific to South Asian.
 ```
 > dfSA=df[grepl("South_Asian", df$Population),]
 > 
@@ -515,7 +515,7 @@ Number of Fisher Scoring iterations: 2
 ```
 
 
-Subset to African and run same models.  Fit models predicting gestational age using main/sub haplogroups, PCA/MDS comps, and sex. Use PCA/MDS comps specific to African.
+Subset to African and run same models.  Use PCA/MDS comps specific to African.
 ```
 > dfAFR=df[grepl("African", df$Population),]
 > 
