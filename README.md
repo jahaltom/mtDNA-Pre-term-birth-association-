@@ -720,9 +720,9 @@ png(paste("MainHaplogroupVSBirthWeightGrams.M.png",sep=""),width=10,height=5,uni
 ggplot(dfSA, aes(x = MainHap, y= bwt)) + geom_boxplot()
 dev.off() 
 
-png(paste("MainHaplogroupVSSex.M.png",sep=""),width=10,height=5,units="in",res=1200)
-ggplot(dfSA, aes(x = MainHap, y= sex)) + geom_bar()
-dev.off() 
+png(paste("MainHaplogroupVSSex.M.png",sep=""),width=10,height=5,units="in",res=1200)  #(1: male, 2: female).
+ggplot(dfSA, aes(x = MainHap, fill= factor(sex))) + geom_bar( position = "dodge") 
+dev.off()  
 
 png(paste("MainHaplogroupVSMaternalAge.M.png",sep=""),width=10,height=5,units="in",res=1200)
 ggplot(dfSA, aes(x = MainHap, y= age)) + geom_boxplot()
