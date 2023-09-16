@@ -92,23 +92,23 @@ summary (glm.fit )
 
 #Make plots for south asian data 
 
-png(paste("MainHaplogroupVSHeight.C.png",sep=""),width=10,height=5,units="in",res=1200)
+png(paste("MainHaplogroupVSMaternalHeightCM.C.png",sep=""),width=10,height=5,units="in",res=1200)
 ggplot(dfSA, aes(x = MainHap, y= ht)) + geom_boxplot()
 dev.off() 
 
-png(paste("MainHaplogroupVSBirthWeight.C.png",sep=""),width=10,height=5,units="in",res=1200)
+png(paste("MainHaplogroupVSBirthWeightGrams.C.png",sep=""),width=10,height=5,units="in",res=1200)
 ggplot(dfSA, aes(x = MainHap, y= bwt)) + geom_boxplot()
 dev.off() 
 
 png(paste("MainHaplogroupVSSex.C.png",sep=""),width=10,height=5,units="in",res=1200)
-ggplot(dfSA, aes(x = MainHap, y= sex)) + geom_boxplot()
+ggplot(dfSA, aes(x = MainHap, y= sex)) + geom_bar()
 dev.off() 
 
-png(paste("MainHaplogroupVSAge.C.png",sep=""),width=10,height=5,units="in",res=1200)
+png(paste("MainHaplogroupVSMaternalAge.C.png",sep=""),width=10,height=5,units="in",res=1200)
 ggplot(dfSA, aes(x = MainHap, y= age)) + geom_boxplot()
 dev.off() 
 
-png(paste("MainHaplogroupVSGday.C.png",sep=""),width=10,height=5,units="in",res=1200)
+png(paste("MainHaplogroupVSGestationalDays.C.png",sep=""),width=10,height=5,units="in",res=1200)
 ggplot(dfSA, aes(x = MainHap, y= gday)) + geom_boxplot()
 dev.off() 
 
