@@ -114,20 +114,20 @@ Use MetadataFinal.M.2.tsv and MetadataFinal.C.2.tsv for the MLR.
 ```
 > library(ISLR)
 > library(ggplot2)
-> 
+
 > #Read in mother dataset of south asian and african 
 > df=read.table("MetadataFinal.M.2.tsv",header=TRUE,sep = '\t',quote="")
 > #Remove any samples with a main and/or sub haplogroup <10.
 > df=df[!grepl("False", df$IsAtLeast10MainHap),]
 > df=df[!grepl("False", df$IsAtLeast10SubHap),]
-> 
-> 
+
 > #Set reference haplogroups
 > df$MainHap= relevel(factor(df$MainHap), ref="H")
 > df$SubHap= relevel(factor(df$SubHap), ref="H2")
-> 
-> #Fit models predicting gestational age using maim/sub haplogroups, PCA/MDS comps, and sex. 
-> 
+```
+ 
+Fit models predicting gestational age using maim/sub haplogroups, PCA/MDS comps, and sex. 
+``` 
 > glm.fit=glm(gday~MainHap + sex + PC1.M_All  + PC2.M_All  + PC3.M_All  + PC4.M_All  + PC5.M_All , data=df  )
 > summary (glm.fit )
 ```
@@ -462,12 +462,12 @@ AIC: 10608
 
 Number of Fisher Scoring iterations: 2
 
-> 
-> 
-> 
+```
+```
 > glm.fit=glm(gday~SubHap + sex  + C1.M_All  + C2.M_All  + C3.M_All  + C4.M_All  + C5.M_All  , data=dfSA  )
 > summary (glm.fit )
-
+```
+```
 Call:
 glm(formula = gday ~ SubHap + sex + C1.M_All + C2.M_All + C3.M_All + 
     C4.M_All + C5.M_All, data = dfSA)
@@ -509,21 +509,20 @@ AIC: 10610
 
 Number of Fisher Scoring iterations: 2
 
-> 
-> 
-> 
-> 
-> 
-> #Subset to African
-> 
-> 
+```
+
+
+Subset to African
+
+```
 > dfAFR=df[grepl("African", df$Population),]
 > 
 > #Fit models predicting gestational age using maim/sub haplogroups, PCA/MDS comps, and sex. 
 > 
 > glm.fit=glm(gday~MainHap + sex + PC1.M_All  + PC2.M_All  + PC3.M_All  + PC4.M_All  + PC5.M_All , data=dfAFR  )
 > summary (glm.fit )
-
+```
+```
 Call:
 glm(formula = gday ~ MainHap + sex + PC1.M_All + PC2.M_All + 
     PC3.M_All + PC4.M_All + PC5.M_All, data = dfAFR)
@@ -558,11 +557,12 @@ AIC: 6222.9
 
 Number of Fisher Scoring iterations: 2
 
-> 
-> 
+```
+```
 > glm.fit=glm(gday~SubHap + sex  + PC1.M_All  + PC2.M_All  + PC3.M_All  + PC4.M_All  + PC5.M_All , data=dfAFR  )
 > summary (glm.fit )
-
+```
+```
 Call:
 glm(formula = gday ~ SubHap + sex + PC1.M_All + PC2.M_All + PC3.M_All + 
     PC4.M_All + PC5.M_All, data = dfAFR)
@@ -602,12 +602,12 @@ AIC: 6227.4
 
 Number of Fisher Scoring iterations: 2
 
-> 
-> 
-> 
+```
+```
 > glm.fit=glm(gday~MainHap + sex + C1.M_All  + C2.M_All  + C3.M_All  + C4.M_All  + C5.M_All , data=dfAFR  )
 > summary (glm.fit )
-
+```
+```
 Call:
 glm(formula = gday ~ MainHap + sex + C1.M_All + C2.M_All + C3.M_All + 
     C4.M_All + C5.M_All, data = dfAFR)
@@ -642,12 +642,12 @@ AIC: 6216.4
 
 Number of Fisher Scoring iterations: 2
 
-> 
-> 
-> 
+```
+```
 > glm.fit=glm(gday~SubHap + sex  + C1.M_All  + C2.M_All  + C3.M_All  + C4.M_All  + C5.M_All  , data=dfAFR  )
 > summary (glm.fit )
-
+```
+```
 Call:
 glm(formula = gday ~ SubHap + sex + C1.M_All + C2.M_All + C3.M_All + 
     C4.M_All + C5.M_All, data = dfAFR)
