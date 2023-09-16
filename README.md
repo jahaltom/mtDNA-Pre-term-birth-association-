@@ -108,26 +108,28 @@ plink --vcf outntDNA.All.C.vcf --cluster --mds-plot 5 --double-id --out All_C
 ### Combine.py:
 Takes MDS/PCS files generated above and adds it into the metadata for mother and child. Outputs MetadataFinal.C.2.tsv and MetadataFinal.M.2.tsv.
 
-## Multiple linear regression
-Use MetadataFinal.M.2.tsv and MetadataFinal.C.2.tsv for the MLR.
+## Multiple linear regression (MLR)
+Use MetadataFinal.M.2.tsv (mother) and MetadataFinal.C.2.tsv child) for the MLR. 
 
+Below is an example using the mother dataset, but the child dataset can be done the exact same way. Just simply swap the ".M" for ".C" .  
 ```
 > library(ISLR)
 > library(ggplot2)
-
+> 
 > #Read in mother dataset of south asian and african 
 > df=read.table("MetadataFinal.M.2.tsv",header=TRUE,sep = '\t',quote="")
 > #Remove any samples with a main and/or sub haplogroup <10.
 > df=df[!grepl("False", df$IsAtLeast10MainHap),]
 > df=df[!grepl("False", df$IsAtLeast10SubHap),]
-
+> 
+> 
 > #Set reference haplogroups
 > df$MainHap= relevel(factor(df$MainHap), ref="H")
 > df$SubHap= relevel(factor(df$SubHap), ref="H2")
+> 
 ```
- 
-Fit models predicting gestational age using maim/sub haplogroups, PCA/MDS comps, and sex. 
-``` 
+Fit models predicting gestational age using maim/sub haplogroups, PCA/MDS comps calculated from all populations, and sex. 
+```
 > glm.fit=glm(gday~MainHap + sex + PC1.M_All  + PC2.M_All  + PC3.M_All  + PC4.M_All  + PC5.M_All , data=df  )
 > summary (glm.fit )
 ```
@@ -170,6 +172,7 @@ Residual deviance: 584838  on 1952  degrees of freedom
 AIC: 16835
 
 Number of Fisher Scoring iterations: 2
+
 ```
 ```
 > glm.fit=glm(gday~SubHap + sex  + PC1.M_All  + PC2.M_All  + PC3.M_All  + PC4.M_All  + PC5.M_All , data=df  )
@@ -330,45 +333,46 @@ AIC: 16836
 Number of Fisher Scoring iterations: 2
 
 ```
-Subset to south asian
+
+Subset to South Asian and run same models. Use PCA/MDS comps specific to South Asian.
 ```
 > dfSA=df[grepl("South_Asian", df$Population),]
 > 
 > #Fit models predicting gestational age using maim/sub haplogroups, PCA/MDS comps, and sex. 
 > 
-> glm.fit=glm(gday~MainHap + sex + PC1.M_All  + PC2.M_All  + PC3.M_All  + PC4.M_All  + PC5.M_All , data=dfSA  )
+> glm.fit=glm(gday~MainHap + sex + PC1.M_SouthAsian  + PC2.M_SouthAsian  + PC3.M_SouthAsian  + PC4.M_SouthAsian  + PC5.M_SouthAsian , data=dfSA  )
 > summary (glm.fit )
 ```
 ```
 Call:
-glm(formula = gday ~ MainHap + sex + PC1.M_All + PC2.M_All + 
-    PC3.M_All + PC4.M_All + PC5.M_All, data = dfSA)
+glm(formula = gday ~ MainHap + sex + PC1.M_SouthAsian + PC2.M_SouthAsian + 
+    PC3.M_SouthAsian + PC4.M_SouthAsian + PC5.M_SouthAsian, data = dfSA)
 
 Deviance Residuals: 
-   Min      1Q  Median      3Q     Max  
--93.98  -11.68    5.21   12.66   34.25  
+    Min       1Q   Median       3Q      Max  
+-94.019  -11.701    5.162   12.669   34.230  
 
 Coefficients:
-            Estimate Std. Error t value Pr(>|t|)    
-(Intercept) 266.9525    12.9662  20.588  < 2e-16 ***
-MainHapD     -1.7612     2.9994  -0.587  0.55719    
-MainHapF    -13.0224     5.0089  -2.600  0.00944 ** 
-MainHapM      0.1588     1.1057   0.144  0.88581    
-MainHapR     -2.5143     4.1955  -0.599  0.54909    
-MainHapU      1.1902     2.0279   0.587  0.55737    
-sex           1.2571     1.0199   1.233  0.21796    
-PC1.M_All    81.7783   743.9653   0.110  0.91249    
-PC2.M_All   -27.3637    20.8440  -1.313  0.18950    
-PC3.M_All    12.0606    23.9932   0.503  0.61529    
-PC4.M_All     9.6772    17.9276   0.540  0.58944    
-PC5.M_All    27.7779    18.6367   1.490  0.13635    
+                 Estimate Std. Error t value Pr(>|t|)    
+(Intercept)      265.5422     1.6933 156.815  < 2e-16 ***
+MainHapD          -1.6918     2.9935  -0.565  0.57208    
+MainHapF         -12.9959     5.0081  -2.595  0.00957 ** 
+MainHapM           0.1627     1.1057   0.147  0.88304    
+MainHapR          -2.4755     4.1963  -0.590  0.55535    
+MainHapU           1.2006     2.0285   0.592  0.55403    
+sex                1.2550     1.0201   1.230  0.21885    
+PC1.M_SouthAsian  -7.1842    17.9617  -0.400  0.68925    
+PC2.M_SouthAsian  25.2185    18.0516   1.397  0.16266    
+PC3.M_SouthAsian   9.7024    17.8837   0.543  0.58755    
+PC4.M_SouthAsian -27.0271    17.8668  -1.513  0.13062    
+PC5.M_SouthAsian   2.2359    17.8787   0.125  0.90050    
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-(Dispersion parameter for gaussian family taken to be 319.0448)
+(Dispersion parameter for gaussian family taken to be 318.9905)
 
     Null deviance: 393604  on 1230  degrees of freedom
-Residual deviance: 388916  on 1219  degrees of freedom
+Residual deviance: 388849  on 1219  degrees of freedom
   (2 observations deleted due to missingness)
 AIC: 10604
 
@@ -376,46 +380,46 @@ Number of Fisher Scoring iterations: 2
 
 ```
 ```
-> glm.fit=glm(gday~SubHap + sex  + PC1.M_All  + PC2.M_All  + PC3.M_All  + PC4.M_All  + PC5.M_All , data=dfSA  )
+> glm.fit=glm(gday~SubHap + sex  + PC1.M_SouthAsian  + PC2.M_SouthAsian  + PC3.M_SouthAsian  + PC4.M_SouthAsian  + PC5.M_SouthAsian , data=dfSA  )
 > summary (glm.fit )
 ```
 ```
 Call:
-glm(formula = gday ~ SubHap + sex + PC1.M_All + PC2.M_All + PC3.M_All + 
-    PC4.M_All + PC5.M_All, data = dfSA)
+glm(formula = gday ~ SubHap + sex + PC1.M_SouthAsian + PC2.M_SouthAsian + 
+    PC3.M_SouthAsian + PC4.M_SouthAsian + PC5.M_SouthAsian, data = dfSA)
 
 Deviance Residuals: 
     Min       1Q   Median       3Q      Max  
--95.424  -11.739    5.125   12.607   34.415  
+-95.458  -11.700    5.127   12.604   34.404  
 
 Coefficients:
-            Estimate Std. Error t value Pr(>|t|)    
-(Intercept) 266.7850    12.9684  20.572  < 2e-16 ***
-SubHapD4     -1.7801     2.9942  -0.594  0.55229    
-SubHapF1    -13.0885     4.9988  -2.618  0.00895 ** 
-SubHapH9     -2.3228     5.4346  -0.427  0.66916    
-SubHapM1     -0.3926     5.0057  -0.078  0.93750    
-SubHapM2     -4.3035     3.1606  -1.362  0.17358    
-SubHapM3     -0.1440     1.3019  -0.111  0.91196    
-SubHapM4      1.5356     2.8197   0.545  0.58613    
-SubHapM5      4.3158     2.2625   1.908  0.05668 .  
-SubHapM6     -6.0952     3.9640  -1.538  0.12440    
-SubHapR6     -2.5746     4.1874  -0.615  0.53877    
-SubHapU2      3.9383     2.5338   1.554  0.12036    
-SubHapU7     -3.1150     3.1199  -0.998  0.31827    
-sex           1.3437     1.0202   1.317  0.18805    
-PC1.M_All    77.4248   743.9573   0.104  0.91713    
-PC2.M_All   -27.5891    20.7991  -1.326  0.18494    
-PC3.M_All    15.7292    24.4458   0.643  0.52007    
-PC4.M_All     9.7926    17.8914   0.547  0.58425    
-PC5.M_All    25.6493    18.6625   1.374  0.16958    
+                 Estimate Std. Error t value Pr(>|t|)    
+(Intercept)      265.4502     1.6936 156.737  < 2e-16 ***
+SubHapD4          -1.7098     2.9885  -0.572  0.56733    
+SubHapF1         -13.0602     4.9980  -2.613  0.00908 ** 
+SubHapH9          -2.3382     5.4308  -0.431  0.66687    
+SubHapM1          -0.3830     5.0045  -0.077  0.93901    
+SubHapM2          -4.3088     3.1580  -1.364  0.17269    
+SubHapM3          -0.1404     1.3018  -0.108  0.91411    
+SubHapM4           1.5331     2.8191   0.544  0.58668    
+SubHapM5           4.3366     2.2625   1.917  0.05551 .  
+SubHapM6          -6.1082     3.9597  -1.543  0.12319    
+SubHapR6          -2.5359     4.1882  -0.605  0.54496    
+SubHapU2           3.9443     2.5334   1.557  0.11976    
+SubHapU7          -3.0953     3.1215  -0.992  0.32158    
+sex                1.3424     1.0204   1.316  0.18856    
+PC1.M_SouthAsian -10.5709    18.3796  -0.575  0.56530    
+PC2.M_SouthAsian  25.9015    18.0184   1.437  0.15083    
+PC3.M_SouthAsian   9.7955    17.8472   0.549  0.58321    
+PC4.M_SouthAsian -25.1552    17.8840  -1.407  0.15981    
+PC5.M_SouthAsian   2.6264    17.8556   0.147  0.88309    
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-(Dispersion parameter for gaussian family taken to be 317.6445)
+(Dispersion parameter for gaussian family taken to be 317.5781)
 
     Null deviance: 393604  on 1230  degrees of freedom
-Residual deviance: 384985  on 1212  degrees of freedom
+Residual deviance: 384905  on 1212  degrees of freedom
   (2 observations deleted due to missingness)
 AIC: 10606
 
@@ -423,292 +427,268 @@ Number of Fisher Scoring iterations: 2
 
 ```
 ```
-
-> glm.fit=glm(gday~MainHap + sex + C1.M_All  + C2.M_All  + C3.M_All  + C4.M_All  + C5.M_All , data=dfSA  )
+> glm.fit=glm(gday~MainHap + sex + C1.M_SouthAsian  + C2.M_SouthAsian  + C3.M_SouthAsian  + C4.M_SouthAsian  + C5.M_SouthAsian , data=dfSA  )
 > summary (glm.fit )
 ```
 ```
 Call:
-glm(formula = gday ~ MainHap + sex + C1.M_All + C2.M_All + C3.M_All + 
-    C4.M_All + C5.M_All, data = dfSA)
+glm(formula = gday ~ MainHap + sex + C1.M_SouthAsian + C2.M_SouthAsian + 
+    C3.M_SouthAsian + C4.M_SouthAsian + C5.M_SouthAsian, data = dfSA)
 
 Deviance Residuals: 
     Min       1Q   Median       3Q      Max  
--94.516  -11.600    5.209   12.773   33.638  
+-93.569  -11.625    5.154   12.585   34.504  
 
 Coefficients:
-            Estimate Std. Error t value Pr(>|t|)    
-(Intercept) 263.8104    12.3930  21.287  < 2e-16 ***
-MainHapD     -2.0164     2.9978  -0.673  0.50132    
-MainHapF    -13.1844     5.0212  -2.626  0.00875 ** 
-MainHapM      0.2168     1.1078   0.196  0.84490    
-MainHapR     -3.1181     4.1780  -0.746  0.45561    
-MainHapU      1.1380     2.0307   0.560  0.57529    
-sex           1.3268     1.0211   1.299  0.19406    
-C1.M_All     51.0096   377.5416   0.135  0.89255    
-C2.M_All     -9.8141    92.6273  -0.106  0.91564    
-C3.M_All     18.3741    84.2625   0.218  0.82742    
-C4.M_All    116.6495   167.1698   0.698  0.48544    
-C5.M_All     30.4021   106.0856   0.287  0.77448    
+                 Estimate Std. Error t value Pr(>|t|)    
+(Intercept)     265.56341    1.68190 157.895  < 2e-16 ***
+MainHapD         -2.28021    2.96899  -0.768  0.44263    
+MainHapF        -13.16000    4.97955  -2.643  0.00833 ** 
+MainHapM         -0.03748    1.09992  -0.034  0.97282    
+MainHapR         -3.01119    4.14348  -0.727  0.46753    
+MainHapU          0.90162    2.01711   0.447  0.65496    
+sex               1.32384    1.01312   1.307  0.19156    
+C1.M_SouthAsian  18.95891   64.62013   0.293  0.76927    
+C2.M_SouthAsian -28.25840   80.68810  -0.350  0.72624    
+C3.M_SouthAsian -63.79492  100.42753  -0.635  0.52540    
+C4.M_SouthAsian -61.33993  102.55817  -0.598  0.54989    
+C5.M_SouthAsian 472.17552  106.38348   4.438 9.88e-06 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-(Dispersion parameter for gaussian family taken to be 320.0044)
+(Dispersion parameter for gaussian family taken to be 314.8756)
 
     Null deviance: 393604  on 1230  degrees of freedom
-Residual deviance: 390085  on 1219  degrees of freedom
+Residual deviance: 383833  on 1219  degrees of freedom
   (2 observations deleted due to missingness)
-AIC: 10608
+AIC: 10588
 
 Number of Fisher Scoring iterations: 2
 
 ```
 ```
-> glm.fit=glm(gday~SubHap + sex  + C1.M_All  + C2.M_All  + C3.M_All  + C4.M_All  + C5.M_All  , data=dfSA  )
+> glm.fit=glm(gday~SubHap + sex  + C1.M_SouthAsian  + C2.M_SouthAsian  + C3.M_SouthAsian  + C4.M_SouthAsian  + C5.M_SouthAsian  , data=dfSA  )
 > summary (glm.fit )
 ```
 ```
 Call:
-glm(formula = gday ~ SubHap + sex + C1.M_All + C2.M_All + C3.M_All + 
-    C4.M_All + C5.M_All, data = dfSA)
+glm(formula = gday ~ SubHap + sex + C1.M_SouthAsian + C2.M_SouthAsian + 
+    C3.M_SouthAsian + C4.M_SouthAsian + C5.M_SouthAsian, data = dfSA)
 
 Deviance Residuals: 
     Min       1Q   Median       3Q      Max  
--95.936  -11.576    5.067   12.706   33.875  
+-95.097  -11.481    4.925   12.589   32.595  
 
 Coefficients:
-            Estimate Std. Error t value Pr(>|t|)    
-(Intercept) 263.8130    12.3980  21.279   <2e-16 ***
-SubHapD4     -2.0175     2.9929  -0.674   0.5004    
-SubHapF1    -13.1896     5.0115  -2.632   0.0086 ** 
-SubHapH9     -1.8783     5.4466  -0.345   0.7303    
-SubHapM1     -0.4280     5.0157  -0.085   0.9320    
-SubHapM2     -4.3220     3.1811  -1.359   0.1745    
-SubHapM3     -0.1024     1.3048  -0.078   0.9375    
-SubHapM4      1.7030     2.8234   0.603   0.5465    
-SubHapM5      4.3544     2.2683   1.920   0.0551 .  
-SubHapM6     -5.9930     3.9933  -1.501   0.1337    
-SubHapR6     -3.1966     4.1704  -0.766   0.4435    
-SubHapU2      3.9085     2.5371   1.541   0.1237    
-SubHapU7     -3.1587     3.1251  -1.011   0.3123    
-sex           1.4142     1.0216   1.384   0.1665    
-C1.M_All     47.5649   377.6103   0.126   0.8998    
-C2.M_All     11.3790    94.2559   0.121   0.9039    
-C3.M_All     34.3874    84.6681   0.406   0.6847    
-C4.M_All     72.1234   167.9160   0.430   0.6676    
-C5.M_All     18.0595   106.2525   0.170   0.8651    
+                 Estimate Std. Error t value Pr(>|t|)    
+(Intercept)     265.46925    1.68175 157.853  < 2e-16 ***
+SubHapD4         -2.26267    2.96327  -0.764  0.44527    
+SubHapF1        -13.15973    4.96804  -2.649  0.00818 ** 
+SubHapH9         -1.45370    5.39929  -0.269  0.78779    
+SubHapM1          0.03093    4.97508   0.006  0.99504    
+SubHapM2         -4.50375    3.16561  -1.423  0.15508    
+SubHapM3         -0.36977    1.29503  -0.286  0.77529    
+SubHapM4          1.40318    2.80382   0.500  0.61685    
+SubHapM5          4.11361    2.24974   1.828  0.06772 .  
+SubHapM6         -6.40724    3.93359  -1.629  0.10360    
+SubHapR6         -3.11784    4.13467  -0.754  0.45095    
+SubHapU2          3.94959    2.51772   1.569  0.11697    
+SubHapU7         -3.77455    3.10293  -1.216  0.22405    
+sex               1.40531    1.01321   1.387  0.16570    
+C1.M_SouthAsian  29.88568   66.17511   0.452  0.65163    
+C2.M_SouthAsian -41.57179   80.96229  -0.513  0.60772    
+C3.M_SouthAsian -40.65350  100.70681  -0.404  0.68652    
+C4.M_SouthAsian -87.11976  102.91583  -0.847  0.39743    
+C5.M_SouthAsian 473.78069  106.30015   4.457 9.08e-06 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-(Dispersion parameter for gaussian family taken to be 318.638)
+(Dispersion parameter for gaussian family taken to be 313.307)
 
     Null deviance: 393604  on 1230  degrees of freedom
-Residual deviance: 386189  on 1212  degrees of freedom
+Residual deviance: 379728  on 1212  degrees of freedom
   (2 observations deleted due to missingness)
-AIC: 10610
+AIC: 10589
 
 Number of Fisher Scoring iterations: 2
 
 ```
 
 
-Subset to African
-
+Subset to African and run same models. Use PCA/MDS comps specific to African.
 ```
 > dfAFR=df[grepl("African", df$Population),]
 > 
 > #Fit models predicting gestational age using maim/sub haplogroups, PCA/MDS comps, and sex. 
 > 
-> glm.fit=glm(gday~MainHap + sex + PC1.M_All  + PC2.M_All  + PC3.M_All  + PC4.M_All  + PC5.M_All , data=dfAFR  )
+> glm.fit=glm(gday~MainHap + sex + PC1.M_Africa  + PC2.M_Africa  + PC3.M_Africa  + PC4.M_Africa  + PC5.M_Africa , data=dfAFR  )
 > summary (glm.fit )
 ```
 ```
 Call:
-glm(formula = gday ~ MainHap + sex + PC1.M_All + PC2.M_All + 
-    PC3.M_All + PC4.M_All + PC5.M_All, data = dfAFR)
+glm(formula = gday ~ MainHap + sex + PC1.M_Africa + PC2.M_Africa + 
+    PC3.M_Africa + PC4.M_Africa + PC5.M_Africa, data = dfAFR)
 
 Deviance Residuals: 
     Min       1Q   Median       3Q      Max  
--91.478   -7.749    2.204    9.743   47.074  
-
-Coefficients:
-            Estimate Std. Error t value Pr(>|t|)    
-(Intercept) 261.0540    20.2498  12.892   <2e-16 ***
-MainHapL0     1.9358     2.4213   0.799    0.424    
-MainHapL1     2.8329     2.4187   1.171    0.242    
-MainHapL2     1.7652     2.2625   0.780    0.436    
-MainHapL3     0.4677     2.1406   0.218    0.827    
-MainHapL4     4.4391     4.2835   1.036    0.300    
-sex           0.3757     1.2111   0.310    0.756    
-PC1.M_All   287.6330   697.9856   0.412    0.680    
-PC2.M_All    46.1668    37.6447   1.226    0.220    
-PC3.M_All   125.7464   279.5384   0.450    0.653    
-PC4.M_All   221.8328   402.3328   0.551    0.582    
-PC5.M_All   113.3673    78.0562   1.452    0.147    
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-(Dispersion parameter for gaussian family taken to be 263.8406)
-
-    Null deviance: 199027  on 737  degrees of freedom
-Residual deviance: 191548  on 726  degrees of freedom
-  (3 observations deleted due to missingness)
-AIC: 6222.9
-
-Number of Fisher Scoring iterations: 2
-
-```
-```
-> glm.fit=glm(gday~SubHap + sex  + PC1.M_All  + PC2.M_All  + PC3.M_All  + PC4.M_All  + PC5.M_All , data=dfAFR  )
-> summary (glm.fit )
-```
-```
-Call:
-glm(formula = gday ~ SubHap + sex + PC1.M_All + PC2.M_All + PC3.M_All + 
-    PC4.M_All + PC5.M_All, data = dfAFR)
-
-Deviance Residuals: 
-    Min       1Q   Median       3Q      Max  
--92.704   -7.808    1.822    9.925   47.114  
-
-Coefficients:
-            Estimate Std. Error t value Pr(>|t|)    
-(Intercept) 262.4042    20.2992  12.927   <2e-16 ***
-SubHapH3     -6.4186     4.4966  -1.427    0.154    
-SubHapL0a     0.5146     2.6162   0.197    0.844    
-SubHapL1b    -4.4886     4.2953  -1.045    0.296    
-SubHapL1c     2.5986     2.7063   0.960    0.337    
-SubHapL2a     0.3570     2.4658   0.145    0.885    
-SubHapL3b    -1.8907     3.0879  -0.612    0.541    
-SubHapL3d    -0.4713     2.8840  -0.163    0.870    
-SubHapL3e    -0.9869     2.6235  -0.376    0.707    
-SubHapL3f     0.2327     4.3798   0.053    0.958    
-SubHapL4b     3.0685     4.3906   0.699    0.485    
-sex           0.2741     1.2152   0.226    0.822    
-PC1.M_All   295.3073   698.7750   0.423    0.673    
-PC2.M_All    44.1477    37.7360   1.170    0.242    
-PC3.M_All   129.8381   280.1314   0.463    0.643    
-PC4.M_All   243.8550   404.1526   0.603    0.546    
-PC5.M_All   121.3559    78.1890   1.552    0.121    
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-(Dispersion parameter for gaussian family taken to be 263.7092)
-
-    Null deviance: 199027  on 737  degrees of freedom
-Residual deviance: 190134  on 721  degrees of freedom
-  (3 observations deleted due to missingness)
-AIC: 6227.4
-
-Number of Fisher Scoring iterations: 2
-
-```
-```
-> glm.fit=glm(gday~MainHap + sex + C1.M_All  + C2.M_All  + C3.M_All  + C4.M_All  + C5.M_All , data=dfAFR  )
-> summary (glm.fit )
-```
-```
-Call:
-glm(formula = gday ~ MainHap + sex + C1.M_All + C2.M_All + C3.M_All + 
-    C4.M_All + C5.M_All, data = dfAFR)
-
-Deviance Residuals: 
-    Min       1Q   Median       3Q      Max  
--91.474   -7.811    1.973    9.515   47.660  
+-92.541   -7.603    2.113    9.800   47.908  
 
 Coefficients:
              Estimate Std. Error t value Pr(>|t|)    
-(Intercept)  262.1691    18.3446  14.291   <2e-16 ***
-MainHapL0      1.5107     2.4050   0.628   0.5301    
-MainHapL1      2.5799     2.4023   1.074   0.2832    
-MainHapL2      1.7984     2.2519   0.799   0.4248    
-MainHapL3      0.6947     2.1322   0.326   0.7447    
-MainHapL4      5.0724     4.2751   1.186   0.2358    
-sex            0.2719     1.2005   0.226   0.8209    
-C1.M_All    -137.3149   336.7501  -0.408   0.6836    
-C2.M_All    -101.6920   832.1197  -0.122   0.9028    
-C3.M_All    -316.4648   209.3724  -1.511   0.1311    
-C4.M_All    -507.3941   207.8133  -2.442   0.0149 *  
-C5.M_All      73.4847   439.0484   0.167   0.8671    
+(Intercept)  269.1589     2.6090 103.167  < 2e-16 ***
+MainHapL0      2.1810     2.3953   0.911  0.36285    
+MainHapL1      2.5697     2.3940   1.073  0.28346    
+MainHapL2      1.9899     2.2335   0.891  0.37325    
+MainHapL3      0.9492     2.1186   0.448  0.65426    
+MainHapL4      4.9490     4.2432   1.166  0.24387    
+sex            0.2869     1.1945   0.240  0.81027    
+PC1.M_Africa -76.8409    16.3119  -4.711 2.96e-06 ***
+PC2.M_Africa  19.9759    16.2094   1.232  0.21821    
+PC3.M_Africa -30.9407    16.1995  -1.910  0.05653 .  
+PC4.M_Africa -51.7693    16.1264  -3.210  0.00138 ** 
+PC5.M_Africa -22.1242    16.1702  -1.368  0.17167    
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-(Dispersion parameter for gaussian family taken to be 261.5529)
+(Dispersion parameter for gaussian family taken to be 258.8672)
 
     Null deviance: 199027  on 737  degrees of freedom
-Residual deviance: 189887  on 726  degrees of freedom
+Residual deviance: 187938  on 726  degrees of freedom
   (3 observations deleted due to missingness)
-AIC: 6216.4
+AIC: 6208.8
 
 Number of Fisher Scoring iterations: 2
 
 ```
 ```
-> glm.fit=glm(gday~SubHap + sex  + C1.M_All  + C2.M_All  + C3.M_All  + C4.M_All  + C5.M_All  , data=dfAFR  )
+> glm.fit=glm(gday~SubHap + sex  + PC1.M_Africa  + PC2.M_Africa  + PC3.M_Africa  + PC4.M_Africa  + PC5.M_Africa , data=dfAFR  )
 > summary (glm.fit )
 ```
 ```
 Call:
-glm(formula = gday ~ SubHap + sex + C1.M_All + C2.M_All + C3.M_All + 
-    C4.M_All + C5.M_All, data = dfAFR)
+glm(formula = gday ~ SubHap + sex + PC1.M_Africa + PC2.M_Africa + 
+    PC3.M_Africa + PC4.M_Africa + PC5.M_Africa, data = dfAFR)
 
 Deviance Residuals: 
     Min       1Q   Median       3Q      Max  
--92.583   -7.725    2.065    9.518   47.657  
+-93.681   -7.718    1.835    9.785   47.909  
 
 Coefficients:
              Estimate Std. Error t value Pr(>|t|)    
-(Intercept)  263.4712    18.3678  14.344   <2e-16 ***
-SubHapH3      -7.4719     4.4789  -1.668   0.0957 .  
-SubHapL0a     -0.1277     2.5983  -0.049   0.9608    
-SubHapL1b     -4.3890     4.2652  -1.029   0.3038    
-SubHapL1c      2.0153     2.6949   0.748   0.4548    
-SubHapL2a      0.1693     2.4531   0.069   0.9450    
-SubHapL3b     -1.7727     3.0740  -0.577   0.5643    
-SubHapL3d     -0.8188     2.8749  -0.285   0.7759    
-SubHapL3e     -0.8742     2.6035  -0.336   0.7371    
-SubHapL3f      0.8053     4.3672   0.184   0.8538    
-SubHapL4b      3.4931     4.3749   0.798   0.4249    
-sex            0.1694     1.2040   0.141   0.8881    
-C1.M_All    -146.2600   336.8893  -0.434   0.6643    
-C2.M_All    -103.8826   832.0641  -0.125   0.9007    
-C3.M_All    -335.3253   210.8770  -1.590   0.1122    
-C4.M_All    -511.2213   209.6822  -2.438   0.0150 *  
-C5.M_All      87.2053   442.4292   0.197   0.8438    
+(Intercept)  270.6655     2.8192  96.009  < 2e-16 ***
+SubHapH3      -6.2609     4.4479  -1.408  0.15968    
+SubHapL0a      0.7982     2.5874   0.308  0.75780    
+SubHapL1b     -3.9454     4.2521  -0.928  0.35379    
+SubHapL1c      2.2477     2.6862   0.837  0.40301    
+SubHapL2a      0.6170     2.4351   0.253  0.80005    
+SubHapL3b     -1.5214     3.0553  -0.498  0.61867    
+SubHapL3d     -0.3125     2.8546  -0.109  0.91285    
+SubHapL3e     -0.1149     2.6011  -0.044  0.96477    
+SubHapL3f      0.2709     4.3375   0.062  0.95021    
+SubHapL4b      3.5939     4.3491   0.826  0.40888    
+sex            0.2007     1.1991   0.167  0.86710    
+PC1.M_Africa -78.9112    16.4627  -4.793 1.99e-06 ***
+PC2.M_Africa  18.9101    16.2433   1.164  0.24474    
+PC3.M_Africa -30.2603    16.2297  -1.864  0.06266 .  
+PC4.M_Africa -52.1842    16.2127  -3.219  0.00135 ** 
+PC5.M_Africa -20.1253    16.2663  -1.237  0.21640    
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-(Dispersion parameter for gaussian family taken to be 261.3311)
+(Dispersion parameter for gaussian family taken to be 259.0031)
 
     Null deviance: 199027  on 737  degrees of freedom
-Residual deviance: 188420  on 721  degrees of freedom
+Residual deviance: 186741  on 721  degrees of freedom
   (3 observations deleted due to missingness)
-AIC: 6220.7
+AIC: 6214.1
 
 Number of Fisher Scoring iterations: 2
 
-
-
+```
 ```
 
+> glm.fit=glm(gday~MainHap + sex + C1.M_Africa  + C2.M_Africa  + C3.M_Africa  + C4.M_Africa  + C5.M_Africa , data=dfAFR  )
+> summary (glm.fit )
+```
+```
+Call:
+glm(formula = gday ~ MainHap + sex + C1.M_Africa + C2.M_Africa + 
+    C3.M_Africa + C4.M_Africa + C5.M_Africa, data = dfAFR)
 
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-92.537   -7.357    2.019    9.849   47.393  
 
+Coefficients:
+             Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  269.4697     2.5826 104.339  < 2e-16 ***
+MainHapL0      1.7144     2.3804   0.720 0.471632    
+MainHapL1      3.0875     2.3790   1.298 0.194766    
+MainHapL2      1.5087     2.2244   0.678 0.497823    
+MainHapL3      1.0830     2.1119   0.513 0.608240    
+MainHapL4      4.5702     4.2262   1.081 0.279873    
+sex            0.1239     1.1865   0.104 0.916850    
+C1.M_Africa -259.4526    53.3250  -4.865  1.4e-06 ***
+C2.M_Africa  -94.0510   106.2891  -0.885 0.376525    
+C3.M_Africa  293.5220   108.8393   2.697 0.007162 ** 
+C4.M_Africa  -32.5256   110.5803  -0.294 0.768738    
+C5.M_Africa -406.7765   112.2942  -3.622 0.000312 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
+(Dispersion parameter for gaussian family taken to be 256.9104)
 
+    Null deviance: 199027  on 737  degrees of freedom
+Residual deviance: 186517  on 726  degrees of freedom
+  (3 observations deleted due to missingness)
+AIC: 6203.2
 
+Number of Fisher Scoring iterations: 2
 
+```
+```
+> glm.fit=glm(gday~SubHap + sex  + C1.M_Africa  + C2.M_Africa  + C3.M_Africa  + C4.M_Africa  + C5.M_Africa  , data=dfAFR  )
+> summary (glm.fit )
+```
+```
+Call:
+glm(formula = gday ~ SubHap + sex + C1.M_Africa + C2.M_Africa + 
+    C3.M_Africa + C4.M_Africa + C5.M_Africa, data = dfAFR)
 
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-93.336   -7.733    1.988    9.852   47.375  
 
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  270.91356    2.78756  97.187  < 2e-16 ***
+SubHapH3      -6.38565    4.42969  -1.442 0.149862    
+SubHapL0a      0.32246    2.56969   0.125 0.900174    
+SubHapL1b     -2.64535    4.34421  -0.609 0.542758    
+SubHapL1c      2.50876    2.65737   0.944 0.345446    
+SubHapL2a      0.13434    2.42327   0.055 0.955804    
+SubHapL3b     -1.83729    3.04034  -0.604 0.545830    
+SubHapL3d     -0.52076    2.84245  -0.183 0.854686    
+SubHapL3e      0.30974    2.59775   0.119 0.905122    
+SubHapL3f      1.60438    4.34626   0.369 0.712131    
+SubHapL4b      3.21088    4.32998   0.742 0.458604    
+sex            0.08436    1.19050   0.071 0.943529    
+C1.M_Africa -267.47449   53.83973  -4.968 8.46e-07 ***
+C2.M_Africa -121.31302  107.41147  -1.129 0.259095    
+C3.M_Africa  301.95999  109.61400   2.755 0.006022 ** 
+C4.M_Africa  -46.71536  112.28621  -0.416 0.677506    
+C5.M_Africa -388.48763  115.04872  -3.377 0.000773 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
+(Dispersion parameter for gaussian family taken to be 257.0866)
 
+    Null deviance: 199027  on 737  degrees of freedom
+Residual deviance: 185359  on 721  degrees of freedom
+  (3 observations deleted due to missingness)
+AIC: 6208.6
 
-
-
-
-
-
-
-
-
+Number of Fisher Scoring iterations: 2
+```
 
 
