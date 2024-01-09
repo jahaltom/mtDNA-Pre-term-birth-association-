@@ -32,7 +32,7 @@ of interest marked and everything else Ns.
 
 
 
-#Combinbe fastas and run through haplogrep3. Failed
+#Combinbe fastas and run through Haplogrep3. Failed
 
 
 
@@ -46,7 +46,7 @@ of interest marked and everything else Ns.
 
 
 
-#run through haplogrep3
+#run through Haplogrep3
 
 
 haplogrepCompOUT: Haploghrep3 results from whole mtDNA (Haplogroups.tsv) and positons of interest. 
