@@ -1,4 +1,4 @@
-haplogrep3OUT: Download 17,830 mtDNA complete genomes in fasta format from NCBI and run through haplogrep3
+haplogrep3OUT: Download 17,830 mtDNA complete genomes in fasta format from NCBI and run through Haplogrep3.
 
 
 GetSpikes.py: Get n=10 for each of the 19 haplogroups of interest ["H","M","L3","L2","L0","L1","U","D","R","L4","T","F","A","C","J","N","G","E","W"].Get only high quality calls that are 1-16569. Makes Haplogroups.tsv. Takes in haplogrep3OUT.
@@ -53,3 +53,7 @@ haplogrepCompOUT: Haploghrep3 results from whole mtDNA (Haplogroups.tsv) and pos
 
 
 ConfPlot.py: Takes in haplogrepCompOUT and makes confusion matrix (ConfPlot.png). 
+
+![alt text](https://github.com/jahaltom/mtDNA-Pre-term-birth-association-/blob/main/Spike-Ins/ConfPlot.png?raw=true)
+
+
