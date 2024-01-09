@@ -1,7 +1,7 @@
 haplogrep3OUT: Download 17,830 mtDNA complete genomes in fasta format from NCBI and run through haplogrep3
 
 
-GetSpikes.py: Get n=10 for each of the 19 haplogroups of interest ["H","M","L3","L2","L0","L1","U","D","R","L4","T","F","A","C","J","N","G","E","W"]. #Get only high quality calls that are 1-16569. Makes Haplogroups.tsv. Takes in haplogrep3OUT.
+GetSpikes.py: Get n=10 for each of the 19 haplogroups of interest ["H","M","L3","L2","L0","L1","U","D","R","L4","T","F","A","C","J","N","G","E","W"].Get only high quality calls that are 1-16569. Makes Haplogroups.tsv. Takes in haplogrep3OUT.
 
 
 #Put list of accession numbers into this site (Haplogroups.tsv). Generates single fasta with 190 seqs.  
@@ -41,8 +41,8 @@ of interest marked and everything else Ns.
 
 
 #SpikeinVCF.py: Takes in list of meg prefixes (one for each spike-in), meg, list of positions of interest, and a vcf that contain the positions of interest. Outputs VCF for each spike-in that has corresponding ALT positions marked;
-1/1: "*" for deltion, or if ALT diff from REF.
-0/0: if ALT match REF, ALT is ".". 
+* 1/1: "*" for deltion, or if ALT diff from REF.
+* 0/0: if ALT match REF, ALT is ".". 
 
 
 
