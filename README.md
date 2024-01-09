@@ -22,7 +22,7 @@ Output VCFs will only contaion SNPs.
 
 
 ## Run Haplogrep3 to assign haplogroups to samples.
-(Doing this on the online Haplogrep3 server gives errors.) Do I need the --chip param? https://haplogrep.readthedocs.io/en/latest/parameters/#parameters
+
 
 Install Haplogrep3
 ```
