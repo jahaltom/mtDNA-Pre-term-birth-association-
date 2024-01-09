@@ -19,11 +19,12 @@ cat seqs.fa | awk '{
 
 
 #For each fasta, combines with NC_012920.1.fasta (Revised Cambridge Reference Sequence (rCRS)), and performs MEGA alignment. Outputs meg and summary file. file.mao needed to MEGA specs. 
+```
 cat fastas | while read i;do
 	cat NC_012920.1.fasta test/$i > Fastas/$i 
 	../tools/MEGA/megacc -a file.mao -d Fastas/$i
 done
-
+```
 
 
 #SpikeinFasta.py: Takes in list of meg prefixes (one for each spike-in), meg, and list of positions of interest. Outputs fasta for each spike-in that has positions 
