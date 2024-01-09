@@ -1,14 +1,14 @@
 haplogrep3OUT: Download 17,830 mtDNA complete genomes in fasta format from NCBI and run through Haplogrep3.
 
 
-GetSpikes.py: Get n=10 for each of the 19 haplogroups of interest ["H","M","L3","L2","L0","L1","U","D","R","L4","T","F","A","C","J","N","G","E","W"].Get only high quality calls that are 1-16569. Makes Haplogroups.tsv. Takes in haplogrep3OUT.
+GetSpikes.py: Extract the 19 haplogroups of interest ["H","M","L3","L2","L0","L1","U","D","R","L4","T","F","A","C","J","N","G","E","W"].Get only high quality calls (>=0.90) that are 1-16569 in length. Makes Haplogroups.tsv. Takes in haplogrep3OUT. (n=11,477)
 
 
-#Put list of accession numbers into this site (Haplogroups.tsv). Generates single fasta with 190 seqs.  
+#Put list of 1,1477 accession numbers into this site (Haplogroups.tsv). Generates single fasta with 11,477 seqs.  
 https://www.ncbi.nlm.nih.gov/sites/batchentrez
 
 
-#Takes fasta from NCBI that has 190 seqs and makes a fasta for each seq. 
+#Takes fasta from NCBI that has 11,477 seqs and makes a fasta for each seq. 
 ```
 cat seqs.fa | awk '{
         if (substr($0, 1, 1)==">") {filename=(substr($1,2) ".fasta")}
