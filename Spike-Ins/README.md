@@ -21,9 +21,9 @@ cat seqs.fa | awk '{
 
 #For each fasta, combines with NC_012920.1.fasta (Revised Cambridge Reference Sequence (rCRS)), and performs MEGA alignment. Outputs meg and summary file. file.mao needed to MEGA specs. 
 ```
-cat fastas | while read i;do
-	cat NC_012920.1.fasta test/$i > Fastas/$i 
-	../tools/MEGA/megacc -a file.mao -d Fastas/$i
+cat fastaFiles | while read i;do
+	cat NC_012920.1.fasta fastas/$i > fastas2/$i 
+	../../tools/MEGA/megacc -a file.mao -d fastas2/$i
 done
 ```
 
