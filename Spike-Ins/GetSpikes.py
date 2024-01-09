@@ -14,7 +14,7 @@ df=df[(df["Quality"]>=0.90) & (df["Range"]=="1-16569")]
 dfH=[]
 for h in hGroups:
     #Get specific haplogroups
-    dfH.append(df[df["Haplogroup"].str.startswith(h)].head(10))
+    dfH.append(df[df["Haplogroup"].str.startswith(h)])
 
 
 
