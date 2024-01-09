@@ -40,7 +40,7 @@ of interest marked and everything else Ns.
 
 
 
-#SpikeinVCF.py: Takes in list of meg prefixes (one for each spike-in), meg, list of positions of interest, and a vcf that contain the positions of interest. Outputs VCF for each spike-in that has corresponding ALT positions marked;
+#SpikeinVCF.py: Takes in list of meg prefixes (one for each spike-in), meg, list of positions of interest, and a vcf that contain the positions of interest. Outputs VCF for each spike-in that has corresponding ALT and GT positions marked;
 * 1/1: "*" for deltion, or if ALT diff from REF.
 * 0/0: if ALT match REF, ALT is ".". 
 
