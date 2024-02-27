@@ -49,7 +49,15 @@ SpikeinVCF.py: Takes in list of meg prefixes (one for each spike-in), meg, list 
 haplogrepCompOUT: Haploghrep3 results from whole mtDNA (Haplogroups.tsv) combined with haplogrep results from positons of interest. 
 
 
-ConfPlot.py: Takes in haplogrepCompOUT and makes confusion matrix (ConfPlot.png). 
+ConfPlot.py: Takes in haplogrepCompOUT and makes confusion matrix (ConfPlot.png). Switch between % based and count based CM by switching the #s in ConfPlot.py. Below is the % based.  
+
+```
+#To make count based CM
+#cm = confusion_matrix(predicted,actual,labels=["H","M","L0","L1","L2","L3","L4","U","D","R","T","F","A","C","J","N","G","E","W"])
+#To make % based CM
+cm = confusion_matrix(predicted,actual,labels=["H","M","L0","L1","L2","L3","L4","U","D","R","T","F","A","C","J","N","G","E","W"],normalize="pred")
+cm=cm.round(decimals=2, out=None)
+```
 
 ![alt text](https://github.com/jahaltom/mtDNA-Pre-term-birth-association-/blob/main/Spike-Ins/ConfPlot.png?raw=true)
 
