@@ -45,9 +45,9 @@ actual=np.array(df["MainHapTrue"].tolist())
 
 predicted=np.array(df["MainHapPred"].tolist())
 
-#To make counts based CM
+#To make count based CM
 #cm = confusion_matrix(predicted,actual,labels=["H","M","L0","L1","L2","L3","L4","U","D","R","T","F","A","C","J","N","G","E","W"])
-#To make % pased CM
+#To make % based CM
 cm = confusion_matrix(predicted,actual,labels=["H","M","L0","L1","L2","L3","L4","U","D","R","T","F","A","C","J","N","G","E","W"],normalize="pred")
 cm=cm.round(decimals=2, out=None)
 
