@@ -62,3 +62,5 @@ cm=cm.round(decimals=2, out=None)
 ![alt text](https://github.com/jahaltom/mtDNA-Pre-term-birth-association-/blob/main/Spike-Ins/ConfPlot.png?raw=true)
 
 
+![alt text](https://github.com/jahaltom/mtDNA-Pre-term-birth-association-/blob/main/Spike-Ins/ConfPlot%25.png?raw=true)
+
