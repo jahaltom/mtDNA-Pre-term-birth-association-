@@ -42,10 +42,11 @@ SpikeinVCF.py: Takes in list of meg prefixes (one for each spike-in), meg, list 
 
 
 
-#run through Haplogrep3
+#run VCFs through Haplogrep3
 
-#11381 were able to have vcf called because some had NTs like Y.
-haplogrepCompOUT: Haploghrep3 results from whole mtDNA (Haplogroups.tsv) and positons of interest. 
+#Only 11,381/11,477 were able to have haplogroup called on vcf because some had NTs like Y.
+
+haplogrepCompOUT: Haploghrep3 results from whole mtDNA (Haplogroups.tsv) combined with haplogrep results from positons of interest. 
 
 
 ConfPlot.py: Takes in haplogrepCompOUT and makes confusion matrix (ConfPlot.png). 
