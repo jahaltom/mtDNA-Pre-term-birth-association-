@@ -27,21 +27,16 @@ cat fastaFiles | while read i;do
 done
 ```
 
-
-#SpikeinFasta.py: Takes in list of meg prefixes (one for each spike-in), meg, and list of positions of interest. Outputs fasta for each spike-in that has positions 
+#"FAILED"
+SpikeinFasta.py:  Takes in list of meg prefixes (one for each spike-in), meg, and list of positions of interest. Outputs fasta for each spike-in that has positions 
 of interest marked and everything else Ns. 
-
-
-
-#Combinbe fastas and run through Haplogrep3. Failed
-
+#Combinbe fastas and run through Haplogrep3. 
 
 
 
 
 
-
-#SpikeinVCF.py: Takes in list of meg prefixes (one for each spike-in), meg, list of positions of interest, and a vcf that contain the positions of interest. Outputs VCF for each spike-in that has corresponding ALT and GT positions marked;
+SpikeinVCF.py: Takes in list of meg prefixes (one for each spike-in), meg, list of positions of interest, and a vcf that contain the positions of interest. Outputs VCF for each spike-in that has corresponding ALT and GT positions marked;
 * GT=1/1: ALT "*" for deltion, or if ALT diff from REF.
 * GT=0/0: if ALT match REF (ALT will be "."). 
 
@@ -49,7 +44,7 @@ of interest marked and everything else Ns.
 
 #run through Haplogrep3
 
-
+#11381 were able to have vcf called because some had NTs like Y.
 haplogrepCompOUT: Haploghrep3 results from whole mtDNA (Haplogroups.tsv) and positons of interest. 
 
 
