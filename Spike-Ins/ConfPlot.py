@@ -45,14 +45,18 @@ actual=np.array(df["MainHapTrue"].tolist())
 
 predicted=np.array(df["MainHapPred"].tolist())
 
-cm = confusion_matrix(predicted,actual,labels=["H","M","L0","L1","L2","L3","L4","U","D","R","T","F","A","C","J","N","G","E","W"])
-
+#To make counts based CM
+#cm = confusion_matrix(predicted,actual,labels=["H","M","L0","L1","L2","L3","L4","U","D","R","T","F","A","C","J","N","G","E","W"])
+#To make % pased CM
+cm = confusion_matrix(predicted,actual,labels=["H","M","L0","L1","L2","L3","L4","U","D","R","T","F","A","C","J","N","G","E","W"],normalize="pred")
+cm=cm.round(decimals=2, out=None)
 
 sns.heatmap(cm, 
             annot=True,
             fmt='g', 
             xticklabels=["H","M","L0","L1","L2","L3","L4","U","D","R","T","F","A","C","J","N","G","E","W"],
             yticklabels=["H","M","L0","L1","L2","L3","L4","U","D","R","T","F","A","C","J","N","G","E","W"])
+sns.set(font_scale=0.5)
 plt.ylabel('Prediction',fontsize=13)
 plt.xlabel('Actual',fontsize=13)
 plt.title('Confusion Matrix',fontsize=17)
