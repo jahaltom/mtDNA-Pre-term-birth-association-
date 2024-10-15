@@ -1,16 +1,22 @@
+#!/bin/bash
+#SBATCH -N 1
+#SBATCH --ntasks-per-node 24
+#SBATCH -t 120:00:00
+#SBATCH --mail-user=haltomj@chop.edu
+#SBATCH --mail-type=ALL
+#SBATCH --mem=500G
+
+
+conda activate plink
+
 #Take in plink files and makes VCF
-plink --bfile momi5.clean --recode vcf --out clean
+plink --bfile plink2 --recode vcf --out plink2
 
-bgzip clean.vcf
+#bgzip plink2.vcf
 
 
-bcftools index clean.vcf.gz
-
-#Extract mtDNA SNPs
-bcftools view --types snps  --regions 26  clean.vcf.gz >  outmtDNA.vcf
-
+#bcftools index plink2.vcf
 
 #Makes ntDNA vcf for PCA.
-bcftools view --types snps -t ^26,25,23 -S samplesC.txt clean.vcf.gz   >  outntDNA_C.vcf
-bcftools view --types snps -t ^26,25,23 -S samplesM.txt clean.vcf.gz   >  outntDNA_M.vcf
-
+bcftools view --types snps -t ^26,24,23 -S child.txt plink2.vcf   >  plink2.C.vcf
+bcftools view --types snps -t ^26,24,23 -S mom.txt --force-samples plink2.vcf   >  plink2.M.vcf
