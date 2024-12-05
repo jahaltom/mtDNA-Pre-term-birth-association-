@@ -21,7 +21,7 @@ Use tree "rCRS PhyloTree 17.2" and  Kulczynski Distance function. Run this on ou
 ## Metadata curration
 MetadataMerge.py: 
 
-
+plink2VCF.sh
 
 ## PCA and MDS 
 
