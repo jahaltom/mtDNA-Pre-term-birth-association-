@@ -1,24 +1,5 @@
 # mtDNA Pre-term birtha association
 
-momi5.pheno: Phenotype file for each pregnancy. Each line is ether a child, mother, or child mother pair. 
-
-## Genrate mother and child specific ntDNA and mtDNA VCFs from plink files.
-
-### plink2VCF.sh
-Requires: 
-* momi5.clean.bed  momi5.clean.bim  momi5.clean.fam
-* samplesC.txt: 1909 children  IDs
-* samplesM.txt: 2176 mother IDs
-
-```
-conda activate plink
-
-bash plink2VCF.sh
-```
-Output VCFs will only contaion SNPs. 
-* outmtDNA.vcf (both mothers and children): Only mtDNA (chr26)
-* outntDNA_C.vcf for child and outntDNA_M.vcf for mother: Only autosomes (chr 1-22)
-  
 
 
 ## Run Haplogrep3 to assign haplogroups to samples.
@@ -38,10 +19,8 @@ Use tree "rCRS PhyloTree 17.2" and  Kulczynski Distance function. Run this on ou
 ```
 
 ## Metadata curration
-### MetadataMerge.py: 
-Combines Haplogrep3 output and momi5.pheno metadata.  Main and sub haplogroups are reported. The result is divided into 2 datasets (mother and child). For each population separately (African,South Asian), samples associated with a main and/or sub haplogroup <10 are marked in the "IsAtLeast10MainHap" and "IsAtLeast10SubHap" columns as False.
- 
-Outputs MetadataFinal.M.tsv for mother and MetadataFinal.C.tsv for child.
+MetadataMerge.py: 
+
 
 
 ## PCA and MDS 
