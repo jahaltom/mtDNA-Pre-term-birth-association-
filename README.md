@@ -48,18 +48,18 @@ Outputs MetadataFinal.M.tsv for mother and MetadataFinal.C.tsv for child.
 
 ```
 #Run plink PCA and MDS South Asian
-cat MetadataFinal.C.tsv | grep 'GAPPS-Bangladesh\|AMANHI-Pakistan\|AMANHI-Bangladesh'  | awk -F'\t' '{print $NF}'  > list
+cat Metadata.C.tsv | grep 'GAPPS-Bangladesh\|AMANHI-Pakistan\|AMANHI-Bangladesh'  | awk -F'\t' '{print $NF}'  > listC
 #Extract nt DNA SNPs for each sample in list
-bcftools view -S list plink2.C.vcf > plink2.C.SouthAsian.vcf
+bcftools view -S listC plink2.C.vcf > plink2.C.SouthAsian.vcf
 plink --vcf plink2.C.SouthAsian.vcf --pca --double-id --out SouthAsian_C
 plink --vcf plink2.C.SouthAsian.vcf --cluster --mds-plot 5 --double-id --out SouthAsian_C
 
 
 
 #Run plink PCA and MDS African
-cat MetadataFinal.C.tsv | grep 'AMANHI-Pemba\|GAPPS-Zambia\'  | awk -F'\t' '{print $NF}'  > list
+cat Metadata.C.tsv | grep 'AMANHI-Pemba\|GAPPS-Zambia\'  | awk -F'\t' '{print $NF}'  > listC
 #Extract nt DNA SNPs for each sample in list
-bcftools view -S list plink2.C.vcf > plink2.C.African.vcf
+bcftools view -S listC plink2.C.vcf > plink2.C.African.vcf
 plink --vcf plink2.C.African.vcf --pca --double-id --out African_C
 plink --vcf plink2.C.African.vcf --cluster --mds-plot 5 --double-id --out African_C
 
