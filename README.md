@@ -36,7 +36,7 @@ plink --vcf plink2.C.SouthAsian.vcf --cluster --mds-plot 5 --double-id --out Sou
 
 
 #Run plink PCA and MDS African
-cat Metadata.C.tsv | grep 'AMANHI-Pemba\|GAPPS-Zambia\'  | awk -F'\t' '{print $NF}'  > listC
+cat Metadata.C.tsv | grep 'AMANHI-Pemba\|GAPPS-Zambia'  | awk -F'\t' '{print $NF}'  > listC
 #Extract nt DNA SNPs for each sample in list
 bcftools view -S listC plink2.C.vcf > plink2.C.African.vcf
 plink --vcf plink2.C.African.vcf --pca --double-id --out African_C
