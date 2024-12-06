@@ -30,23 +30,23 @@ plink2VCF.sh
 cat Metadata.C.tsv | grep 'GAPPS-Bangladesh\|AMANHI-Pakistan\|AMANHI-Bangladesh'  | awk -F'\t' '{print $NF}'  > listC
 #Extract nt DNA SNPs for each sample in list
 bcftools view -S listC plink2.C.vcf > plink2.C.SouthAsian.vcf
-plink --vcf plink2.C.SouthAsian.vcf --pca --double-id --out SouthAsian_C
-plink --vcf plink2.C.SouthAsian.vcf --cluster --mds-plot 5 --double-id --out SouthAsian_C
-
+plink --vcf plink2.C.SouthAsian.vcf --pca --double-id --out PCA-MDS/SouthAsian_C
+plink --vcf plink2.C.SouthAsian.vcf --cluster --mds-plot 5 --double-id --out PCA-MDS/SouthAsian_C
+rm plink2.C.SouthAsian.vcf
 
 
 #Run plink PCA and MDS African
 cat Metadata.C.tsv | grep 'AMANHI-Pemba\|GAPPS-Zambia'  | awk -F'\t' '{print $NF}'  > listC
 #Extract nt DNA SNPs for each sample in list
 bcftools view -S listC plink2.C.vcf > plink2.C.African.vcf
-plink --vcf plink2.C.African.vcf --pca --double-id --out African_C
-plink --vcf plink2.C.African.vcf --cluster --mds-plot 5 --double-id --out African_C
-
+plink --vcf plink2.C.African.vcf --pca --double-id --out PCA-MDS/African_C
+plink --vcf plink2.C.African.vcf --cluster --mds-plot 5 --double-id --out PCA-MDS/African_C
+rm plink2.C.African.vcf
 
 #Run plink PCA and MDS All
-plink --vcf plink2.C.vcf --pca --double-id --out All_C
-plink --vcf plink2.C.vcf --cluster --mds-plot 5 --double-id --out All_C
-
+plink --vcf plink2.C.vcf --pca --double-id --out PCA-MDS/All_C
+plink --vcf plink2.C.vcf --cluster --mds-plot 5 --double-id --out PCA-MDS/All_C
+rm listC
 ```
 
 ## Combinbe MDS/PCA data with mother and child metadata.
