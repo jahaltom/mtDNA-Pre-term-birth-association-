@@ -1,7 +1,7 @@
-### Linear and logistic regression
+# Linear and logistic regression
 
 ## Extract sample size for each haplogroup across populations
-# Mother
+### Mother
 ```r
 df=read.table("Metadata.M.Final.tsv",header=TRUE,sep = '\t',quote="")
 
@@ -37,7 +37,7 @@ table(df[df$population=="SouthAsian",]$MainHap)
 
 
 
-# Child
+### Child
 
 
 ```r
