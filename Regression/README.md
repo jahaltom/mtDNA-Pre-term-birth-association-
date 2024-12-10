@@ -79,5 +79,5 @@ table(df[df$population=="SouthAsian",]$MainHap)
 
 
 ```r
- Rscript reg.r > out
+ Rscript reg.r > out.txt
 ```
