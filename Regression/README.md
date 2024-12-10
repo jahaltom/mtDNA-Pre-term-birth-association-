@@ -76,3 +76,8 @@ table(df[df$population=="SouthAsian",]$MainHap)
 
 
 # Use regression models to see population association with gestational age and pre-term birth (PTB)
+
+
+```r
+ Rscript reg.r > out
+```
