@@ -17,7 +17,7 @@ md = pd.read_csv("Metadata.M.Final.tsv",sep='\t')
 md.set_index('Sample_ID', inplace=True)
 md=md.astype(str)
 
-md=md[["PW_AGE",	"PW_EDUCATION",	"TYP_HOUSE",	"HH_ELECTRICITY",	"FUEL_FOR_COOK",	"DRINKING_SOURCE",	"TOILET",	"WEALTH_INDEX",	"SNIFF_TOBA",	"SNIFF_FREQ",	"SMOKE_HIST",	"SMOK_TYP",	"SMOK_FREQ",	"PASSIVE_SMOK",	"ALCOHOL",	
+md=md[["PW_AGE",	"PW_EDUCATION",	"TYP_HOUSE",	"HH_ELECTRICITY",	"FUEL_FOR_COOK",	"DRINKING_SOURCE",	"TOILET",	"WEALTH_INDEX",	"SNIFF_TOBA",	"SNIFF_FREQ",	"SMOKE_HIST",	"SMOK_FREQ",	"PASSIVE_SMOK",	"ALCOHOL",	
     "ALCOHOL_FREQ",	"CHRON_HTN",	"DIABETES",	"TB",	"THYROID",	"EPILEPSY",	"MAT_HEIGHT",	"BIRTH_WEIGHT",	"GAGEBRTH_IN", 	"PTB",	"Sex",	"MainHap",	"PC1_All",	"PC2_All",	"PC3_All",	"PC4_All",	"PC5_All",	"PC6_All",	"PC7_All",	
     "PC8_All",	"PC9_All",	"PC10_All",	"PC11_All",	"PC12_All",	"PC13_All",	"PC14_All",	"PC15_All",	"PC16_All",	"PC17_All",	"PC18_All",	"PC19_All",	"PC20_All",	"C1_All",	"C2_All",	"C3_All",	"C4_All",	"C5_All"]]
 
