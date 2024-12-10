@@ -69,21 +69,22 @@ model <- function(pop,ref,type,CoM) {
     
     
     
-    
-    print(c(pop,ref,CoM))
+    x=paste("Population:",pop, "Reference:", ref,"Child or Mother:", CoM,sep=" ")
+        
+    print(x)
     glm.fit=glm( pca , data=df  )
     print(summary (glm.fit ))
     
-    print(c(pop,ref,CoM))
+    print(x)
     glm.fit=glm( pcaBi , family="binomial", data=df  )
     print(summary (glm.fit ))
     
 
-    print(c(pop,ref,CoM))
+    print(x)
     glm.fit=glm( mds , data=df  )
     print(summary (glm.fit ))
     
-    print(c(pop,ref,CoM))
+    print(x)
     glm.fit=glm( mdsBi , family="binomial", data=df  )
     print(summary (glm.fit ))
     
