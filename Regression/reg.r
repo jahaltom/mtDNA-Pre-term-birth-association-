@@ -4,14 +4,14 @@ library(dplyr)
 
 df=read.table("Metadata.M.Final.tsv",header=TRUE,sep = '\t',quote="")
 print(c("Population GA","Mother"))
-glm.fit=glm(GAGEBRTH_IN~population , data=df  ) 
+glm.fit=glm(GAGEBRTH~population , data=df  ) 
 summary (glm.fit )
 print(c("Population PTB(binary)","Mother"))
 glm.fit=glm(PTB~population , family="binomial", data=df  )
 summary (glm.fit )
 
 print(c("Site GA","Mother"))
-glm.fit=glm(GAGEBRTH_IN~site , data=df  ) 
+glm.fit=glm(GAGEBRTH~site , data=df  ) 
 summary (glm.fit )
 print(c("Site PTB(binary)","Mother"))
 glm.fit=glm(PTB~site , family="binomial", data=df  )
@@ -20,14 +20,14 @@ summary (glm.fit )
         
 df=read.table("Metadata.C.Final.tsv",header=TRUE,sep = '\t',quote="")
 print(c("Population GA","Child"))
-glm.fit=glm(GAGEBRTH_IN~population , data=df  ) 
+glm.fit=glm(GAGEBRTH~population , data=df  ) 
 summary (glm.fit )
 print(c("Population PTB(binary)","Child"))
 glm.fit=glm(PTB~population , family="binomial", data=df  )
 summary (glm.fit )
 
 print(c("Site GA","Child"))
-glm.fit=glm(GAGEBRTH_IN~site , data=df  ) 
+glm.fit=glm(GAGEBRTH~site , data=df  ) 
 summary (glm.fit )
 print(c("Site PTB(binary)","Child"))
 glm.fit=glm(PTB~site , family="binomial", data=df  )
@@ -59,8 +59,8 @@ model <- function(pop,ref,type,CoM) {
     
     
     
-    pca=as.formula(paste("GAGEBRTH_IN ~ MainHap + PC1_", pop,"+ PC2_", pop, "+ PC3_", pop, "+ PC4_", pop, "+ PC5_", pop,sep=""))
-    mds=as.formula(paste("GAGEBRTH_IN ~ MainHap + C1_", pop,"+ C2_", pop, "+ C3_", pop, "+ C4_", pop, "+ C5_", pop,sep=""))
+    pca=as.formula(paste("GAGEBRTH ~ MainHap + PC1_", pop,"+ PC2_", pop, "+ PC3_", pop, "+ PC4_", pop, "+ PC5_", pop,sep=""))
+    mds=as.formula(paste("GAGEBRTH ~ MainHap + C1_", pop,"+ C2_", pop, "+ C3_", pop, "+ C4_", pop, "+ C5_", pop,sep=""))
     
         
     pcaBi=as.formula(paste("PTB ~ MainHap + PC1_", pop,"+ PC2_", pop, "+ PC3_", pop, "+ PC4_", pop, "+ PC5_", pop,sep=""))
