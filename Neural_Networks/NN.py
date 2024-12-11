@@ -5,7 +5,7 @@ import tensorflow as tf
 import shap
 import matplotlib.pyplot as plt
 import keras_tuner as kt
-
+import pickle
 #from tensorflow.keras import Sequential
 #from tensorflow.keras.layers import Dense, Dropout
 
@@ -14,18 +14,23 @@ import keras_tuner as kt
 
 # Load metadata
 md = pd.read_csv("Metadata.M.Final.tsv",sep='\t')
+
+md=md.dropna(subset=["PTB","GAGEBRTH"])
+
+
+
 md.set_index('Sample_ID', inplace=True)
 md=md.astype(str)
 
-md=md[["PW_AGE",	"PW_EDUCATION",	"TYP_HOUSE",	"HH_ELECTRICITY",	"FUEL_FOR_COOK",	"DRINKING_SOURCE",	"TOILET",	"WEALTH_INDEX",	"SNIFF_TOBA",	"SNIFF_FREQ",	"SMOKE_HIST",	"SMOK_FREQ",	"PASSIVE_SMOK",	"ALCOHOL",	
-    "ALCOHOL_FREQ",	"CHRON_HTN",	"DIABETES",	"TB",	"THYROID",	"EPILEPSY",	"MAT_HEIGHT",	"BIRTH_WEIGHT",	"GAGEBRTH_IN", 	"PTB",	"Sex",	"MainHap",	"PC1_All",	"PC2_All",	"PC3_All",	"PC4_All",	"PC5_All",	"PC6_All",	"PC7_All",	
-    "PC8_All",	"PC9_All",	"PC10_All",	"PC11_All",	"PC12_All",	"PC13_All",	"PC14_All",	"PC15_All",	"PC16_All",	"PC17_All",	"PC18_All",	"PC19_All",	"PC20_All",	"C1_All",	"C2_All",	"C3_All",	"C4_All",	"C5_All"]]
+md=md[["PW_AGE",        "PW_EDUCATION", "TYP_HOUSE",    "HH_ELECTRICITY",       "FUEL_FOR_COOK",        "DRINKING_SOURCE",      "TOILET",       "WEALTH_INDEX", "SNIFF_TOBA",   "SNIFF_FREQ",   "SMOKE_HIST",   "SMOK_FREQ",    "PASSIVE_SMOK", "ALCOHOL",
+    "ALCOHOL_FREQ",     "CHRON_HTN",    "DIABETES",     "TB",   "THYROID",      "EPILEPSY",     "MAT_HEIGHT",   "BIRTH_WEIGHT", "GAGEBRTH",  "PTB",  "Sex",  "MainHap",      "PC1_All",      "PC2_All",      "PC3_All",      "PC4_All",      "PC5_All",      "PC6_All",      "PC7_All",
+    "PC8_All",  "PC9_All",      "PC10_All",     "PC11_All",     "PC12_All",     "PC13_All",     "PC14_All",     "PC15_All",     "PC16_All",     "PC17_All",     "PC18_All",     "PC19_All",     "PC20_All",     "C1_All",       "C2_All",       "C3_All",       "C4_All",       "C5_All"]]
 
 
 
 
 
-#Catigorical 
+#Catigorical
 # One-hot encode haplogroups and gender
 data_encoded = pd.get_dummies(md, columns=['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
        'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK', 'ALCOHOL', 'CHRON_HTN',
@@ -40,7 +45,7 @@ data_encoded[cols]=data_encoded[cols].astype(int)
 
 
 # Select continuous columns
-continuous_columns = ['PW_AGE','ALCOHOL_FREQ',"SNIFF_FREQ", "SMOK_FREQ",'PW_EDUCATION', 'BIRTH_WEIGHT', 'MAT_HEIGHT','GAGEBRTH_IN',"PC1_All",	"PC2_All",	"PC3_All",	"PC4_All",	"PC5_All",	"PC6_All",	"PC7_All",  "PC8_All",	"PC9_All",	"PC10_All",	"PC11_All",	"PC12_All",	"PC13_All",	"PC14_All",	"PC15_All",	"PC16_All",	"PC17_All",	"PC18_All",	"PC19_All",	"PC20_All",	"C1_All",	"C2_All",	"C3_All",	"C4_All",	"C5_All"]
+continuous_columns = ['PW_AGE','ALCOHOL_FREQ',"SNIFF_FREQ", "SMOK_FREQ",'PW_EDUCATION', 'BIRTH_WEIGHT', 'MAT_HEIGHT','GAGEBRTH',"PC1_All",   "PC2_All",      "PC3_All",      "PC4_All",      "PC5_All",      "PC6_All",      "PC7_All",  "PC8_All",  "PC9_All",      "PC10_All",     "PC11_All",     "PC12_All",     "PC13_All",  "PC14_All",     "PC15_All",     "PC16_All",     "PC17_All",     "PC18_All",     "PC19_All",     "PC20_All",     "C1_All",       "C2_All",       "C3_All",       "C4_All",       "C5_All"]
 
 # Scale data to range [0, 1]
 scaler = MinMaxScaler()
@@ -49,14 +54,13 @@ data_encoded[continuous_columns] = scaler.fit_transform(data_encoded[continuous_
 print(data_encoded)
 
 
-data_encoded = data_encoded[data_encoded["PTB"] != "nan"]
-
+##########
 data_encoded[["PTB"]]= data_encoded[["PTB"]].astype(float).astype(int)
 
 
 
 # Features (X) and target (y)
-X = data_encoded.drop(["PTB","GAGEBRTH_IN"], axis=1)
+X = data_encoded.drop(["PTB","GAGEBRTH"], axis=1)
 y = data_encoded["PTB"]
 
 
@@ -145,8 +149,18 @@ print(f"Final Model Test Accuracy: {accuracy}")
 # Explain the model predictions using KernelExplainer
 explainer = shap.KernelExplainer(final_model, X_train)
 
-# Compute SHAP values for the test set
+
+# Compute SHAP values for the test set.   Use a lower nsamples value (e.g., 100 or 200) to save time, 
 shap_values = explainer.shap_values(X_test, nsamples=100)
+
+with open("shap_values.pkl", "wb") as file:
+    pickle.dump(shap_values, file)
+
+
+
+# # Load shap_values back
+# with open("shap_values.pkl", "rb") as file:
+#     loaded_shap_values = pickle.load(file)
 
 # Plot feature importance
 shap.summary_plot(shap_values, X_test)
@@ -154,7 +168,7 @@ plt.savefig("shap_summary_plot.sub.png", bbox_inches="tight")
 
 
 
-shap_values = shap_values.squeeze() 
+shap_values = shap_values.squeeze()
 
 #For individual predictions, use shap.force_plot:
 shap.force_plot(explainer.expected_value, shap_values[0], X_test.iloc[0])
