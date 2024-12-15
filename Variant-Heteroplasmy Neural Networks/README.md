@@ -4,7 +4,7 @@ bcftools view -i 'ALT!="."' merged_chrM_22175.vcf -o filtered.vcf
 plink --vcf filtered.vcf --max-maf 0.01 --recode vcf --out rare_variants
 ```
 
-```
+```python
 import cyvcf2
 import pandas as pd
 
