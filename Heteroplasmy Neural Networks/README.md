@@ -6,7 +6,7 @@ sed -i 's/NC_012920.1 Homo sapiens mitochondrion, complete genome/chrM/g' NC_012
 gatk CreateSequenceDictionary -R NC_012920.1.fasta
 ```
 
-#### USe GNU parallel to process bam files with GATK. Implements Mutect2 in mitocondrial mode and filters. allele frequency
+#### Use GNU parallel to process 15K bam files with GATK. Implements Mutect2 in mitocondrial mode and filters. For each bam file outputs allele frequency (heteroplasmy) calls.
 ```
         parallel --jobs 70 \
         """
