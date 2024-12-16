@@ -46,7 +46,7 @@ df_sorted.to_csv('data.csv', index=None)
 
 
  
-df_sorted=df
+
 
 cOm=["C","M"]
 
@@ -57,18 +57,18 @@ for f in cOm:
     cols=["Var"]+dfCM["SampleID"].to_list()+["POS"]
     
     existing_columns = [col for col in df_sorted if col in cols]
-    df_sorted = df_sorted[existing_columns]
+    df_filt = df_sorted[existing_columns]
 
-    per10=df_sorted[df_sorted.columns[1:df_sorted.shape[1]-1]].shape[1]*.10
+    per10=df_filt[df_filt.columns[1:df_filt.shape[1]-1]].shape[1]*.10
     # Condition: Remove rows where less than 10% columns are > 0  
-    df_sorted=df_sorted[(df_sorted[df_sorted.columns[1:df_sorted.shape[1]-1]] > 0).sum(axis=1) >= per10] 
+    df_filt=df_filt[(df_filt[df_filt.columns[1:df_filt.shape[1]-1]] > 0).sum(axis=1) >= per10] 
 
 
 
 
     # Step 1: Reshape df_freq into long format
-    df_long = pd.melt(df_sorted, id_vars=['Var', 'POS'], 
-                  value_vars=df_sorted.columns[1:df_sorted.shape[1]-1],
+    df_long = pd.melt(df_filt, id_vars=['Var', 'POS'], 
+                  value_vars=df_filt.columns[1:df_filt.shape[1]-1],
                   var_name='SampleID', value_name='Frequency')
 
 
@@ -143,7 +143,7 @@ for f in cOm:
     
     
     #Drop the 'POS' column if it's no longer needed
-    df = df_sorted.drop(columns='POS')
+    df = df_filt.drop(columns='POS')
     df = df.set_index('Var')
     df=df.T
     # Convert rownames (index) to a column
