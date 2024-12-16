@@ -59,7 +59,8 @@ for f in cOm:
     # Step 2: Merge with race metadata
     df_merged = df_long.merge(dfCM, on='SampleID')
 
-    ##########################################Population
+    df_merged.to_csv('forPlotting.csv', index=None,sep="\t")
+    ##########################################Population  
     # Step 3: Map colors to races
     race_to_color = {'SouthAsian': 'blue', 'African': 'green'}  # Define color mapping
     df_merged['Color'] = df_merged['population'].map(race_to_color)
@@ -79,7 +80,7 @@ for f in cOm:
     plt.title('Position vs Frequency Colored by population Metadata')
     plt.legend(title='population')
     plt.grid(True)
-    plt.xticks(np.linspace(0, 16568, 20))
+    plt.xticks(np.arange(0, 17001, 1000)) 
     # Show the plot
     plt.show()
     plt.savefig("Heteroplasmy."+f+".Population.png", bbox_inches="tight")
@@ -104,7 +105,7 @@ for f in cOm:
     plt.title('Position vs Frequency Colored by PTB Metadata')
     plt.legend(title='PTB')
     plt.grid(True)
-    plt.xticks(np.linspace(0, 16568, 20))
+    plt.xticks(np.arange(0, 17001, 1000))
     # Show the plot
     plt.show()
     plt.savefig("Heteroplasmy."+f+".PTB.png", bbox_inches="tight")
