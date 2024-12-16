@@ -1,4 +1,4 @@
- -S child.txt --force-samples plink2.vcf   >  plink2.C.vcf
+
 
 ```
 bcftools view -i 'ALT!="."'  -S child.txt --force-samples merged_chrM_22175.vcf -o filtered.C.vcf
