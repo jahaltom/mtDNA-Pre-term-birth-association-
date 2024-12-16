@@ -33,4 +33,11 @@ vcf = cyvcf2.VCF(vcf_path)
 
 variant_df.columns = [f"Variant_{v.POS}_{v.REF}>{", ".join(v.ALT)}" for v in vcf]
 variant_df.index = samples
+
+variant_df.index.name = 'SampleID'
+variant_df.reset_index(inplace=True)
+
+variant_df.to_csv('rare_variants.NN.tsv', index=None,sep='\t')
+
+
 ```
