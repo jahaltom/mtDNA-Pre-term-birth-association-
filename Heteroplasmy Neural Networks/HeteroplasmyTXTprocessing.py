@@ -2,6 +2,7 @@ import pandas as pd
 import glob
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
+import numpy as np
 
 # List all .txt files in the current directory
 txt_files = glob.glob("*.txt")
