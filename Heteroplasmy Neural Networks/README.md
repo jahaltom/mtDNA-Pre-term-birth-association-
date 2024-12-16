@@ -6,10 +6,11 @@ sed -i 's/NC_012920.1 Homo sapiens mitochondrion, complete genome/chrM/g' NC_012
 gatk CreateSequenceDictionary -R NC_012920.1.fasta
 ```
 
-#### USe GNU parallel to process  
+#### USe GNU parallel to process bam files with GATK. Implements Mutect2 in mitocondrial mode and filters. allele frequency
 ```
         parallel --jobs 70 \
-        """    
+        """
+          #Reheader bam to only have chrM. 
           cat {} | grep -E '^@HD|^@PG|^@RG|^@CO|^@SQ.*SN:chrM|^[^@]' |   /scr1/users/haltomj/tools/samtools-1.21/bin/samtools view -bo {.}.reheader.bam
           /scr1/users/haltomj/tools/samtools-1.21/bin/samtools sort {.}.reheader.bam -o {.}.reheader.sorted.bam
           /scr1/users/haltomj/tools/samtools-1.21/bin/samtools index {.}.reheader.sorted.bam
