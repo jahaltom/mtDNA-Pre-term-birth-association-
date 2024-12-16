@@ -6,7 +6,7 @@ plink --vcf filtered.C.vcf --max-maf 0.01 --recode vcf --out rare_variants_C
 rm filtered.C.vcf
 
 bcftools view -i 'ALT!="."'  -S mom.txt --force-samples merged_chrM_22175.vcf -o filtered.M.vcf
-plink --vcf filtered.C.vcf --max-maf 0.01 --recode vcf --out rare_variants_M
+plink --vcf filtered.M.vcf --max-maf 0.01 --recode vcf --out rare_variants_M
 rm filtered.M.vcf
 ```
 
