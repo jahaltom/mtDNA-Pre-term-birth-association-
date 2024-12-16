@@ -1,8 +1,13 @@
+ -S child.txt --force-samples plink2.vcf   >  plink2.C.vcf
 
 ```
-bcftools view -i 'ALT!="."' merged_chrM_22175.vcf -o filtered.vcf
-plink --vcf filtered.vcf --max-maf 0.01 --recode vcf --out rare_variants
-rm filtered.vcf
+bcftools view -i 'ALT!="."'  -S child.txt --force-samples merged_chrM_22175.vcf -o filtered.C.vcf
+plink --vcf filtered.C.vcf --max-maf 0.01 --recode vcf --out rare_variants_C
+rm filtered.C.vcf
+
+bcftools view -i 'ALT!="."'  -S mom.txt --force-samples merged_chrM_22175.vcf -o filtered.M.vcf
+plink --vcf filtered.C.vcf --max-maf 0.01 --recode vcf --out rare_variants_M
+rm filtered.M.vcf
 ```
 
 ```python
