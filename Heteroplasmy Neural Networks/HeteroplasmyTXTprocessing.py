@@ -43,26 +43,35 @@ df_sorted.to_csv('data.csv', index=None)
 
 
 
-      # Condition: Remove rows where less than 10 columns are > 0  
-df_sorted=df_sorted[(df_sorted[df_sorted.columns[1:df_sorted.shape[1]-1]] > 0).sum(axis=1) >= 100] 
-
-
-
-
-# Step 1: Reshape df_freq into long format
-df_long = pd.melt(df_sorted, id_vars=['Var', 'POS'], 
-                  value_vars=df_sorted.columns[1:df_sorted.shape[1]-1],
-                  var_name='SampleID', value_name='Frequency')
-
 
 
  
- 
+df_sorted=df
+
 cOm=["C","M"]
 
 for f in cOm:
     dfCM = pd.read_csv("Metadata."+f+".Final.tsv",sep='\t')
+
+    #Subset df to only have C or M
+    cols=["Var"]+dfCM["SampleID"].to_list()+["POS"]
     
+    existing_columns = [col for col in df_sorted if col in cols]
+    df_sorted = df_sorted[existing_columns]
+
+    per10=df_sorted[df_sorted.columns[1:df_sorted.shape[1]-1]].shape[1]*.10
+    # Condition: Remove rows where less than 10% columns are > 0  
+    df_sorted=df_sorted[(df_sorted[df_sorted.columns[1:df_sorted.shape[1]-1]] > 0).sum(axis=1) >= per10] 
+
+
+
+
+    # Step 1: Reshape df_freq into long format
+    df_long = pd.melt(df_sorted, id_vars=['Var', 'POS'], 
+                  value_vars=df_sorted.columns[1:df_sorted.shape[1]-1],
+                  var_name='SampleID', value_name='Frequency')
+
+
     # Step 2: Merge with race metadata
     df_merged = df_long.merge(dfCM, on='SampleID')
     
