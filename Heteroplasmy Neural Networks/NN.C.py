@@ -14,6 +14,7 @@ dfIN = pd.read_csv("HetroplasmyNN.C.tsv",sep='\t')
  
 # Load metadata
 md = pd.read_csv("Metadata.C.Final.tsv",sep='\t')[["SampleID","PTB"]]
+md=md.dropna(subset=["PTB"])
 md[["PTB"]]=md[["PTB"]].astype(int)
 
 
