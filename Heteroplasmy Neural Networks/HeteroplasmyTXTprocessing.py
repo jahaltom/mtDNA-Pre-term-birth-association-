@@ -64,7 +64,7 @@ for f in cOm:
     df_merged['Color'] = df_merged['population'].map(race_to_color)
     
     # Step 4: Plot the data
-    plt.figure(figsize=(20, 6))
+    plt.figure(figsize=(25, 6))
     
     # Scatter plot colored by race
     for race in df_merged['population'].unique():
@@ -78,7 +78,7 @@ for f in cOm:
     plt.title('Position vs Frequency Colored by population Metadata')
     plt.legend(title='population')
     plt.grid(True)
-    
+    plt.xticks(np.linspace(0, 16568, 20))
     # Show the plot
     plt.show()
     plt.savefig("Heteroplasmy."+f+".Population.png", bbox_inches="tight")
@@ -89,7 +89,7 @@ for f in cOm:
     df_merged['Color'] = df_merged['PTB'].map(ptb)
     
     # Step 4: Plot the data
-    plt.figure(figsize=(20, 6))
+    plt.figure(figsize=(25, 6))
     
     # Scatter plot colored by race
     for race in df_merged['PTB'].unique():
@@ -103,7 +103,7 @@ for f in cOm:
     plt.title('Position vs Frequency Colored by PTB Metadata')
     plt.legend(title='PTB')
     plt.grid(True)
-    
+    plt.xticks(np.linspace(0, 16568, 20))
     # Show the plot
     plt.show()
     plt.savefig("Heteroplasmy."+f+".PTB.png", bbox_inches="tight")
