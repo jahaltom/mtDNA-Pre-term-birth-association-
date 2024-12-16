@@ -2,13 +2,38 @@ library(ISLR)
 library(ggplot2)
 library(dplyr)
 
+
+stats <- function(model) {
+        # Get coefficients
+        coefficients <- coef(model)
+        # Compute odds ratios
+        odds_ratios <- exp(coefficients)
+        # Compute confidence intervals
+        conf_int <- confint(model)
+        # Exponentiate confidence intervals
+        odds_ratios_conf <- exp(conf_int)  
+        results <- cbind(odds_ratio = odds_ratios, lower_CI = odds_ratios_conf[, 1], upper_CI = odds_ratios_conf[, 2])
+        options(scipen = 999)
+        print(round(results,3))
+        options(scipen = 0)
+        }
+
+
+
+
+
+
 df=read.table("Metadata.M.Final.tsv",header=TRUE,sep = '\t',quote="")
+df$PTB <- factor(df$PTB)
+print(c("PTB levels ",levels(df$PTB)))
+
 print(c("Population GA","Mother"))
 glm.fit=glm(GAGEBRTH~population , data=df  ) 
 summary (glm.fit )
 print(c("Population PTB(binary)","Mother"))
 glm.fit=glm(PTB~population , family="binomial", data=df  )
 summary (glm.fit )
+stats(glm.fit)
 
 print(c("Site GA","Mother"))
 glm.fit=glm(GAGEBRTH~site , data=df  ) 
@@ -16,28 +41,33 @@ summary (glm.fit )
 print(c("Site PTB(binary)","Mother"))
 glm.fit=glm(PTB~site , family="binomial", data=df  )
 summary (glm.fit )
-
+stats(glm.fit)
         
 df=read.table("Metadata.C.Final.tsv",header=TRUE,sep = '\t',quote="")
+df$PTB <- factor(df$PTB)
+print(c("PTB levels ",levels(df$PTB)))
+
 print(c("Population GA","Child"))
 glm.fit=glm(GAGEBRTH~population , data=df  ) 
 summary (glm.fit )
 print(c("Population PTB(binary)","Child"))
 glm.fit=glm(PTB~population , family="binomial", data=df  )
 summary (glm.fit )
-
+stats(glm.fit)
 print(c("Site GA","Child"))
 glm.fit=glm(GAGEBRTH~site , data=df  ) 
 summary (glm.fit )
 print(c("Site PTB(binary)","Child"))
 glm.fit=glm(PTB~site , family="binomial", data=df  )
 summary (glm.fit )
-
+stats(glm.fit)
 
 model <- function(pop,ref,type,CoM) {
     
     df=read.table(paste("Metadata.",CoM,".Final.tsv",sep=""),header=TRUE,sep = '\t',quote="")
-    
+    df$PTB <- factor(df$PTB)
+    print(c("PTB levels ",levels(df$PTB)))
+        
     if (type == 1) {
 
     } else {
@@ -78,7 +108,7 @@ model <- function(pop,ref,type,CoM) {
     print(x)
     glm.fit=glm( pcaBi , family="binomial", data=df  )
     print(summary (glm.fit ))
-    
+    stats(glm.fit)
 
     print(x)
     glm.fit=glm( mds , data=df  )
@@ -87,7 +117,7 @@ model <- function(pop,ref,type,CoM) {
     print(x)
     glm.fit=glm( mdsBi , family="binomial", data=df  )
     print(summary (glm.fit ))
-    
+    stats(glm.fit)
    
 }   
 
