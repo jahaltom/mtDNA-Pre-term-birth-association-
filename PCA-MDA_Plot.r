@@ -27,7 +27,7 @@ for (s in sets){
         
             # Create PC1 vs PC2 scatter plot with color by region
             ggplot(md, aes(x = md[[paste("PC1_",p,sep="")]], y = md[[paste("PC2_",p,sep="")]], color = md[[f]])) +
-              geom_point(size = 3, alpha = 0.8) +  # Scatter plot points
+              geom_point(size = 1, alpha = 0.8) +  # Scatter plot points
               labs(
                 title = "PC1 vs PC2",
                 x = paste0("PC1 (", round(pc_percentage[1],1)[1,], "% variance)"),
@@ -40,7 +40,7 @@ for (s in sets){
             
             # Create PC1 vs PC2 scatter plot with color by region
             ggplot(md, aes(x = md[[paste("C1_",p,sep="")]], y = md[[paste("C2_",p,sep="")]], color = md[[f]])) +
-              geom_point(size = 3, alpha = 0.8) +  # Scatter plot points
+              geom_point(size = 1, alpha = 0.8) +  # Scatter plot points
               labs(
                 title = "C1 vs C2",
                 x = paste0("C1"),
