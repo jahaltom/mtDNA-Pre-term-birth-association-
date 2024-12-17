@@ -28,8 +28,6 @@ md=md[["PW_AGE",        "PW_EDUCATION", "TYP_HOUSE",    "HH_ELECTRICITY",       
 
 
 
-
-
 #Catigorical
 # One-hot encode haplogroups and gender
 data_encoded = pd.get_dummies(md, columns=['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
@@ -37,21 +35,25 @@ data_encoded = pd.get_dummies(md, columns=['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_
        'DIABETES', 'TB', 'THYROID', 'EPILEPSY',
         'Sex', 'MainHap',"SNIFF_TOBA","SMOKE_HIST"])
 
-print(data_encoded)
-
-cols=[ 'TYP_HOUSE_-77.0', 'TYP_HOUSE_-88.0', 'TYP_HOUSE_1.0', 'TYP_HOUSE_2.0', 'HH_ELECTRICITY_-77.0', 'HH_ELECTRICITY_-88.0', 'HH_ELECTRICITY_0.0', 'HH_ELECTRICITY_1.0', 'FUEL_FOR_COOK_-77.0', 'FUEL_FOR_COOK_-88.0', 'FUEL_FOR_COOK_1.0', 'FUEL_FOR_COOK_2.0', 'FUEL_FOR_COOK_3.0', 'FUEL_FOR_COOK_4.0', 'FUEL_FOR_COOK_5.0', 'DRINKING_SOURCE_-77.0', 'DRINKING_SOURCE_-88.0', 'DRINKING_SOURCE_1.0', 'DRINKING_SOURCE_2.0', 'DRINKING_SOURCE_3.0', 'DRINKING_SOURCE_4.0', 'TOILET_-77.0', 'TOILET_-88.0', 'TOILET_1.0', 'TOILET_2.0', 'TOILET_3.0', 'TOILET_4.0', 'WEALTH_INDEX_-77.0', 'WEALTH_INDEX_-88.0', 'WEALTH_INDEX_1.0', 'WEALTH_INDEX_2.0', 'WEALTH_INDEX_3.0', 'WEALTH_INDEX_4.0', 'WEALTH_INDEX_5.0', 'PASSIVE_SMOK_-77.0', 'PASSIVE_SMOK_0.0', 'PASSIVE_SMOK_1.0', 'ALCOHOL_-77.0', 'ALCOHOL_1.0', 'ALCOHOL_2.0', 'ALCOHOL_4.0', 'CHRON_HTN_-77.0', 'CHRON_HTN_-88.0', 'CHRON_HTN_0.0', 'CHRON_HTN_1.0', 'DIABETES_-77.0', 'DIABETES_-88.0', 'DIABETES_0.0', 'DIABETES_1.0', 'TB_-77.0', 'TB_-88.0', 'TB_0.0', 'TB_1.0', 'THYROID_-77.0', 'THYROID_-88.0', 'THYROID_0.0', 'THYROID_1.0', 'EPILEPSY_-77.0', 'EPILEPSY_-88.0', 'EPILEPSY_0.0', 'EPILEPSY_1.0', 'Sex_2.0', 'Sex_nan', 'MainHap_A', 'MainHap_B', 'MainHap_C', 'MainHap_D', 'MainHap_E', 'MainHap_F', 'MainHap_G', 'MainHap_H', 'MainHap_HV', 'MainHap_I', 'MainHap_J', 'MainHap_K', 'MainHap_L0', 'MainHap_L1', 'MainHap_L2', 'MainHap_L3', 'MainHap_L4', 'MainHap_L5', 'MainHap_M', 'MainHap_N', 'MainHap_R', 'MainHap_T', 'MainHap_U', 'MainHap_W', 'MainHap_X', 'MainHap_Z', 'SNIFF_TOBA_-77.0', 'SNIFF_TOBA_-88.0', 'SNIFF_TOBA_1.0', 'SNIFF_TOBA_2.0', 'SNIFF_TOBA_3.0', 'SNIFF_TOBA_4.0', 'SMOKE_HIST_-77.0', 'SMOKE_HIST_-88.0', 'SMOKE_HIST_1.0', 'SMOKE_HIST_2.0', 'SMOKE_HIST_3.0', 'SMOKE_HIST_4.0']
-data_encoded[cols]=data_encoded[cols].astype(int)
-
 
 
 # Select continuous columns
 continuous_columns = ['PW_AGE','ALCOHOL_FREQ',"SNIFF_FREQ", "SMOK_FREQ",'PW_EDUCATION', 'BIRTH_WEIGHT', 'MAT_HEIGHT','GAGEBRTH',"PC1_All",   "PC2_All",      "PC3_All",      "PC4_All",      "PC5_All",      "PC6_All",      "PC7_All",  "PC8_All",  "PC9_All",      "PC10_All",     "PC11_All",     "PC12_All",     "PC13_All",  "PC14_All",     "PC15_All",     "PC16_All",     "PC17_All",     "PC18_All",     "PC19_All",     "PC20_All",     "C1_All",       "C2_All",       "C3_All",       "C4_All",       "C5_All"]
 
+
 # Scale data to range [0, 1]
 scaler = MinMaxScaler()
 data_encoded[continuous_columns] = scaler.fit_transform(data_encoded[continuous_columns])
 
-print(data_encoded)
+
+ 
+
+cols=data_encoded.drop(columns=continuous_columns+["PTB"]).columns
+data_encoded[cols]=data_encoded[cols].astype(int)
+
+
+
+
 
 
 ##########
@@ -141,6 +143,19 @@ print(f"Final Model Test Accuracy: {accuracy}")
 
 
 
+explainer = shap.Explainer(final_model, X_train)
+shap_values = explainer.shap_values(X_test)
+
+
+
+
+# Plot feature importance
+shap.summary_plot(shap_values, X_test)
+plt.savefig("shap_summary_plot.sub.M.png", bbox_inches="tight")
+plt.clf()
+
+
+
 
 
 
@@ -148,12 +163,11 @@ print(f"Final Model Test Accuracy: {accuracy}")
 
 # Explain the model predictions using KernelExplainer
 explainer = shap.KernelExplainer(final_model, X_train)
-
-
 # Compute SHAP values for the test set.   Use a lower nsamples value (e.g., 100 or 200) to save time, 
 shap_values = explainer.shap_values(X_test, nsamples=100)
 
-with open("shap_values.pkl", "wb") as file:
+
+with open("shap_values.M.pkl", "wb") as file:
     pickle.dump(shap_values, file)
 
 
@@ -162,42 +176,32 @@ with open("shap_values.pkl", "wb") as file:
 # with open("shap_values.pkl", "rb") as file:
 #     loaded_shap_values = pickle.load(file)
 
+
 # Plot feature importance
 shap.summary_plot(shap_values, X_test)
-plt.savefig("shap_summary_plot.sub.png", bbox_inches="tight")
-
-
-
-shap_values = shap_values.squeeze()
-
-#For individual predictions, use shap.force_plot:
-shap.force_plot(explainer.expected_value, shap_values[0], X_test.iloc[0])
-plt.savefig("shap_force_plot.sub.png", bbox_inches="tight")
-
-
-
-#Understand interactions between features and predictions:
-shap.dependence_plot("HH_ELECTRICITY_0", shap_values, X_test)
-plt.savefig("shap_dependence_plot.sub.png", bbox_inches="tight")
+plt.savefig("shap_summary_plot.sub.Kernal.M.png", bbox_inches="tight")
+plt.clf()
 
 
 
 
+
+
+# shap_values = shap_values.squeeze()
+
+# #For individual predictions, use shap.force_plot:
+# shap.force_plot(explainer.expected_value, shap_values[0], X_test.iloc[0])
+# plt.savefig("shap_force_plot.sub.png", bbox_inches="tight")
+# plt.clf()
+
+
+# #Understand interactions between features and predictions:
+# shap.dependence_plot("HH_ELECTRICITY_0", shap_values, X_test)
+# plt.savefig("shap_dependence_plot.sub.png", bbox_inches="tight")
+# plt.clf()
 
 
 
 
 
 #Cross-Validation
-
-
-
-
-
-
-
-
-
-
-
-
