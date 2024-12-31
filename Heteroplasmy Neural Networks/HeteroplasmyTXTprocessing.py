@@ -103,7 +103,7 @@ for f in cOm:
     # Step 2: Merge with race metadata
     df_merged = df_long.merge(dfCM, on='SampleID')
     
-    df_merged.to_csv('forPlotting.'+f+'csv', index=None,sep="\t")
+    df_merged.to_csv('forPlotting.'+f+'.csv', index=None,sep="\t")
     
     
     
