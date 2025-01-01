@@ -80,7 +80,7 @@ df_sorted = df_sorted.fillna(0)
 cOm=["C","M"]
 
 for f in cOm:
-    dfCM = pd.read_csv("/scr1/users/haltomj/PTB/heteroplasmy/Metadata."+f+".Final.tsv",sep='\t')
+    dfCM = pd.read_csv("Metadata."+f+".Final.tsv",sep='\t')
     
     #Subset df to only have C or M
     cols=["Var"]+dfCM["SampleID"].to_list()+["POS"]
