@@ -58,7 +58,7 @@ rm listC
 
 ## Combine PCA/MDS results with metadata. 
 ### CombinePCA-MDS.py: 
-Takes in eigenvec and mds files and adds this data to (Metadata.M.Weibull.tsv Metadata.C.Weibull.tsv). Outputs ("Metadata.M.Final.tsv" anbd "Metadata.C.Final.tsv"). 
+Takes in eigenvec and mds files and adds this data to (Metadata.M.Weibull.tsv Metadata.C.Weibull.tsv). Outputs ("Metadata.M.Final.tsv" and "Metadata.C.Final.tsv"). 
 
 
 
