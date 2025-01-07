@@ -43,5 +43,12 @@ plink --vcf plink2.C.vcf --cluster --mds-plot 5 --double-id --out PCA-MDS/All_C
 rm listC
 ```
 
+## Combine PCA/MDS results with metadata. 
+### CombinePCA-MDS.py: 
+Takes in eigenvec and mds files and adds this data to (Metadata.C.tsv and Metadata.M.tsv). Outputs ("Metadata.M.Final.tsv" anbd "Metadata.C.Final.tsv"). 
+
+
+
+
 ## Outlier removal with Weibull
 ### WeibullFiltering.py:
