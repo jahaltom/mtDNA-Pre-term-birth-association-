@@ -22,6 +22,8 @@ Outputs (Metadata.M.Weibull.tsv Metadata.C.Weibull.tsv).
 Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.M.png weibullFiltering.C.png).
 Also outputs C.txt and M.txt which are subset from (Metadata.M.Weibull.tsv Metadata.C.Weibull.tsv) and used for sample selection in plink2VCF.sh.
 
+C: Lower Cutoff: 232.24832311358944, Upper Cutoff: 297.5082654877975
+M: Lower Cutoff: 229.40491328561183, Upper Cutoff: 298.6448367835414
 
 
 ### plink2VCF.sh: 
