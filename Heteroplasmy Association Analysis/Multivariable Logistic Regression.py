@@ -7,23 +7,29 @@ from statsmodels.stats.multitest import multipletests
 
 #################################################Multivariable Logistic Regression
 
-dfIN = pd.read_csv("HetroplasmyNN.C.tsv",sep='\t')
+dfIN = pd.read_csv("HetroplasmyNN.M.tsv",sep='\t')
 
 
-continuous_columns=dfIN.drop(["SampleID"], axis=1).columns.to_list()
-
-# Assuming `vaf_matrix` is your matrix of variant allele frequencies
-scaler = StandardScaler()
-dfIN[continuous_columns] = scaler.fit_transform(dfIN[continuous_columns])
-
- 
 # Load metadata
-md = pd.read_csv("Metadata.C.Final.tsv",sep='\t')[["SampleID","PTB"]]
+md = pd.read_csv("Metadata.M.Final.Weibull.tsv")[["SampleID","PTB", 'PC1_All', 'PC2_All', 'PC3_All', 'PC4_All', 'PC5_All','BABY_SEX','PW_AGE']]
 md=md.dropna(subset=["PTB"])
 md[["PTB"]]=md[["PTB"]].astype(int)
 
+md = md[(md["BABY_SEX"] != -77.0) & (md["PW_AGE"] != -77.0)]
+md["BABY_SEX"] = md["BABY_SEX"].astype(int)
 
 data_encoded=pd.merge(dfIN,md,on=["SampleID"])
+
+
+continuous_columns=data_encoded.drop(["SampleID","PTB","BABY_SEX"], axis=1).columns.to_list()
+
+# Assuming `vaf_matrix` is your matrix of variant allele frequencies
+scaler = StandardScaler()
+data_encoded[continuous_columns] = scaler.fit_transform(data_encoded[continuous_columns])
+
+
+
+
 
 # Features (X) and target (y)
 X = data_encoded.drop(["PTB","SampleID"], axis=1)
