@@ -23,7 +23,7 @@ for s in sets:
         dfComb.append(df)                
     dfComb = reduce(lambda left, right: pd.merge(left, right, on="FID",how="left"), dfComb)
     dfComb = dfComb.rename(columns={"FID":"Sample_ID"})
-    md = pd.read_csv("Metadata."+s+".tsv",sep='\t')    
+    md = pd.read_csv("Metadata."+s+".Weibull.tsv",sep='\t')  
     dfFinal=pd.merge(md,dfComb,on=["Sample_ID"])     
     sa=["GAPPS-Bangladesh","AMANHI-Pakistan","AMANHI-Bangladesh"]
     afr=["AMANHI-Pemba","GAPPS-Zambia"]  
