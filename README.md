@@ -19,9 +19,11 @@ Use tree "rCRS PhyloTree 17.2" and  Kulczynski Distance function. Run this on ou
 ```
 
 ## Metadata curration
-MetadataMerge.py: 
+MetadataMerge.py: Takes in Haplogrep3 output and metadata files (momi_combined_data.txt and samples.tab) and performs merge. Filters for only high quality haplogroup calls "Quality">=0.9 and only live births "PREG_OUTCOME"==2. Identifies main and sub haplogroups. 
+Seperates mother and child in dataset, then filters to include only main haplogroups with at least 10 occurrences. Writes two tsvs (Metadata.C.tsv and Metadata.M.tsv). Also outputs child.txt and mom.txt which are subset from (Metadata.C.tsv and Metadata.M.tsv) and used for sample selection  plink2VCF.sh.
 
-plink2VCF.sh
+
+plink2VCF.sh: 
 
 ## PCA and MDS 
 
