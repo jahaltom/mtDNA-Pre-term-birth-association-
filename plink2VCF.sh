@@ -18,5 +18,5 @@ plink --bfile plink2 --recode vcf --out plink2
 #bcftools index plink2.vcf
 
 #Makes ntDNA vcf for PCA.
-bcftools view --types snps -t ^26,24,23 -S child.txt --force-samples plink2.vcf   >  plink2.C.vcf
-bcftools view --types snps -t ^26,24,23 -S mom.txt --force-samples plink2.vcf   >  plink2.M.vcf
+bcftools view --types snps -t ^26,24,23 -S C.txt --force-samples plink2.vcf   >  plink2.C.vcf
+bcftools view --types snps -t ^26,24,23 -S M.txt --force-samples plink2.vcf   >  plink2.M.vcf
