@@ -6,7 +6,7 @@ from scipy.stats import weibull_min
 CoM=["C","M"]
 for i in CoM:
   # Load metadata
-  md = pd.read_csv("Metadata."+i+".Final.tsv",sep='\t')
+  md = pd.read_csv("Metadata."+i+".tsv",sep='\t')
   md=md.dropna(subset=["GAGEBRTH"])
   
   
@@ -26,7 +26,7 @@ for i in CoM:
   filtered_data = md[(md["GAGEBRTH"] >= lower_cutoff) & (md["GAGEBRTH"] <= upper_cutoff)]
   
   
-  filtered_data.to_csv('Metadata."+i+".Final.Weibull.tsv', index=False) 
+  filtered_data.to_csv('Metadata."+i+".Weibull.tsv', index=False) 
   
   
   
