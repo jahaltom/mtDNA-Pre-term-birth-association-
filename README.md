@@ -13,15 +13,16 @@ Use tree "rCRS PhyloTree 17.2" and  Kulczynski Distance function. Run this on me
 ## Metadata curration, filtering, and conversion. 
 ### MetadataMerge.py: 
 Takes in Haplogrep3 output and metadata files (momi_combined_data.txt and samples.tab) and performs merge. Filters for only high quality haplogroup calls "Quality">=0.9 and only live births "PREG_OUTCOME"==2. Identifies main and sub haplogroups. 
-Seperates mother and child in dataset, then filters to include only main haplogroups with at least 10 occurrences. Writes two tsvs (Metadata.C.tsv and Metadata.M.tsv). Also outputs child.txt and mom.txt which are subset from (Metadata.C.tsv and Metadata.M.tsv) and used for sample selection  plink2VCF.sh.
-
+Seperates mother and child in dataset, then filters to include only main haplogroups with at least 10 occurrences. Writes two tsvs (Metadata.C.tsv and Metadata.M.tsv). 
 
 ## Outlier removal with Weibull
 ### WeibullFiltering.py:
 Takes in (Metadata.C.tsv and Metadata.M.tsv) and removes samples where GA "GAGEBRTH" is na. Fit the Weibull distribution to the data and defines cutoff thresholds for outlier detection (upper/lower GA in days ...1st percentile and 99th percentile). Filter the data on these threshholds. 
 Outputs (Metadata.M.Weibull.tsv Metadata.C.Weibull.tsv).
 Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.M.png weibullFiltering.C.png).
-    
+Also outputs C.txt and M.txt which are subset from (Metadata.M.Weibull.tsv Metadata.C.Weibull.tsv) and used for sample selection in plink2VCF.sh.
+
+
 
 ### plink2VCF.sh: 
 Takes in plink files and makes vcfs. Selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (child.txt and mom.txt). Outputs two vcfs (plink2.C.vcf and plink2.M.vcf) that will used below. 
