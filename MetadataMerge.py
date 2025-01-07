@@ -90,14 +90,14 @@ dfC = dfC[dfC['MainHap'].isin(category_counts[category_counts >= 10].index)]
 
 dfC["Sample_ID"]=("0_"+dfC["SampleID"])
 dfC.to_csv("Metadata.C.tsv", index=False, sep='\t')  
-pd.DataFrame("0_"+dfC["SampleID"]).to_csv("child.txt", index=False, sep='\t',header=False)  
+
 
 
 
 
 dfM["Sample_ID"]=("0_"+dfM["SampleID"])
 dfM.to_csv("Metadata.M.tsv", index=False, sep='\t')  
-pd.DataFrame("0_"+dfM["SampleID"]).to_csv("mom.txt", index=False, sep='\t',header=False)  
+
 
 
 
