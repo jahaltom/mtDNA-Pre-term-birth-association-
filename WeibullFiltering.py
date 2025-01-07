@@ -27,7 +27,7 @@ for i in CoM:
   
   
   filtered_data.to_csv('Metadata."+i+".Weibull.tsv', index=False) 
-  filtered_data[["Sample_ID"]].to_csv(i".txt", index=False) 
+  filtered_data[["Sample_ID"]].to_csv(i+".txt", index=False) 
   
   
   # Step 4: Plot the original data, filtered data, and Weibull distribution
