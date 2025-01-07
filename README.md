@@ -1,21 +1,13 @@
-# mtDNA Pre-term birtha association
+# mtDNA Pre-term birth association
 
 
 
 ## Run Haplogrep3 to assign haplogroups to samples.
 
-
-Install Haplogrep3
-```
-wget https://github.com/genepi/haplogrep3/releases/download/v3.2.1/haplogrep3-3.2.1-linux.zip
-unzip haplogrep3-3.2.1-linux.zip
+Use tree "rCRS PhyloTree 17.2" and  Kulczynski Distance function. Run this on merged_chrM_22175.vcf. Outputs haplogroups to haplogrep3OUT_22175. 
 
 ```
-
-Use tree "rCRS PhyloTree 17.2" and  Kulczynski Distance function. Run this on outmtDNA.vcf. Outputs haplogroups to haplogrep3OUT. 
-
-```
-./haplogrep3 classify  --extend-report --tree phylotree-rcrs@17.2 --in outmtDNA.vcf --out haplogrep3OUT
+./haplogrep3 classify  --extend-report --tree phylotree-rcrs@17.2 --in merged_chrM_22175.vcf --out haplogrep3OUT_22175
 ```
 
 ## Metadata curration
@@ -30,7 +22,7 @@ Takes in plink files and makes vcfs. Selects for only snps, excludes chrs (x,y,a
 
 
 ## PCA and MDS 
-
+Generates PCs and MDS clusters for (plink2.C.vcf and plink2.M.vcf). Does this across all data (All) and South Asian/African seperatly. Below is for the plink2.C.vcf data only. To do the plink2.M.vcf, just swap C and M. 
 ```
 #Run plink PCA and MDS South Asian
 cat Metadata.C.tsv | grep 'GAPPS-Bangladesh\|AMANHI-Pakistan\|AMANHI-Bangladesh'  | awk -F'\t' '{print $NF}'  > listC
@@ -54,4 +46,4 @@ plink --vcf plink2.C.vcf --pca --double-id --out PCA-MDS/All_C
 plink --vcf plink2.C.vcf --cluster --mds-plot 5 --double-id --out PCA-MDS/All_C
 rm listC
 ```
-
+### WeibullFiltering.py
