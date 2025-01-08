@@ -34,7 +34,7 @@ Takes in plink files and makes vcfs. Selects for only snps, excludes chrs (x,y,a
 Generates PCs and MDS clusters for (plink2.C.vcf and plink2.M.vcf). Does this across all data (All) and South Asian/African seperatly. Below is for the plink2.C.vcf data only. To do the plink2.M.vcf, just swap C and M. 
 ```
 #Run plink PCA and MDS South Asian
-cat Metadata.C.tsv | grep 'GAPPS-Bangladesh\|AMANHI-Pakistan\|AMANHI-Bangladesh'  | awk -F'\t' '{print $NF}'  > listC
+cat Metadata.C.Weibull.tsv | grep 'GAPPS-Bangladesh\|AMANHI-Pakistan\|AMANHI-Bangladesh'  | awk -F'\t' '{print $NF}'  > listC
 #Extract nt DNA SNPs for each sample in list
 bcftools view -S listC plink2.C.vcf > plink2.C.SouthAsian.vcf
 plink --vcf plink2.C.SouthAsian.vcf --pca --double-id --out PCA-MDS/SouthAsian_C
@@ -43,7 +43,7 @@ rm plink2.C.SouthAsian.vcf
 
 
 #Run plink PCA and MDS African
-cat Metadata.C.tsv | grep 'AMANHI-Pemba\|GAPPS-Zambia'  | awk -F'\t' '{print $NF}'  > listC
+cat Metadata.C.Weibull.tsv | grep 'AMANHI-Pemba\|GAPPS-Zambia'  | awk -F'\t' '{print $NF}'  > listC
 #Extract nt DNA SNPs for each sample in list
 bcftools view -S listC plink2.C.vcf > plink2.C.African.vcf
 plink --vcf plink2.C.African.vcf --pca --double-id --out PCA-MDS/African_C
