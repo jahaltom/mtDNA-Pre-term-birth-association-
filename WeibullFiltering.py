@@ -26,7 +26,7 @@ for i in CoM:
   filtered_data = md[(md["GAGEBRTH"] >= lower_cutoff) & (md["GAGEBRTH"] <= upper_cutoff)]
   
   
-  filtered_data.to_csv('Metadata.'+i+'.Weibull.tsv', index=False, sep="/t") 
+  filtered_data.to_csv('Metadata.'+i+'.Weibull.tsv', index=False, sep="\t") 
   filtered_data[["Sample_ID"]].to_csv(i+".txt", index=False,header=False) 
   
   
