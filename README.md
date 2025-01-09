@@ -64,4 +64,4 @@ Takes in eigenvec and mds files and adds this data to (Metadata.M.Weibull.tsv Me
 
 ## Plotting
 ### PCA-MDA_Plot.r:
-
+Takes in Metadata.M.Final.tsv, Metadata.C.Final.tsv, and eigenval, and makes PCA/MDS plots. Lables Main/Sub haplogroup and site. Does this for All populations, african only, and south asian only. Also splits data by child/mother. 
