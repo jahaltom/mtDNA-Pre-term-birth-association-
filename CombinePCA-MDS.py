@@ -12,10 +12,10 @@ for s in sets:
     pops=["All","African","SouthAsian"] 
     for p in pops:
         header=["FID","IID"]+[f"PC{i}"+"_"+p for i in range(1, 21)]
-        pca = pd.read_csv(p+"_"+s+".eigenvec",sep='\s+',header=None)
+        pca = pd.read_csv("PCA-MDS/"+p+"_"+s+".eigenvec",sep='\s+',header=None)
         pca.columns=header
         pca = pca.drop(columns=['IID'])
-        mds = pd.read_csv(p+"_"+s+".mds",sep='\s+')
+        mds = pd.read_csv("PCA-MDS/"+p+"_"+s+".mds",sep='\s+')
         mds = mds.drop(columns=['IID','SOL'])
         mds.columns=mds.columns + "_" + p
         mds = mds.rename(columns={"FID_" + p: "FID"})
