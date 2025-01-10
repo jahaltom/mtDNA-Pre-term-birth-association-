@@ -9,7 +9,7 @@ import numpy as np
 md=pd.read_csv('samples.tab',sep='\t')  
 md = md.rename(columns={'id': 'SampleID'})
 
-haplo=pd.read_csv('haplogrep3OUT_22175',sep='\t')  
+haplo=pd.read_csv('/scr1/users/haltomj/PTB/haplogrep3OUT_22175',sep='\t')  
 haplo=pd.merge(md,haplo,on=["SampleID"])
 
 haplo=haplo.drop_duplicates(subset=['Subject_ID'])
@@ -22,7 +22,7 @@ haplo=haplo.drop_duplicates(subset=['Subject_ID'])
 
 
 #Read in other metadata 
-md=pd.read_csv('momi_combined_data.txt',sep='\t')  
+md=pd.read_csv('/scr1/users/haltomj/PTB/MOMI_derived_data.tsv',sep='\t')  
 md=md.drop_duplicates() 
 
 # ##Filter
