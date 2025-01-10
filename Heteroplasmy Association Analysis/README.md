@@ -35,3 +35,12 @@ gatk CreateSequenceDictionary -R NC_012920.1.fasta
 
         """ ::: *chrM.bam
 ```
+
+### HeteroplasmyTXTprocessing.py:
+Uses Dask for parallel processing all "heteroplasmy.txt" files made above.
+Removes variants with more than one alt call. Samples without any reads maping to a varaint are set to AF=0. 
+
+Takes in Metadata.C.Final.tsv and Metadata.M.Final.tsv and splits heteroplasmy data into seperate child mother datasets.  Removes variants where less than 1% of samples are > 0. 
+Reshape data into long format and merge with metadata. Genrates forPlotting.C.csv and forPlotting.M.csv
+
+Transpose dataset so that samples are rows and variants are columns. Outputs HetroplasmyNN.C.tsv and HetroplasmyNN.M.tsv.
