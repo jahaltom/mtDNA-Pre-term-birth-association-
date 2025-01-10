@@ -17,7 +17,7 @@ for (s in sets){
         if (p != "All"){
             md=md[md$population==p,]}
                                       
-        eigenvalues = read.table(paste(p,"_",s,".eigenval",sep=""))
+        eigenvalues = read.table(paste(""PCA-MDS/",p,"_",s,".eigenval",sep=""))
         total_variance = sum(eigenvalues)
         pc_percentage = (eigenvalues[1] / total_variance) * 100
         
