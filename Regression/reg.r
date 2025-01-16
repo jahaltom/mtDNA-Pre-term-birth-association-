@@ -24,17 +24,37 @@ stats <- function(model) {
 
 
         
-df=read.table("Metadata.C.Final.tsv",header=TRUE,sep = '\t',quote="")
+CoM="M"
+
+
+df=read.table(paste("Metadata.",CoM,".Final.tsv",sep=""),header=TRUE,sep = '\t',quote="")
+
+print("What it is")
+table(df$MainHap)
+
+
 df$PTB <- factor(df$PTB)
 print(c("PTB levels ",levels(df$PTB)))
 
+
+# Initialize Population column if it does not exist
+if (!"Population" %in% colnames(df)) {
+  df$Population <- NA  # Create Population column with NA values
+}
+
+# Assign "African" to Population if site is "AMANHI-Pemba" or "GAPPS-Zambia"
+df$Population <- ifelse(df$site %in% c("AMANHI-Pemba", "GAPPS-Zambia"), "African", "South Asian")
+
+
+
 print(c("Population GA","Child"))
-glm.fit=glm(GAGEBRTH~population , data=df  ) 
+glm.fit=glm(GAGEBRTH~Population , data=df  ) 
 summary (glm.fit )
 print(c("Population PTB(binary)","Child"))
 glm.fit=glm(PTB~population , family="binomial", data=df  )
 summary (glm.fit )
 stats(glm.fit)
+
 print(c("Site GA","Child"))
 glm.fit=glm(GAGEBRTH~site , data=df  ) 
 summary (glm.fit )
@@ -49,33 +69,13 @@ stats(glm.fit)
 
 
 
-
-CoM="M"
-
-
-df=read.table(paste("Metadata.",CoM,".Final.tsv",sep=""),header=TRUE,sep = '\t',quote="")
-
-print("What it is")
-table(df$MainHap)
+  
 
 
-
-
-
-    
-
-    df$PTB <- factor(df$PTB)
-    print(c("PTB levels ",levels(df$PTB)))
         
-   
-      
-      
-     
 
     #Set reference haplogroups
     df$MainHap= relevel(factor(df$MainHap), ref="M")
-    
-    
     
     
     
