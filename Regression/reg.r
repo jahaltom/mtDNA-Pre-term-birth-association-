@@ -35,13 +35,17 @@ print(c("PTB levels ",levels(df$PTB)))
 
 
 
+df$tab=paste(df$MainHap,df$PTB,sep="_")
+table(df$tab)
+
+
 table(df$MainHap)
 df <- df %>%
         group_by(MainHap) %>%
-        filter(n() >= 10) %>%
+        filter(n() >= 25) %>%
         ungroup()
-
 table(df$MainHap)
+
 
 
 
@@ -124,7 +128,7 @@ stats(glm.fit)
 # table(df$SubHap)
 # df <- df %>%
 #         group_by(SubHap) %>%
-#         filter(n() >= 20) %>%
+#         filter(n() >= 25) %>%
 #         ungroup()
 
 # table(df$SubHap)
