@@ -70,6 +70,8 @@ vif_data["VIF"] = [variance_inflation_factor(add_constant(df_encoded).values, i)
 sns.heatmap(df_encoded.corr(), cmap='coolwarm', center=0, annot=False)
 plt.title("Correlation Heatmap for Encoded Categorical Variables")
 plt.show()
+plt.savefig("CategoricalCorrelationHeatmap.png", bbox_inches="tight")
+plt.clf()
 
 # Output results
 results_df = pd.DataFrame(results, columns=['Variable', 'Test', 'P-Value', 'Effect Size'])
