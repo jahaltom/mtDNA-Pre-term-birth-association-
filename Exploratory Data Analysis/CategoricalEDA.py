@@ -75,8 +75,13 @@ plt.clf()
 
 # Output results
 results_df = pd.DataFrame(results, columns=['Variable', 'Test', 'P-Value', 'Effect Size'])
-results_df['Bonferroni_Corrected_P'] = results_df['P-Value'] * len(results_df)
-results_df['Significant'] = results_df['Bonferroni_Corrected_P'] < 0.05
+# Separate Bonferroni correction for each test type
+for test_type in ['Chi2', 'ANOVA', 'Kruskal-Wallis']:
+    test_mask = results_df['Test'] == test_type
+    num_tests = test_mask.sum()  # Number of tests for this type
+    results_df.loc[test_mask, 'Significant'] = results_df.loc[test_mask, 'P-Value'] < (0.05 / num_tests)
+
+
 
 # Select Important Variables
 results_df['Effect Size'] = results_df['Effect Size'].replace(['None', 'Low counts'], 0)
