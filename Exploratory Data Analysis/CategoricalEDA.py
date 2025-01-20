@@ -53,6 +53,13 @@ for column in categorical_columns:
         results.append((column, 'ANOVA', anova_p, None))
         results.append((column, 'Kruskal-Wallis', kruskal_p, None))
 
+# Remove rows containing -88 or -77 in any column
+df=df[['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
+                       'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK', 'CHRON_HTN',
+                       'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
+                       "SNIFF_TOBA", "SMOKE_HIST"]]
+df = df[~df.isin([-88, -77]).any(axis=1)]
+
 # Multicollinearity Check
 df_encoded = pd.get_dummies(df[categorical_columns], drop_first=True).astype(int)
 vif_data = pd.DataFrame()
