@@ -79,7 +79,8 @@ results_df['Bonferroni_Corrected_P'] = results_df['P-Value'] * len(results_df)
 results_df['Significant'] = results_df['Bonferroni_Corrected_P'] < 0.05
 
 # Select Important Variables
-important_vars = results_df[(results_df['Significant'] == True) & (results_df['Effect Size'] > 0.1)]['Variable'].unique()
+results_df['Effect Size'] = results_df['Effect Size'].replace(['None', 'Low counts'], 0)
+important_vars = results_df[(results_df['Significant'] == True) ]['Variable'].unique()   # results_df[(results_df['Significant'] == True) & (results_df['Effect Size'] > 0.1)]['Variable'].unique()
 
 # Remove multicollinear variables
 threshold_vif = 5
