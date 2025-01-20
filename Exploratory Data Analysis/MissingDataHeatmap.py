@@ -71,6 +71,6 @@ g.ax_row_dendrogram.legend(
 
 #plt.title("Missing Data Heatmap with Site Categories")
 plt.show()
-plt.savefig("Metadata.png", bbox_inches="tight")
+plt.savefig("MissingDataHeatmap.png", bbox_inches="tight")
 plt.clf()
 
