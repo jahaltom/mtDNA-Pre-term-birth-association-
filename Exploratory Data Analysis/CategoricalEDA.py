@@ -75,6 +75,41 @@ plt.clf()
 
 # Output results
 results_df = pd.DataFrame(results, columns=['Variable', 'Test', 'P-Value', 'Effect Size'])
-results_df['Significant'] = results_df['P-Value'] < 0.05 / len(results_df)  # Bonferroni correction
-print(results_df)
-print(vif_data)
+results_df['Bonferroni_Corrected_P'] = results_df['P-Value'] * len(results_df)
+results_df['Significant'] = results_df['Bonferroni_Corrected_P'] < 0.05
+
+# Select Important Variables
+important_vars = results_df[(results_df['Significant'] == True) & (results_df['Effect Size'] > 0.1)]['Variable'].unique()
+
+# Remove multicollinear variables
+threshold_vif = 5
+non_multicollinear_vars = vif_data[vif_data['VIF'] < threshold_vif]['Variable'].unique()
+
+# Final Selected Variables
+final_vars = [var for var in important_vars if var in non_multicollinear_vars]
+
+
+
+
+
+# Output Results
+print("Significant Variables After Bonferroni Correction and Multicollinearity Check:")
+print(final_vars)
+results_df.to_csv("Categorical_Analysis_Results.csv", index=False)
+vif_data.to_csv("Categorical_Multicollinearity_VIF.csv", index=False)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
