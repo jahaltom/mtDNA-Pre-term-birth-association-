@@ -80,6 +80,7 @@ for col in continuous_vars:
     plt.xlabel(col)
     plt.ylabel("GAGEBRTH (Gestational Age in Days)")
     plt.show()
+    plt.tight_layout()
     plt.savefig("GAGEBRTHScatter"+col+".png", bbox_inches="tight")
     plt.clf()
 
@@ -92,5 +93,6 @@ for col in continuous_vars:
     plt.xlabel("PTB (0 = Full-term, 1 = Pre-term)")
     plt.ylabel(col)
     plt.show()
+    plt.tight_layout()
     plt.savefig("PTBBox"+col+".png", bbox_inches="tight")
     plt.clf()
