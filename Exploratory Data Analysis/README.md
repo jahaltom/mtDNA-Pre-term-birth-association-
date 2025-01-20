@@ -1,1 +1,1 @@
-![alt text]([https://github.com/jahaltom/RNA-Seq-Ancestry-Inference/blob/main/FlowChart.png](https://github.com/jahaltom/mtDNA-Pre-term-birth-association-/blob/4954d8147685770b3a7dbc4c04fd805bf4773fa8/Exploratory%20Data%20Analysis/Metadata.png?raw=true)
+![alt text](https://github.com/jahaltom/mtDNA-Pre-term-birth-association-/blob/main/Exploratory%20Data%20Analysis/Metadata.png?raw=true)
