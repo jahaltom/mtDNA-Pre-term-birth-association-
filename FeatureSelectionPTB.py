@@ -153,19 +153,19 @@ plot_feat(ridge_coefs,"Ridge")
 
 
 
-# Step 2d: ElasticNet Regression
-elasticnet = ElasticNetCV(alphas=[0.01], l1_ratio=0.5, cv=5, random_state=42)  # l1_ratio=0.5 for balanced mix
-elasticnet.fit(X_train_preprocessed, y_train)
+# # Step 2d: ElasticNet Regression
+# elasticnet = ElasticNetCV(alphas=[0.01], l1_ratio=0.5, cv=5, random_state=42)  # l1_ratio=0.5 for balanced mix
+# elasticnet.fit(X_train_preprocessed, y_train)
 
-evaluate_model_regression(elasticnet, X_test_preprocessed, y_test, "ElasticNet Regression")
+# evaluate_model_regression(elasticnet, X_test_preprocessed, y_test, "ElasticNet Regression")
 
-elasticnet_coefs = pd.DataFrame({
-    'Feature': preprocessor.get_feature_names_out(),
-    'Coefficient': elasticnet.coef_
-}).query("Coefficient != 0").sort_values(by='Coefficient', key=abs, ascending=False)
-print("\nElasticNet Significant Features:")
-print(elasticnet_coefs)
-plot_feat(elasticnet_coefs,"Elastic")
+# elasticnet_coefs = pd.DataFrame({
+#     'Feature': preprocessor.get_feature_names_out(),
+#     'Coefficient': elasticnet.coef_
+# }).query("Coefficient != 0").sort_values(by='Coefficient', key=abs, ascending=False)
+# print("\nElasticNet Significant Features:")
+# print(elasticnet_coefs)
+# plot_feat(elasticnet_coefs,"Elastic")
 
 
 
