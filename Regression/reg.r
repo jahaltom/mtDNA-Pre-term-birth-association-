@@ -101,7 +101,7 @@ stats(glm.fit)
 # stats(glm.fit)
    
 
-ref="HV" 
+ref="H" 
 #Set reference haplogroups
 df$MainHap= relevel(factor(df$MainHap), ref=ref)
 print(paste("Hapologroup and PCA - GA, Ref=", ref ," Dataset: ",CoM,sep=""))
