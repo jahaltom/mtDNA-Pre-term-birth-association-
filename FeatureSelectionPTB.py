@@ -34,7 +34,7 @@ def plot_feat(coefMat, model_name):
     plt.gca().invert_yaxis()  # Invert y-axis for better readability
     plt.tight_layout()
     plt.show()
-    plt.savefig(model_name+"_TopFeature.png", bbox_inches="tight")
+    plt.savefig(model_name+"_TopFeature.PTB.png", bbox_inches="tight")
     plt.clf()
 
 
