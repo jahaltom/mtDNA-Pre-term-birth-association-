@@ -7,8 +7,11 @@ CoM=["C","M"]
 for i in CoM:
   # Load metadata
   md = pd.read_csv("Metadata."+i+".tsv",sep='\t')
-  md=md.dropna(subset=["GAGEBRTH"])
-  
+  md=md.dropna(subset=["GAGEBRTH","PTB"])
+
+
+  md = md[md['MainHap'].map(md['MainHap'].value_counts()) >= 25]
+
   
   
   # Step 1: Fit the Weibull distribution to the data
