@@ -7,8 +7,7 @@ from matplotlib.colors import ListedColormap
 # Load the data
 df = pd.read_csv("Metadata.M.Final.tsv", sep='\t')
 
-# Drop rows with missing target variables
-df = df.dropna(subset=["PTB", "GAGEBRTH"])
+
 
 df['SNIFF_FREQ'] = df['SNIFF_FREQ'].replace({-88: 0})
 df['SNIFF_FREQ'] = df['SNIFF_FREQ'].replace({-77: 0})
