@@ -199,11 +199,11 @@ shap_values_positive_class = shap_values[:, :, 1]  # shape will be (11734, 29)
 
 # Plot the SHAP summary plot for the positive class
 shap.summary_plot(shap_values_positive_class, X_train_balanced.values, feature_names=preprocessor.get_feature_names_out())
-plt.savefig("shapRF.png", bbox_inches="tight")
+plt.savefig("shap.RF.PTB.png", bbox_inches="tight")
 plt.clf()
 
 shap.dependence_plot('num__PW_AGE', shap_values_positive_class, X_train_balanced.values, feature_names=preprocessor.get_feature_names_out())
-plt.savefig("shapDepRF.png", bbox_inches="tight")
+plt.savefig("shapDep.RF.PTB.png", bbox_inches="tight")
 plt.clf()
 
 
@@ -241,17 +241,17 @@ shap_values_positive_class = shap_values[:, :, 1]  # shape will be (11734, 29)
 
 # Plot the SHAP summary plot for the positive class
 shap.summary_plot(shap_values_positive_class, X_train_balanced.values, feature_names=preprocessor.get_feature_names_out())
-plt.savefig("shapGB.png", bbox_inches="tight")
+plt.savefig("shap.GB.PTB.png", bbox_inches="tight")
 plt.clf()
 
 shap.dependence_plot('num__PW_AGE', shap_values_positive_class, X_train_balanced.values, feature_names=preprocessor.get_feature_names_out())
-plt.savefig("shapDepGB.png", bbox_inches="tight")
+plt.savefig("shapDep.GB.PTB.png", bbox_inches="tight")
 plt.clf()
 
 
 # shap_interaction_values = explainer.shap_interaction_values(X_train_balanced)
 # shap.summary_plot(shap_interaction_values, X_train_balanced.values, feature_names=preprocessor.get_feature_names_out())
-# plt.savefig("shapIntGB.png", bbox_inches="tight")
+# plt.savefig("shapInt.GB.PTB.png", bbox_inches="tight")
 # plt.clf()
 
 
