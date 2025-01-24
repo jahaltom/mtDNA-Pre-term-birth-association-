@@ -151,7 +151,7 @@ shap_values_rf = explainer_rf.shap_values(X_train_preprocessed)
 
 # SHAP Summary Plot for Random Forest
 shap.summary_plot(shap_values_rf, X_train_preprocessed, feature_names=preprocessor.get_feature_names_out())
-plt.savefig("shap.RF.png", bbox_inches="tight")
+plt.savefig("shap.RF.GA.png", bbox_inches="tight")
 plt.clf()
 
 # Step 5: Gradient Boosting for Feature Importance
@@ -182,7 +182,7 @@ shap_values_gb = explainer_gb.shap_values(X_train_preprocessed)
 
 # SHAP Summary Plot for Gradient Boosting
 shap.summary_plot(shap_values_gb, X_train_preprocessed, feature_names=preprocessor.get_feature_names_out())
-plt.savefig("shap.GB.png", bbox_inches="tight")
+plt.savefig("shap.GB.GA.png", bbox_inches="tight")
 plt.clf()
 
 
@@ -220,7 +220,7 @@ shap_values = explainer.shap_values(X_test_preprocessed[:100])
 
 # Visualize SHAP summary plot
 shap.summary_plot(shap_values, X_test_preprocessed[:100], feature_names=preprocessor.get_feature_names_out())
-plt.savefig("SHAP_NN.png", bbox_inches="tight")
+plt.savefig("SHAP.NN.GA.png", bbox_inches="tight")
 plt.clf()
 
 # Feature Importances for NN (using permutation importance)
@@ -240,5 +240,5 @@ plt.figure(figsize=(10, 6))
 sns.barplot(data=nn_importances.head(10), x='Importance', y='Feature')
 plt.title("Neural Network Feature Importances (Top 10)")
 plt.tight_layout()
-plt.savefig("NN_FeatureImportance.png", bbox_inches="tight")
+plt.savefig("NN_FeatureImportance.GA.png", bbox_inches="tight")
 plt.clf()
