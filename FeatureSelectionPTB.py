@@ -237,14 +237,14 @@ print(gb_importances.head(10))
 explainer = shap.TreeExplainer(gb_cv.best_estimator_)
 shap_values = explainer.shap_values(X_train_balanced)
 # Extract SHAP values for the positive class (index 1) for binary classification
-shap_values_positive_class = shap_values[:, :, 1]  # shape will be (11734, 29)
+
 
 # Plot the SHAP summary plot for the positive class
-shap.summary_plot(shap_values_positive_class, X_train_balanced.values, feature_names=preprocessor.get_feature_names_out())
+shap.summary_plot(shap_values, X_train_balanced.values, feature_names=preprocessor.get_feature_names_out())
 plt.savefig("shap.GB.PTB.png", bbox_inches="tight")
 plt.clf()
 
-shap.dependence_plot('num__PW_AGE', shap_values_positive_class, X_train_balanced.values, feature_names=preprocessor.get_feature_names_out())
+shap.dependence_plot('num__PW_AGE', shap_values, X_train_balanced.values, feature_names=preprocessor.get_feature_names_out())
 plt.savefig("shapDep.GB.PTB.png", bbox_inches="tight")
 plt.clf()
 
@@ -290,7 +290,7 @@ plt.figure(figsize=(10, 6))
 sns.barplot(data=nn_importances.head(10), x='Importance', y='Feature')
 plt.title("Neural Network Feature Importances (Top 10)")
 plt.tight_layout()
-plt.savefig("NN_FeatureImportance.png", bbox_inches="tight")
+plt.savefig("NN_FeatureImportance.PTB.png", bbox_inches="tight")
 plt.clf()
 
 
@@ -300,15 +300,15 @@ shap_values_nn = explainer_nn.shap_values(X_train_balanced)
 
 
 # Extract SHAP values for the positive class (index 1) for binary classification
-shap_values_positive_class = shap_values_nn[:, :, 1]  # shape will be (11734, 29)
+#shap_values_positive_class = shap_values_nn[:, :, 1]  # shape will be (11734, 29)
 
 # Plot the SHAP summary plot for the positive class
-shap.summary_plot(shap_values_positive_class, X_train_balanced.values, feature_names=preprocessor.get_feature_names_out())
-plt.savefig("shapNN.png", bbox_inches="tight")
+shap.summary_plot(shap_values, X_train_balanced.values, feature_names=preprocessor.get_feature_names_out())
+plt.savefig("shap.NN.PTB.png", bbox_inches="tight")
 plt.clf()
 
-shap.dependence_plot('num__PW_AGE', shap_values_positive_class, X_train_balanced.values, feature_names=preprocessor.get_feature_names_out())
-plt.savefig("shapDepNN.png", bbox_inches="tight")
+shap.dependence_plot('num__PW_AGE', shap_values, X_train_balanced.values, feature_names=preprocessor.get_feature_names_out())
+plt.savefig("shapDep.NN.PTB.png", bbox_inches="tight")
 plt.clf()
 
 
