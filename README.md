@@ -36,7 +36,7 @@ bcftools view --types snps -t ^26,24,23 -S C.txt --force-samples /scr1/users/hal
 bcftools view --types snps -t ^26,24,23 -S M.txt --force-samples /scr1/users/haltomj/PTB/plink2.vcf   >  plink2.M.vcf
 ```
 ## Dimensionality reduction via PCA and MDS.
-Generates PCs and MDS clusters for (plink2.C.vcf and plink2.M.vcf). Does this across all data (All) and South Asian/African seperatly. Below is for the plink2.C.vcf data only. To do the plink2.M.vcf, just swap C and M. 
+Generates PCs and MDS clusters for (plink2.C.vcf and plink2.M.vcf). 
 ```
 mkdir PCA-MDS
 #Run plink PCA and MDS All
@@ -57,7 +57,7 @@ Takes in eigenvec and mds files and adds this data to (Metadata.M.Weibull.tsv Me
 
 ## Plotting
 ### PCA-MDA_Plot.r:
-Takes in Metadata.M.Final.tsv, Metadata.C.Final.tsv, and eigenval, and makes PCA/MDS plots. Lables Main/Sub haplogroup and site. Does this for All populations, african only, and south asian only. Also splits data by child/mother. 
+Takes in Metadata.M.Final.tsv, Metadata.C.Final.tsv, and eigenval, and makes PCA/MDS plots. Lables Main/Sub haplogroup and site.  Also splits data by child/mother. 
 
 
 ## Check for mtDNA haplogroup association with nDNA PCA clusters.
