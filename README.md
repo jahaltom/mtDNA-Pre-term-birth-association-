@@ -165,4 +165,7 @@ kappa_pca2_hap = cohen_kappa_score(df['PC2_cluster'], df['MainHap_numeric'])
 print(f"Weighted Cohen's Kappa for PCA2 and mtDNA Haplogroups: {kappa_pca2_hap:.3f}")
 ```
 
+Negative values (PC1 -0.001 and PC2 -0.007) suggest no agreement or random association.
+Conclusion: No significant evidence of assortative mating effecting the mtDNA haplogroups.
+
 
