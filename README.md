@@ -29,31 +29,22 @@ M: Lower Cutoff: 229.40491328561183, Upper Cutoff: 298.6448367835414
 
 ### plink2VCF.sh: 
 Takes in plink files and makes vcfs. Selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (C.txt and M.txt). Outputs two vcfs (plink2.C.vcf and plink2.M.vcf) that will used below. 
-
+```
+bcftools view --types snps -t ^26,24,23 -S C.txt --force-samples /scr1/users/haltomj/PTB/plink2.vcf   >  plink2.C.vcf
+bcftools view --types snps -t ^26,24,23 -S M.txt --force-samples /scr1/users/haltomj/PTB/plink2.vcf   >  plink2.M.vcf
+```
 ## Dimensionality reduction via PCA and MDS.
 Generates PCs and MDS clusters for (plink2.C.vcf and plink2.M.vcf). Does this across all data (All) and South Asian/African seperatly. Below is for the plink2.C.vcf data only. To do the plink2.M.vcf, just swap C and M. 
 ```
-#Run plink PCA and MDS South Asian
-cat Metadata.C.Weibull.tsv | grep 'GAPPS-Bangladesh\|AMANHI-Pakistan\|AMANHI-Bangladesh'  | awk -F'\t' '{print $NF}'  > listC
-#Extract nt DNA SNPs for each sample in list
-bcftools view -S listC plink2.C.vcf > plink2.C.SouthAsian.vcf
-plink --vcf plink2.C.SouthAsian.vcf --pca --double-id --out PCA-MDS/SouthAsian_C
-plink --vcf plink2.C.SouthAsian.vcf --cluster --mds-plot 5 --double-id --out PCA-MDS/SouthAsian_C
-rm plink2.C.SouthAsian.vcf
-
-
-#Run plink PCA and MDS African
-cat Metadata.C.Weibull.tsv | grep 'AMANHI-Pemba\|GAPPS-Zambia'  | awk -F'\t' '{print $NF}'  > listC
-#Extract nt DNA SNPs for each sample in list
-bcftools view -S listC plink2.C.vcf > plink2.C.African.vcf
-plink --vcf plink2.C.African.vcf --pca --double-id --out PCA-MDS/African_C
-plink --vcf plink2.C.African.vcf --cluster --mds-plot 5 --double-id --out PCA-MDS/African_C
-rm plink2.C.African.vcf
-
+mkdir PCA-MDS
 #Run plink PCA and MDS All
-plink --vcf plink2.C.vcf --pca --double-id --out PCA-MDS/All_C
-plink --vcf plink2.C.vcf --cluster --mds-plot 5 --double-id --out PCA-MDS/All_C
+plink --vcf plink2.C.vcf --pca --double-id --out PCA-MDS/C
+plink --vcf plink2.C.vcf --cluster --mds-plot 5 --double-id --out PCA-MDS/C
 rm listC
+
+plink --vcf plink2.M.vcf --pca --double-id --out PCA-MDS/M
+plink --vcf plink2.M.vcf --cluster --mds-plot 5 --double-id --out PCA-MDS/M
+rm listM
 ```
 
 ## Combine PCA/MDS results with metadata. 
