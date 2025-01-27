@@ -101,6 +101,11 @@ plt.close()
 
 
 #### Use this to inform your KMeans clustering. 
+Pick the elbow in the plot (where an increase in the x-axis is no longer making a notable changein y-axis). 
+
+Chose the highest Silhouett score. 
+
+Both of these should agree. In this case it was n_clusters=4
 
 ```python 
 #Elbow Method (for KMeans)
@@ -135,7 +140,29 @@ for k in range(2, 10):
 
 ```
 
+#### Discretize PCA components into clusters ( KMeans)
+```python
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import cohen_kappa_score
+from sklearn.cluster import KMeans
+kmeans = KMeans(n_clusters=4, random_state=42)
+df['PC1_cluster'] = kmeans.fit_predict(df[['PC1']])
+df['PC2_cluster'] = kmeans.fit_predict(df[['PC2']])
 
 
+# Step 1: Convert 'MainHap' to numeric labels
+label_encoder = LabelEncoder()
+df['MainHap_numeric'] = label_encoder.fit_transform(df['MainHap'])
+
+
+
+# Step 2: Calculate Cohen's Kappa for PCA1 and MainHap
+kappa_pca1_hap = cohen_kappa_score(df['PC1_cluster'], df['MainHap_numeric'])
+print(f"Weighted Cohen's Kappa for PCA1 and mtDNA Haplogroups: {kappa_pca1_hap:.3f}")
+
+# You can do the same for PCA2 and MainHap
+kappa_pca2_hap = cohen_kappa_score(df['PC2_cluster'], df['MainHap_numeric'])
+print(f"Weighted Cohen's Kappa for PCA2 and mtDNA Haplogroups: {kappa_pca2_hap:.3f}")
+```
 
 
