@@ -72,11 +72,10 @@ import seaborn as sns
 
 # Load the dataset
 df = pd.read_csv("Metadata.M.Final.tsv", sep='\t')
-# Clean the dataset
 
+# Clean the dataset
 df['GAGEBRTH'] = pd.to_numeric(df['GAGEBRTH'], errors='coerce')  # Ensure GAGEBRTH is numeric
 df=df[[  'DIABETES','PW_AGE', 'MAT_HEIGHT',"PC1", "PC2", "PC3", "PC4", "PC5","MainHap","PTB", "GAGEBRTH"]]
-
 categorical_columns=["MainHap"]
 continuous_columns=['DIABETES', 'PW_AGE', 'MAT_HEIGHT', 'PC1', 'PC2', 'PC3', 'PC4', 'PC5']
 
@@ -84,11 +83,6 @@ continuous_columns=['DIABETES', 'PW_AGE', 'MAT_HEIGHT', 'PC1', 'PC2', 'PC3', 'PC
 encoded_df = pd.get_dummies(df[categorical_columns], drop_first=True)
 encoded_df = encoded_df.astype(int)
 mixed_df = pd.concat([df[continuous_columns + ['GAGEBRTH','PTB']], encoded_df], axis=1)
-
-
-
-
-
 
 
 
@@ -102,3 +96,46 @@ plt.show()
 plt.savefig("PCACorr.png")
 plt.close()
 ```
+### Discretize PCA components into clusters and Calculate Cohen's Kappa
+
+
+
+#### Use this to inform your KMeans clustering. 
+
+```python 
+#Elbow Method (for KMeans)
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+
+distortions = []
+K = range(1, 10)  # Try different numbers of clusters
+for k in K:
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(df[['PC1', 'PC2']])
+    distortions.append(kmeans.inertia_)
+
+plt.figure(figsize=(8, 5))
+plt.plot(K, distortions, marker='o')
+plt.title('Elbow Method for Optimal Clusters')
+plt.xlabel('Number of Clusters (k)')
+plt.ylabel('Inertia')
+plt.show()
+plt.savefig("Elbow.png")
+plt.close()
+
+#Silhouette Score
+from sklearn.metrics import silhouette_score
+
+for k in range(2, 10):
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    labels = kmeans.fit_predict(df[['PC1', 'PC2']])
+    score = silhouette_score(df[['PC1', 'PC2']], labels)
+    print(f'Number of clusters: {k}, Silhouette Score: {score:.3f}')
+
+
+```
+
+
+
+
+
