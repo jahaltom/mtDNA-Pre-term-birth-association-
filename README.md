@@ -64,7 +64,7 @@ Takes in Metadata.M.Final.tsv, Metadata.C.Final.tsv, and eigenval, and makes PCA
 To determine whether the nDNA PCA clusters correlated with the mtDNA haplogroups due to assortative mating;
 
 ### Pearson correlation:
-```p
+```python
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
