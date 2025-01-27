@@ -1,6 +1,8 @@
 # mtDNA Pre-term birth association
 
 
+### plink2VCF.sh: 
+Takes in plink files for nDNA and makes vcf.
 
 ## Run Haplogrep3 to assign haplogroups to samples.
 
@@ -27,8 +29,8 @@ C: Lower Cutoff: 232.24832311358944, Upper Cutoff: 297.5082654877975
 M: Lower Cutoff: 229.40491328561183, Upper Cutoff: 298.6448367835414
 
 
-### plink2VCF.sh: 
-Takes in plink files and makes vcfs. Selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (C.txt and M.txt). Outputs two vcfs (plink2.C.vcf and plink2.M.vcf) that will used below. 
+### Subset nDNA VCF: 
+Subsets nDNA vcf. Selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (C.txt and M.txt). Outputs two vcfs (plink2.C.vcf and plink2.M.vcf) that will used below. 
 ```
 bcftools view --types snps -t ^26,24,23 -S C.txt --force-samples /scr1/users/haltomj/PTB/plink2.vcf   >  plink2.C.vcf
 bcftools view --types snps -t ^26,24,23 -S M.txt --force-samples /scr1/users/haltomj/PTB/plink2.vcf   >  plink2.M.vcf
@@ -56,3 +58,47 @@ Takes in eigenvec and mds files and adds this data to (Metadata.M.Weibull.tsv Me
 ## Plotting
 ### PCA-MDA_Plot.r:
 Takes in Metadata.M.Final.tsv, Metadata.C.Final.tsv, and eigenval, and makes PCA/MDS plots. Lables Main/Sub haplogroup and site. Does this for All populations, african only, and south asian only. Also splits data by child/mother. 
+
+
+## Check for mtDNA haplogroup association with nDNA PCA clusters.
+To determine whether the nDNA PCA clusters correlated with the mtDNA haplogroups due to assortative mating;
+
+### Pearson correlation:
+```p
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+# Load the dataset
+df = pd.read_csv("Metadata.M.Final.tsv", sep='\t')
+# Clean the dataset
+
+df['GAGEBRTH'] = pd.to_numeric(df['GAGEBRTH'], errors='coerce')  # Ensure GAGEBRTH is numeric
+df=df[[  'DIABETES','PW_AGE', 'MAT_HEIGHT',"PC1", "PC2", "PC3", "PC4", "PC5","MainHap","PTB", "GAGEBRTH"]]
+
+categorical_columns=["MainHap"]
+continuous_columns=['DIABETES', 'PW_AGE', 'MAT_HEIGHT', 'PC1', 'PC2', 'PC3', 'PC4', 'PC5']
+
+# Mixed Feature Correlation: One-Hot Encode categorical features
+encoded_df = pd.get_dummies(df[categorical_columns], drop_first=True)
+encoded_df = encoded_df.astype(int)
+mixed_df = pd.concat([df[continuous_columns + ['GAGEBRTH','PTB']], encoded_df], axis=1)
+
+
+
+
+
+
+
+
+# Compute and visualize correlation matrix  (Pearson correlation).
+plt.figure(figsize=(20, 15))
+corr_matrix = mixed_df.corr()
+sns.heatmap(corr_matrix, annot=False, cmap='coolwarm', center=0)
+plt.title("Correlation Matrix for All Variables")
+plt.tight_layout()
+plt.show()
+plt.savefig("PCACorr.png")
+plt.close()
+```
