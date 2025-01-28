@@ -1,4 +1,3 @@
-
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -15,9 +14,7 @@ def cramers_v(contingency_table):
 
 # Read dataset
 df = pd.read_csv("Metadata.M.Final.tsv", sep='\t')
-df = df.dropna(subset=["PTB", "GAGEBRTH"])
-df.set_index('Sample_ID', inplace=True)
-df['GAGEBRTH'] = pd.to_numeric(df['GAGEBRTH'], errors='coerce')
+#df['GAGEBRTH'] = pd.to_numeric(df['GAGEBRTH'], errors='coerce')
 
 # Clean and select categorical variables
 categorical_columns = ['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
@@ -30,9 +27,8 @@ results = []
 
 # Categorical Analysis
 for column in categorical_columns:
-    df_cleaned = df[(df[column] != "-77") & (df[column] != "-88")]
+    df_cleaned = df[(df[column] != -77) & (df[column] != -88)]
     contingency_table = pd.crosstab(df_cleaned[column], df_cleaned['PTB'])
-
     # Chi-Square and Fisher's Exact Test
     if (contingency_table.values < 5).any():
         if contingency_table.shape == (2, 2):
@@ -44,7 +40,6 @@ for column in categorical_columns:
         chi2, p, _, _ = chi2_contingency(contingency_table)
         cramers_v_value = cramers_v(contingency_table)
         results.append((column, 'Chi2', p, cramers_v_value))
-
     # ANOVA and Kruskal-Wallis
     groups = [df_cleaned[df_cleaned[column] == level]['GAGEBRTH'].dropna() for level in df_cleaned[column].unique()]
     if len(groups) > 1:
@@ -60,11 +55,14 @@ df=df[['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
                        "SNIFF_TOBA", "SMOKE_HIST"]]
 df = df[~df.isin([-88, -77]).any(axis=1)]
 
+
 # Multicollinearity Check
-df_encoded = pd.get_dummies(df[categorical_columns], drop_first=True).astype(int)
+df["FUEL_FOR_COOK"] = df["FUEL_FOR_COOK"].astype(str)
+df_encoded = pd.get_dummies(df,drop_first=True,dtype=int)
 vif_data = pd.DataFrame()
 vif_data["Variable"] = df_encoded.columns
 vif_data["VIF"] = [variance_inflation_factor(add_constant(df_encoded).values, i) for i in range(len(df_encoded.columns))]
+
 
 # Visualizations
 sns.heatmap(df_encoded.corr(), cmap='coolwarm', center=0, annot=False)
