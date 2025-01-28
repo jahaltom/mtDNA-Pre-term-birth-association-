@@ -26,3 +26,4 @@ VIF is used to asses each variable. MainHap and FUEL_FOR_COOK are one-hot encode
 
 Pearson correlation:
 
+Start AT output rsults
