@@ -198,3 +198,51 @@ Output results:Separate Bonferroni correction for each test type.
 62       SMOKE_HIST     2            4            0          0.000000
 63       SMOKE_HIST     3            1            0          0.000000
 ```
+
+
+```
+
+
+
+import pandas as pd
+
+# Columns to analyze
+columns = ['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
+                       'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK', 'CHRON_HTN',
+                       'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
+                       "SNIFF_TOBA", "SMOKE_HIST"]
+
+# List to store results
+results = []
+
+# Loop through each column
+for col in columns:
+    unique_values = df[col].drop_duplicates().to_list()
+    for value in unique_values:
+        # Calculate counts
+        ptb_counts = df[df[col] == value]["PTB"].value_counts()
+        # Ensure there are no missing categories (0 or 1)
+        ptb_counts = ptb_counts.reindex([0, 1], fill_value=0)       
+        # Calculate percentage of PTB = 1 relative to PTB = 0
+        percentage = (ptb_counts[1] / ptb_counts[0] * 100) if ptb_counts[0] > 0 else None
+        # Append results as a row
+        results.append({
+            "Column": col,
+            "Value": value,
+            "PTB_0_Count": ptb_counts[0],
+            "PTB_1_Count": ptb_counts[1],
+            "PTB_1_Percentage": percentage
+        })
+
+# Create a DataFrame from the results
+results_df = pd.DataFrame(results)
+
+# Display the table
+print(results_df)
+
+
+
+
+
+
+```
