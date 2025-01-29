@@ -65,6 +65,7 @@ vif_data["VIF"] = [variance_inflation_factor(add_constant(df_encoded).values, i)
 
 
 # Visualizations
+df_encoded = pd.get_dummies(df,drop_first=False,dtype=int)
 sns.heatmap(df_encoded.corr(), cmap='coolwarm', center=0, annot=False)
 plt.title("Correlation Heatmap for Encoded Categorical Variables")
 plt.show()
@@ -72,18 +73,17 @@ plt.savefig("CategoricalCorrelationHeatmap.png", bbox_inches="tight")
 plt.clf()
 
 # Output results
-results_df = pd.DataFrame(results, columns=['Variable', 'Test', 'P-Value', 'Effect Size'])
+results_df = pd.DataFrame(results, columns=['Variable', 'Test','P-Value', 'Effect Size'])
 # Separate Bonferroni correction for each test type
-for test_type in ['Chi2', 'ANOVA', 'Kruskal-Wallis']:
-    test_mask = results_df['Test'] == test_type
+for test_type in ['Chi2', 'ANOVA', 'Kruskal-Wallis','Fisher']:
+    test_mask = (results_df['Test'] == test_type) & (results_df['P-Value'].notna())
     num_tests = test_mask.sum()  # Number of tests for this type
     results_df.loc[test_mask, 'Significant'] = results_df.loc[test_mask, 'P-Value'] < (0.05 / num_tests)
 
 
 
 # Select Important Variables
-results_df['Effect Size'] = results_df['Effect Size'].replace(['None', 'Low counts'], 0)
-important_vars = results_df[(results_df['Significant'] == True) ]['Variable'].unique()   # results_df[(results_df['Significant'] == True) & (results_df['Effect Size'] > 0.1)]['Variable'].unique()
+important_vars = results_df[(results_df['Significant'] == True) ]['Variable'].unique()  
 
 # Remove multicollinear variables
 threshold_vif = 5
