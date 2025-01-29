@@ -52,7 +52,7 @@ for column in categorical_columns:
 df=df[['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
                        'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK', 'CHRON_HTN',
                        'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
-                       "SNIFF_TOBA", "SMOKE_HIST"]]
+                       "SNIFF_TOBA", "SMOKE_HIST","PTB","GAGEBRTH"]]
 df = df[~df.isin([-88, -77]).any(axis=1)]
 
 
@@ -68,7 +68,6 @@ vif_data["VIF"] = [variance_inflation_factor(add_constant(df_encoded).values, i)
 df_encoded = pd.get_dummies(df,drop_first=False,dtype=int)
 sns.heatmap(df_encoded.corr(), cmap='coolwarm', center=0, annot=False)
 plt.title("Correlation Heatmap for Encoded Categorical Variables")
-plt.show()
 plt.savefig("CategoricalCorrelationHeatmap.png", bbox_inches="tight")
 plt.clf()
 
@@ -82,7 +81,7 @@ for test_type in ['Chi2', 'ANOVA', 'Kruskal-Wallis','Fisher']:
 
 
 
-# Select Important Variables
+# Select Important Variables###################################################################################
 important_vars = results_df[(results_df['Significant'] == True) ]['Variable'].unique()  
 
 # Remove multicollinear variables
