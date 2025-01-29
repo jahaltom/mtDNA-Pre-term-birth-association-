@@ -24,6 +24,9 @@ Subsets df to specific columns and removes missing data across the board.
 VIF is used to asses each variable. MainHap and FUEL_FOR_COOK are one-hot encoded and the 1st is dropped. 
 
 
-Pearson correlation:
+Pearson correlation: Using same df from above except 1st is not droped.
 
-Start AT output rsults
+
+Output results:Separate Bonferroni correction for each test type.
+
+
