@@ -10,10 +10,11 @@ for i in CoM:
   md=md.dropna(subset=["GAGEBRTH","PTB"])
 
 
-  md = md[md['MainHap'].map(md['MainHap'].value_counts()) >= 25]
+
   wantedCol = ['DIABETES', 'PW_AGE', 'MAT_HEIGHT', "MainHap"]#######################
   # Apply filtering only in the wantedCol columns
   md = md[~md[wantedCol].isin([-88, -77]).any(axis=1)]##############################
+  md = md[md['MainHap'].map(md['MainHap'].value_counts()) >= 25]
 
   
   
