@@ -122,7 +122,7 @@ shap_values_rf = explainer.shap_values(X_train_preprocessed)
 
 # SHAP Summary Plot
 shap.summary_plot(shap_values_rf, X_train_preprocessed, feature_names=preprocessor.get_feature_names_out())
-plt.savefig("shapSummary.RF.GA.png", bbox_inches="tight")
+plt.savefig("shap.summary_plot.RF.GA.png", bbox_inches="tight")
 plt.clf()
 
 
@@ -136,7 +136,7 @@ shap_interaction_values = explainer.shap_interaction_values(X_train_preprocessed
 #Interaction plot
 plt.figure(figsize=(20, 20))
 shap.summary_plot(shap_interaction_values, X_train_preprocessed,feature_names=preprocessor.get_feature_names_out())
-plt.savefig("shapSummary.Interaction.RF.GA.png", bbox_inches="tight")
+plt.savefig("shap.summary_plot.Interaction.RF.GA.png", bbox_inches="tight")
 plt.clf()
 
 #Finds top interactions. Reports top 10
@@ -180,7 +180,7 @@ PartialDependenceDisplay.from_estimator(
     grid_resolution=20,
     ax=ax
 )
-plt.savefig("PDP_Top5.png", bbox_inches="tight")
+plt.savefig("PDP_Top5.RF.GA.png", bbox_inches="tight")
 plt.clf()
 
 
@@ -191,7 +191,7 @@ plt.clf()
 plt.figure(figsize=(40, 40))
 sns.heatmap(interaction_df, annot=True, cmap="coolwarm", linewidths=0.5)
 plt.title("Feature Interaction Heatmap (SHAP)")
-plt.savefig("FeatureInteractionHeatmap.png", bbox_inches="tight")
+plt.savefig("FeatureInteractionHeatmap.RF.GA.png", bbox_inches="tight")
 plt.clf()
 
 
@@ -225,7 +225,7 @@ display = PartialDependenceDisplay.from_estimator(
     ax=ax
 )
 plt.subplots_adjust(top=0.9)
-plt.savefig("PDP_RFE.png", bbox_inches="tight")
+plt.savefig("PDP_RFE.RF.GA.png", bbox_inches="tight")
 plt.clf()
 
 
@@ -241,7 +241,7 @@ print(shap_variance_df.sort_values(by="SHAP Variance", ascending=False))
 # SHAP Dependence Plots to detect non-linear relationships and interactions.Plots for all relevant features (selected_features from  Recursive Feature Elimination (RFE)) 
 for name in selected_features:
     shap.dependence_plot(name, shap_values_rf, X_train_preprocessed, feature_names=preprocessor.get_feature_names_out(), show=False)
-    plt.savefig("Dep_Plot."+name+".png", bbox_inches="tight")
+    plt.savefig("shap.dependence_plot."+name+".RF.GA.png", bbox_inches="tight")
     plt.clf()
     
     
