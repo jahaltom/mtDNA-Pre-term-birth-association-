@@ -167,49 +167,7 @@ plt.clf()
 shap_interaction_values = explainer.shap_interaction_values(X_train_balanced)
 
 
-
-
-
-
-
-
-
-
-
-import pickle
-
-
-# Save SHAP interaction values using pickle
-with open('shap_interaction_values.pkl', 'wb') as f:
-    pickle.dump(shap_interaction_values, f)
-
-# Load SHAP interaction values
-with open('shap_interaction_values.pkl', 'rb') as f:
-    loaded_shap_interaction_values = pickle.load(f)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+shap_interaction_values = shap_interaction_values[:, :, :, 1]
 
 
 
