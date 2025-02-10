@@ -27,7 +27,7 @@ def plot_feat(coefMat, model_name):
     plt.gca().invert_yaxis()
     plt.tight_layout()
     plt.show()
-    plt.savefig(model_name+"_TopFeature.GA.png", bbox_inches="tight")
+    plt.savefig(model_name+"_TopFeature.LinReg.GA.png", bbox_inches="tight")
     plt.clf()
 
 
