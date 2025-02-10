@@ -56,6 +56,8 @@ def evaluate_model(model, X_test, y_test, model_name):
         plt.title(f'ROC Curve - {model_name}')
         plt.legend()
         plt.show()
+        plt.savefig("ROC_AUC_plot.Reg.PTB.png")
+        plt.clf()
 
 
 
