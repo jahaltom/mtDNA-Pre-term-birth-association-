@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np
 from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
-from sklearn.linear_model import LogisticRegressionCV, Ridge
+from sklearn.linear_model import Ridge
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.linear_model import ElasticNetCV
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
@@ -95,19 +95,18 @@ print(ridge_importance)
 
 
 
-# Step 2: Lasso Regression
-lasso = LogisticRegressionCV(penalty='l1', solver='saga', cv=5, max_iter=5000, random_state=42)
-lasso.fit(X_train_preprocessed, y_train)
+# Lasso Regression for continuous prediction
+lasso = LassoCV(cv=5, max_iter=5000, random_state=42)
+lasso.fit(X_train_preprocessed, y_train)  # y_train should be continuous, not binary
 evaluate_model_regression(lasso, X_test_preprocessed, y_test, "Lasso Regression")
 
-# Plot Lasso feature importance
+# Lasso Feature Importance
 lasso_importance = pd.DataFrame({
     'Feature': preprocessor.get_feature_names_out(),
-    'Coefficient': lasso.coef_[0]
+    'Coefficient': lasso.coef_
 }).sort_values(by='Coefficient', key=abs, ascending=False)
 plot_feat(lasso_importance, "Lasso")
 print(lasso_importance)
-
 
 
 # Step 3: ElasticNet Regression
