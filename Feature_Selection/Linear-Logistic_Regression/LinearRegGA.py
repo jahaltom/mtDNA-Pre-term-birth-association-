@@ -42,18 +42,24 @@ def evaluate_model_regression(model, X_test, y_test, model_name):
 
 # Load the dataset
 df = pd.read_csv("Metadata.M.Final.tsv", sep='\t')
-df = df.dropna(subset=["GAGEBRTH"])  # Drop rows with missing targets
-df['GAGEBRTH'] = pd.to_numeric(df['GAGEBRTH'], errors='coerce')  # Ensure GAGEBRTH is numeric
-df = df[[  'DIABETES', 'PW_AGE', 'MAT_HEIGHT', "PC1", "PC2", "PC3", "PC4", "PC5", "MainHap", "GAGEBRTH"]]
+
+#df['GAGEBRTH'] = pd.to_numeric(df['GAGEBRTH'], errors='coerce')  # Ensure GAGEBRTH is numeric
+df = df[['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
+                       'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK', 'CHRON_HTN',
+                       'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
+                       "SNIFF_TOBA","GAGEBRTH",'PW_AGE', 'MAT_HEIGHT', "PC1", "PC2", "PC3", "PC4", "PC5"]]
 df = df[~df.isin([-88, -77]).any(axis=1)]  # Remove rows with invalid entries (-88, -77)
 df = df[df['MainHap'].map(df['MainHap'].value_counts()) >= 25]
 
 # Define features
-categorical_columns = ['DIABETES', 'MainHap']
+categorical_columns = ['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
+                       'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK', 'CHRON_HTN',
+                       'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
+                       "SNIFF_TOBA"]
 continuous_columns = ['PW_AGE', 'MAT_HEIGHT', "PC1", "PC2", "PC3", "PC4", "PC5"]
 
 X = df[categorical_columns + continuous_columns]
-y = df['GAGEBRTH']  # Predict GAGEBRTH instead of PTB
+y = df['GAGEBRTH']  
 
 # Train-test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
@@ -69,7 +75,6 @@ preprocessor = ColumnTransformer(
 # Preprocess the training data
 X_train_preprocessed = preprocessor.fit_transform(X_train)
 X_test_preprocessed = preprocessor.transform(X_test)
-
 
 
 
