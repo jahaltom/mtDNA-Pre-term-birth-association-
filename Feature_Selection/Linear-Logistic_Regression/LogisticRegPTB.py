@@ -68,7 +68,7 @@ df = pd.read_csv("Metadata.M.Final.tsv", sep='\t')
 df = df[['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
                        'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK', 'CHRON_HTN',
                        'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
-                       "SNIFF_TOBA","GAGEBRTH",'PW_AGE', 'MAT_HEIGHT', "PC1", "PC2", "PC3", "PC4", "PC5"]]
+                       "SNIFF_TOBA","PTB",'PW_AGE', 'MAT_HEIGHT', "PC1", "PC2", "PC3", "PC4", "PC5"]]
 df = df[~df.isin([-88, -77]).any(axis=1)]  # Remove rows with invalid entries (-88, -77)
 df = df[df['MainHap'].map(df['MainHap'].value_counts()) >= 25]
 
@@ -80,7 +80,7 @@ categorical_columns = ['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING
 continuous_columns = ['PW_AGE', 'MAT_HEIGHT', "PC1", "PC2", "PC3", "PC4", "PC5"]
 
 X = df[categorical_columns + continuous_columns]
-y = df['GAGEBRTH']  
+y = df['PTB']  
 
 # Train-test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
