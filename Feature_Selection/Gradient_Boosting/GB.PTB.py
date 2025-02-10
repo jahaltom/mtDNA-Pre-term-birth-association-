@@ -149,7 +149,7 @@ print(selected_features)
 explainer = shap.TreeExplainer(gb_cv.best_estimator_)  # Use the trained Random Forest
 shap_values_gb = explainer.shap_values(X_train_balanced)
 # Extract SHAP values for the positive class (index 1) for binary classification
-shap_values_gb = shap_values_gb[:, :, 1]  # shape will be (11734, 29)
+#shap_values_gb = shap_values_gb[:, :, 1]  # shape will be (11734, 29)
 ####
 
 
@@ -165,7 +165,7 @@ plt.clf()
 shap_interaction_values = explainer.shap_interaction_values(X_train_balanced)
 
 
-shap_interaction_values = shap_interaction_values[:, :, :, 1]
+#shap_interaction_values = shap_interaction_values[:, :, :, 1]
 
 
 
