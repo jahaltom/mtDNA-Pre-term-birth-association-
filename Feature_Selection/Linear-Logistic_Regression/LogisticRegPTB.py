@@ -34,7 +34,7 @@ def plot_feat(coefMat, model_name):
     plt.gca().invert_yaxis()  # Invert y-axis for better readability
     plt.tight_layout()
     plt.show()
-    plt.savefig(model_name+"_TopFeature.PTB.png", bbox_inches="tight")
+    plt.savefig(model_name+"_TopFeature.LogReg.PTB.png", bbox_inches="tight")
     plt.clf()
 
 
@@ -56,7 +56,7 @@ def evaluate_model(model, X_test, y_test, model_name):
         plt.title(f'ROC Curve - {model_name}')
         plt.legend()
         plt.show()
-        plt.savefig("ROC_AUC_plot.Reg.PTB.png")
+        plt.savefig("ROC_AUC_plot.LogReg.PTB.png")
         plt.clf()
 
 
@@ -158,19 +158,5 @@ plot_feat(ridge_coefs,"Ridge")
 
 
 
-
-# # Step 2d: ElasticNet Regression
-# elasticnet = ElasticNetCV(alphas=[0.01], l1_ratio=0.5, cv=5, random_state=42)  # l1_ratio=0.5 for balanced mix
-# elasticnet.fit(X_train_preprocessed, y_train)
-
-# evaluate_model_regression(elasticnet, X_test_preprocessed, y_test, "ElasticNet Regression")
-
-# elasticnet_coefs = pd.DataFrame({
-#     'Feature': preprocessor.get_feature_names_out(),
-#     'Coefficient': elasticnet.coef_
-# }).query("Coefficient != 0").sort_values(by='Coefficient', key=abs, ascending=False)
-# print("\nElasticNet Significant Features:")
-# print(elasticnet_coefs)
-# plot_feat(elasticnet_coefs,"Elastic")
 
 
