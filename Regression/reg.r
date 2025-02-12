@@ -139,10 +139,66 @@ stats(glm.fit)
 # glm.fit=glm( PTB ~ MainHap + C1 + C2 + C3 + C4 + C5  , family="binomial", data=df  )
 # print(summary (glm.fit ))
 # stats(glm.fit)
+
+
+ref="D" 
+#Set reference haplogroups
+df$MainHap= relevel(factor(df$MainHap), ref=ref)
+print(paste("Hapologroup and PCA - GA, Ref=", ref ," Dataset: ",CoM,sep=""))
+glm.fit=glm( GAGEBRTH ~ MainHap + PC1 + PC2 + PC3 + PC4 + PC5 + DIABETES + PW_AGE + MAT_HEIGHT , data=df  )
+print(summary (glm.fit ))
+print(paste("Hapologroup and PCA - PTB, Ref=", ref ," Dataset: ",CoM,sep=""))
+glm.fit=glm( PTB ~ MainHap + PC1 + PC2 + PC3 + PC4 + PC5 + DIABETES + PW_AGE + MAT_HEIGHT  , family="binomial", data=df  )
+print(summary (glm.fit ))
+stats(glm.fit)
+
+# print(paste("Hapologroup and MDS - GA, Ref=", ref ," Dataset: ",CoM,sep=""))
+# glm.fit=glm( GAGEBRTH ~ MainHap + C1 + C2 + C3 + C4 + C5  , data=df  )
+# print(summary (glm.fit ))
+# print(paste("Hapologroup and MDS - PTB, Ref=", ref ," Dataset: ",CoM,sep=""))
+# glm.fit=glm( PTB ~ MainHap + C1 + C2 + C3 + C4 + C5  , family="binomial", data=df  )
+# print(summary (glm.fit ))
+# stats(glm.fit)
     
     
+ref="G" 
+#Set reference haplogroups
+df$MainHap= relevel(factor(df$MainHap), ref=ref)
+print(paste("Hapologroup and PCA - GA, Ref=", ref ," Dataset: ",CoM,sep=""))
+glm.fit=glm( GAGEBRTH ~ MainHap + PC1 + PC2 + PC3 + PC4 + PC5 + DIABETES + PW_AGE + MAT_HEIGHT , data=df  )
+print(summary (glm.fit ))
+print(paste("Hapologroup and PCA - PTB, Ref=", ref ," Dataset: ",CoM,sep=""))
+glm.fit=glm( PTB ~ MainHap + PC1 + PC2 + PC3 + PC4 + PC5 + DIABETES + PW_AGE + MAT_HEIGHT  , family="binomial", data=df  )
+print(summary (glm.fit ))
+stats(glm.fit)
+
+# print(paste("Hapologroup and MDS - GA, Ref=", ref ," Dataset: ",CoM,sep=""))
+# glm.fit=glm( GAGEBRTH ~ MainHap + C1 + C2 + C3 + C4 + C5  , data=df  )
+# print(summary (glm.fit ))
+# print(paste("Hapologroup and MDS - PTB, Ref=", ref ," Dataset: ",CoM,sep=""))
+# glm.fit=glm( PTB ~ MainHap + C1 + C2 + C3 + C4 + C5  , family="binomial", data=df  )
+# print(summary (glm.fit ))
+# stats(glm.fit)
     
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
