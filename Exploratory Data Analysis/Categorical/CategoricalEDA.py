@@ -81,23 +81,7 @@ for test_type in ['Chi2', 'ANOVA', 'Kruskal-Wallis','Fisher']:
 
 
 
-# Select Important Variables###################################################################################
-important_vars = results_df[(results_df['Significant'] == True) ]['Variable'].unique()  
-
-# Remove multicollinear variables
-threshold_vif = 5
-non_multicollinear_vars = vif_data[vif_data['VIF'] < threshold_vif]['Variable'].unique()
-
-# Final Selected Variables
-final_vars = [var for var in important_vars if var in non_multicollinear_vars]
-
-
-
-
-
 # Output Results
-print("Significant Variables After Bonferroni Correction and Multicollinearity Check:")
-print(final_vars)
 results_df.to_csv("Categorical_Analysis_Results.csv", index=False)
 vif_data.to_csv("Categorical_Multicollinearity_VIF.csv", index=False)
 
