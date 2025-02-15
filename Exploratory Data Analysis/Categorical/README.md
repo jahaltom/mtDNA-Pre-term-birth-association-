@@ -130,13 +130,15 @@ print(results_df)
         - Fisher's Exact Test(if contingency_table.values < 5 and contingency_table.shape == (2, 2)  e.g. TB)(DRINKING_SOURCE has a value < 5 but not 2x2. This gets excluded). 
     - For GAGEBRTH;
         - ANOVA and Kruskal-Wallis
-
+          
+- Output results:Separate Bonferroni correction for each test type (Categorical_Analysis_Results.csv).
+  
 - Subsets df to specific columns and removes missing data across the board. 
-- VIF is used to asses each variable for multicollinearity. MainHap and FUEL_FOR_COOK are one-hot encoded and the 1st is dropped. 
+- VIF is used to asses each variable for multicollinearity. MainHap and FUEL_FOR_COOK are one-hot encoded and the 1st is dropped. Outputs results in Categorical_Multicollinearity_VIF.csv.
 - Pearson correlation: Using same df from above except 1st is not droped.
 
   
-- Output results:Separate Bonferroni correction for each test type.
+
 
 
 
