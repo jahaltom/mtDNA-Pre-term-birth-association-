@@ -5,6 +5,8 @@ For each categorical variable class, determine the number of pre-term births and
 ```python
 import pandas as pd
 
+df = pd.read_csv("Metadata.M.Final.tsv", sep='\t')
+
 # Columns to analyze
 columns = ['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
                        'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK', 'CHRON_HTN',
