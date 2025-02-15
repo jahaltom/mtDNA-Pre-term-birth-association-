@@ -1,6 +1,7 @@
 # Initial EDA.
 
-For each categorical variable class, determine the number of pre-term births and normal births (PTB=1 normal=0) and the % of PTB=1. Missing data is removed. 
+For each categorical variable class, determine the number of pre-term births and normal births (PTB=1 normal=0) and the % of PTB=1. 
+Missing data is removed for each variable one at a time.
 
 ```python
 import pandas as pd
@@ -13,17 +14,18 @@ columns = ['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
                        'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
                        "SNIFF_TOBA", "SMOKE_HIST"]
 df=df[columns+["PTB"]]
-df = df[~df.isin([-88, -77]).any(axis=1)]  # Remove rows with invalid entries (-88, -77)
+
 
 # List to store results
 results = []
 
 # Loop through each column
 for col in columns:
-    unique_values = df[col].drop_duplicates().to_list()
+    dfT = df[~df[col].isin([-88, -77])]  # Remove rows with invalid entries (-88, -77)
+    unique_values = dfT[col].drop_duplicates().to_list()
     for value in unique_values:
         # Calculate counts
-        ptb_counts = df[df[col] == value]["PTB"].value_counts()
+        ptb_counts = dfT[dfT[col] == value]["PTB"].value_counts()
         # Ensure there are no missing categories (0 or 1)
         ptb_counts = ptb_counts.reindex([0, 1], fill_value=0)       
         # Calculate percentage of PTB = 1 relative to all
@@ -45,69 +47,69 @@ print(results_df)
 ```
 
 ```
-             Column Value  PTB_0_Count  PTB_1_Count  PTB_1_Percentage
-0         TYP_HOUSE     1         3618          289          7.396980
-1         TYP_HOUSE     2         3468          249          6.698951
-2    HH_ELECTRICITY     0         2953          169          5.413197
-3    HH_ELECTRICITY     1         4133          369          8.196357
-4     FUEL_FOR_COOK     4         2758          250          8.311170
-5     FUEL_FOR_COOK     1         1372          167         10.851202
-6     FUEL_FOR_COOK     3         2590          104          3.860431
-7     FUEL_FOR_COOK     5          160           10          5.882353
-8     FUEL_FOR_COOK     2          206            7          3.286385
-9   DRINKING_SOURCE     2         2655          247          8.511371
-10  DRINKING_SOURCE     1         3983          262          6.171967
-11  DRINKING_SOURCE     4          446           29          6.105263
+              Column Value  PTB_0_Count  PTB_1_Count  PTB_1_Percentage
+0         TYP_HOUSE     1         4173          334          7.410694
+1         TYP_HOUSE     2         3605          265          6.847545
+2    HH_ELECTRICITY     1         5226          461          8.106207
+3    HH_ELECTRICITY     0         3154          182          5.455635
+4     FUEL_FOR_COOK     1         1449          174         10.720887
+5     FUEL_FOR_COOK     4         2988          280          8.567931
+6     FUEL_FOR_COOK     3         3081          137          4.257303
+7     FUEL_FOR_COOK     5          650           43          6.204906
+8     FUEL_FOR_COOK     2          209            7          3.240741
+9   DRINKING_SOURCE     1         4410          289          6.150245
+10  DRINKING_SOURCE     2         2912          281          8.800501
+11  DRINKING_SOURCE     4          451           29          6.041667
 12  DRINKING_SOURCE     3            2            0          0.000000
-13           TOILET     1         3693          352          8.702101
-14           TOILET     2         2194          108          4.691573
-15           TOILET     3         1185           77          6.101426
+13           TOILET     1         4420          430          8.865979
+14           TOILET     2         2683          130          4.621401
+15           TOILET     3         1261           82          6.105733
 16           TOILET     4           14            1          6.666667
-17     WEALTH_INDEX     2         1386           86          5.842391
-18     WEALTH_INDEX     5         1552          108          6.506024
-19     WEALTH_INDEX     1         1327           94          6.615060
-20     WEALTH_INDEX     4         1423          131          8.429858
-21     WEALTH_INDEX     3         1398          119          7.844430
-22     PASSIVE_SMOK     1         2670          198          6.903766
-23     PASSIVE_SMOK     0         4416          340          7.148865
-24        CHRON_HTN     0         6921          515          6.925767
-25        CHRON_HTN     1          165           23         12.234043
-26         DIABETES     0         7056          528          6.962025
-27         DIABETES     1           30           10         25.000000
-28               TB     0         7049          536          7.066579
-29               TB     1           37            2          5.128205
-30          THYROID     0         7064          533          7.015927
-31          THYROID     1           22            5         18.518519
-32         EPILEPSY     0         7074          538          7.067788
+17     WEALTH_INDEX     5         1689          125          6.890849
+18     WEALTH_INDEX     1         1464          104          6.632653
+19     WEALTH_INDEX     3         1532          126          7.599517
+20     WEALTH_INDEX     2         1518           93          5.772812
+21     WEALTH_INDEX     4         1572          151          8.763784
+22     PASSIVE_SMOK     1         2685          200          6.932409
+23     PASSIVE_SMOK     0         4442          342          7.148829
+24        CHRON_HTN     0         8167          611          6.960583
+25        CHRON_HTN     1          206           29         12.340426
+26         DIABETES     0         8349          632          7.037078
+27         DIABETES     1           34           11         24.444444
+28               TB     0         8302          638          7.136465
+29               TB     1           72            4          5.263158
+30          THYROID     0         8358          637          7.081712
+31          THYROID     1           23            6         20.689655
+32         EPILEPSY     0         8371          643          7.133348
 33         EPILEPSY     1           12            0          0.000000
-34         BABY_SEX     1         3579          288          7.447634
-35         BABY_SEX     2         3507          250          6.654245
-36          MainHap     M         2711          294          9.783694
-37          MainHap     G           55            1          1.785714
-38          MainHap     W          103           11          9.649123
-39          MainHap     U          511           50          8.912656
-40          MainHap     R          312           19          5.740181
-41          MainHap     F           68            5          6.849315
-42          MainHap     D          113           13         10.317460
-43          MainHap     N           36            3          7.692308
-44          MainHap     Z           21            3         12.500000
-45          MainHap     J           49            4          7.547170
-46          MainHap     H           83            9          9.782609
-47          MainHap     T           92           10          9.803922
-48          MainHap     K           32            7         17.948718
-49          MainHap     A           59            3          4.838710
-50          MainHap    L1          143            5          3.378378
-51          MainHap    L2          728           35          4.587156
-52          MainHap    L3         1396           49          3.391003
-53          MainHap    L0          409            8          1.918465
-54          MainHap    L4          116            6          4.918033
-55          MainHap     E           49            3          5.769231
-56       SNIFF_TOBA     1         6521          484          6.909350
-57       SNIFF_TOBA     4          528           51          8.808290
-58       SNIFF_TOBA     2           23            0          0.000000
+34         BABY_SEX     1         4222          334          7.330992
+35         BABY_SEX     2         4132          307          6.915972
+36          MainHap     M         2919          317          9.796044
+37          MainHap     U          537           59          9.899329
+38          MainHap     R          330           23          6.515581
+39          MainHap     N           39            3          7.142857
+40          MainHap     D          119           16         11.851852
+41          MainHap     T           96           10          9.433962
+42          MainHap     F           76            5          6.172840
+43          MainHap     J           52            5          8.771930
+44          MainHap     H           90            9          9.090909
+45          MainHap     W          114           11          8.800000
+46          MainHap     G           58            1          1.694915
+47          MainHap     Z           25            3         10.714286
+48          MainHap     K           34            7         17.073171
+49          MainHap     A           60            3          4.761905
+50          MainHap    L1          330           14          4.069767
+51          MainHap    L2          960           55          5.418719
+52          MainHap    L3         1776           72          3.896104
+53          MainHap    L0          593           20          3.262643
+54          MainHap    L4          125            7          5.303030
+55          MainHap     E           50            3          5.660377
+56       SNIFF_TOBA     1         6723          500          6.922331
+57       SNIFF_TOBA     4          572           54          8.626198
+58       SNIFF_TOBA     2           24            0          0.000000
 59       SNIFF_TOBA     3           14            3         17.647059
-60       SMOKE_HIST     1         7067          538          7.074293
-61       SMOKE_HIST     4           14            0          0.000000
+60       SMOKE_HIST     1         7659          578          7.017118
+61       SMOKE_HIST     4           16            1          5.882353
 62       SMOKE_HIST     2            4            0          0.000000
 63       SMOKE_HIST     3            1            0          0.000000
 
