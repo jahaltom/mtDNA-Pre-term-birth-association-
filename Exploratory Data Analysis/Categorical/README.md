@@ -134,6 +134,7 @@ print(results_df)
 - Subsets df to specific columns and removes missing data across the board. 
 - VIF is used to asses each variable for multicollinearity. MainHap and FUEL_FOR_COOK are one-hot encoded and the 1st is dropped. 
 - Pearson correlation: Using same df from above except 1st is not droped.
+
   
 - Output results:Separate Bonferroni correction for each test type.
 
