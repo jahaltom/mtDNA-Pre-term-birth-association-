@@ -48,6 +48,16 @@ for column in categorical_columns:
         results.append((column, 'ANOVA', anova_p, None))
         results.append((column, 'Kruskal-Wallis', kruskal_p, None))
 
+
+# Output results
+results_df = pd.DataFrame(results, columns=['Variable', 'Test','P-Value', 'Effect Size'])
+# Separate Bonferroni correction for each test type
+for test_type in ['Chi2', 'ANOVA', 'Kruskal-Wallis','Fisher']:
+    test_mask = (results_df['Test'] == test_type) & (results_df['P-Value'].notna())
+    num_tests = test_mask.sum()  # Number of tests for this type
+    results_df.loc[test_mask, 'Significant'] = results_df.loc[test_mask, 'P-Value'] < (0.05 / num_tests)
+results_df.to_csv("Categorical_Analysis_Results.csv", index=False)
+
 # Remove rows containing -88 or -77 in any column
 df=df[['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
                        'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK', 'CHRON_HTN',
@@ -62,7 +72,7 @@ df_encoded = pd.get_dummies(df,drop_first=True,dtype=int)
 vif_data = pd.DataFrame()
 vif_data["Variable"] = df_encoded.columns
 vif_data["VIF"] = [variance_inflation_factor(add_constant(df_encoded).values, i) for i in range(len(df_encoded.columns))]
-
+vif_data.to_csv("Categorical_Multicollinearity_VIF.csv", index=False)
 
 # Visualizations
 df_encoded = pd.get_dummies(df,drop_first=False,dtype=int)
@@ -71,19 +81,8 @@ plt.title("Correlation Heatmap for Encoded Categorical Variables")
 plt.savefig("CategoricalCorrelationHeatmap.png", bbox_inches="tight")
 plt.clf()
 
-# Output results
-results_df = pd.DataFrame(results, columns=['Variable', 'Test','P-Value', 'Effect Size'])
-# Separate Bonferroni correction for each test type
-for test_type in ['Chi2', 'ANOVA', 'Kruskal-Wallis','Fisher']:
-    test_mask = (results_df['Test'] == test_type) & (results_df['P-Value'].notna())
-    num_tests = test_mask.sum()  # Number of tests for this type
-    results_df.loc[test_mask, 'Significant'] = results_df.loc[test_mask, 'P-Value'] < (0.05 / num_tests)
 
 
-
-# Output Results
-results_df.to_csv("Categorical_Analysis_Results.csv", index=False)
-vif_data.to_csv("Categorical_Multicollinearity_VIF.csv", index=False)
 
 
 
