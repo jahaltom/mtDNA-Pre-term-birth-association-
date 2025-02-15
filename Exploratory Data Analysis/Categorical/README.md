@@ -24,8 +24,8 @@ for col in columns:
         ptb_counts = df[df[col] == value]["PTB"].value_counts()
         # Ensure there are no missing categories (0 or 1)
         ptb_counts = ptb_counts.reindex([0, 1], fill_value=0)       
-        # Calculate percentage of PTB = 1 relative to PTB = 0
-        percentage = (ptb_counts[1] / ptb_counts[0] * 100) if ptb_counts[0] > 0 else None
+        # Calculate percentage of PTB = 1 relative to all
+        percentage = (ptb_counts[1] / (ptb_counts[0] + ptb_counts[1] ) * 100) if ptb_counts[0] > 0 else None
         # Append results as a row
         results.append({
             "Column": col,
