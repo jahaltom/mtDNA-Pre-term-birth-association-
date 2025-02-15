@@ -25,7 +25,7 @@ for col in columns:
         # Ensure there are no missing categories (0 or 1)
         ptb_counts = ptb_counts.reindex([0, 1], fill_value=0)       
         # Calculate percentage of PTB = 1 relative to all
-        percentage = (ptb_counts[1] / (ptb_counts[0] + ptb_counts[1] ) * 100) if ptb_counts[0] > 0 else None
+        percentage = (ptb_counts[1] / (ptb_counts[0] + ptb_counts[1] ) * 100) 
         # Append results as a row
         results.append({
             "Column": col,
