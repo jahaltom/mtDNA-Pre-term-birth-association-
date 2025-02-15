@@ -139,54 +139,6 @@ print(results_df)
 
   
 
-
-
-
-## VIF results
-```
-           Variable          VIF
-0         TYP_HOUSE  1492.133301
-1    HH_ELECTRICITY     1.338904
-2   DRINKING_SOURCE     1.933587
-3            TOILET     2.070086
-4      WEALTH_INDEX     1.532907
-5      PASSIVE_SMOK     1.519001
-6         CHRON_HTN     1.145544
-7          DIABETES     1.040461
-8                TB     1.023495
-9           THYROID     1.007865
-10         EPILEPSY     1.009333
-11         BABY_SEX     1.006067
-12       SNIFF_TOBA     1.004969
-13       SMOKE_HIST     1.082677
-14              PTB     1.008571
-15         GAGEBRTH     1.733009
-16  FUEL_FOR_COOK_2     1.782972
-17  FUEL_FOR_COOK_3     2.437520
-18  FUEL_FOR_COOK_4    11.640222
-19  FUEL_FOR_COOK_5     3.093030
-20        MainHap_D     1.711992
-21        MainHap_E     2.991917
-22        MainHap_F     2.149492
-23        MainHap_G     2.167560
-24        MainHap_H     1.894286
-25        MainHap_J     2.512088
-26        MainHap_K     1.868047
-27       MainHap_L0     1.629379
-28       MainHap_L1     9.678624
-29       MainHap_L2     4.164354
-30       MainHap_L3    16.140782
-31       MainHap_L4    26.885350
-32        MainHap_M     3.608939
-33        MainHap_N    30.204153
-34        MainHap_R     1.626251
-35        MainHap_T     6.092557
-36        MainHap_U     2.667763
-37        MainHap_W     9.398611
-38        MainHap_Z     2.810342
-
-
-```
 ## Stat results (Separate Bonferroni correction for each test type)
 ```
            Variable            Test       P-Value Effect Size Significant
@@ -239,6 +191,50 @@ print(results_df)
 46       SMOKE_HIST           ANOVA           NaN        None         NaN
 47       SMOKE_HIST  Kruskal-Wallis           NaN        None         NaN
 ```
+## VIF results
+```
+           Variable          VIF
+0         TYP_HOUSE  1492.133301
+1    HH_ELECTRICITY     1.338904
+2   DRINKING_SOURCE     1.933587
+3            TOILET     2.070086
+4      WEALTH_INDEX     1.532907
+5      PASSIVE_SMOK     1.519001
+6         CHRON_HTN     1.145544
+7          DIABETES     1.040461
+8                TB     1.023495
+9           THYROID     1.007865
+10         EPILEPSY     1.009333
+11         BABY_SEX     1.006067
+12       SNIFF_TOBA     1.004969
+13       SMOKE_HIST     1.082677
+14              PTB     1.008571
+15         GAGEBRTH     1.733009
+16  FUEL_FOR_COOK_2     1.782972
+17  FUEL_FOR_COOK_3     2.437520
+18  FUEL_FOR_COOK_4    11.640222
+19  FUEL_FOR_COOK_5     3.093030
+20        MainHap_D     1.711992
+21        MainHap_E     2.991917
+22        MainHap_F     2.149492
+23        MainHap_G     2.167560
+24        MainHap_H     1.894286
+25        MainHap_J     2.512088
+26        MainHap_K     1.868047
+27       MainHap_L0     1.629379
+28       MainHap_L1     9.678624
+29       MainHap_L2     4.164354
+30       MainHap_L3    16.140782
+31       MainHap_L4    26.885350
+32        MainHap_M     3.608939
+33        MainHap_N    30.204153
+34        MainHap_R     1.626251
+35        MainHap_T     6.092557
+36        MainHap_U     2.667763
+37        MainHap_W     9.398611
+38        MainHap_Z     2.810342
 
+
+```
 
 
