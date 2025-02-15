@@ -1,7 +1,6 @@
-
+# CategoricalEDA.py
 
 - Takes in Metadata.M.Final.tsv 
-
 - For each catigorical column, removes missing data.
     - For PTB; 
         - Performs Chi-Square and cramers v.
@@ -10,23 +9,14 @@
     - For GAGEBRTH;
         - ANOVA and Kruskal-Wallis
 
-
-
 - Subsets df to specific columns and removes missing data across the board. 
-
-
-
-- VIF is used to asses each variable. MainHap and FUEL_FOR_COOK are one-hot encoded and the 1st is dropped. 
-
-
+- VIF is used to asses each variable for multicollinearity. MainHap and FUEL_FOR_COOK are one-hot encoded and the 1st is dropped. 
 - Pearson correlation: Using same df from above except 1st is not droped.
-
-
 - Output results:Separate Bonferroni correction for each test type.
 
 
 
-
+# VIF results
 ```
            Variable          VIF
 0         TYP_HOUSE  1492.133301
@@ -71,6 +61,7 @@
 
 
 ```
+# Sat results (Separate Bonferroni correction for each test type)
 ```
            Variable            Test       P-Value Effect Size Significant
 0         TYP_HOUSE            Chi2  3.396992e-01    0.010432       False
