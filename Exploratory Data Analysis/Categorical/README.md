@@ -1,6 +1,6 @@
-# Inital EDA.
+# Initial EDA.
 
-For each catigorical variable class, determin the number of pre-term births and normal births (PTB=1 normal=0) and the % of PTB=1
+For each categorical variable class, determine the number of pre-term births and normal births (PTB=1 normal=0) and the % of PTB=1
 
 ```python
 import pandas as pd
