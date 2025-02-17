@@ -18,7 +18,7 @@ Takes in Haplogrep3 output and metadata files (MOMI_derived_data.tsv and samples
 
 
 ## MissingDataHeatmap.py
-![alt text](https://github.com/jahaltom/mtDNA-Pre-term-birth-association-/blob/main/Exploratory%20Data%20Analysis/MissingDataHeatmap.png?raw=true)
+![alt text](https://github.com/jahaltom/mtDNA-Pre-term-birth-association-/blob/main/plots/MissingDataHeatmap.png?raw=true)
 
 ## Outlier removal with Weibull (Do weibull filtering once, then EDA selecting for relevant features, then Weibull once more unhasing the lines marked ######
 ### WeibullFiltering.py:
