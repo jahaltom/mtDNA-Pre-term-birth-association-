@@ -112,12 +112,4 @@ vif_data['VIF'] = [variance_inflation_factor(dfCont[continuous_vars].values, i)
                    for i in range(len(continuous_vars))]
 print(vif_data.sort_values(by='VIF', ascending=False))
 
-# Filter out high-VIF variables (>10 suggests multicollinearity issues)
-high_vif = vif_data[vif_data['VIF'] > 10]
-print("\nHigh VIF Variables (Consider Dropping or Combining):")
-print(high_vif)
 
-# Final filtered variables
-final_vars = [col for col in continuous_vars if col not in high_vif['Variable'].tolist()]
-print("\nFinal Set of Variables for Modeling:")
-print(final_vars)
