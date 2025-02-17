@@ -18,12 +18,12 @@ Takes in Haplogrep3 output and metadata files (MOMI_derived_data.tsv and samples
 
 
 ## MissingDataHeatmap.py
-Analyze dataset for missing data using features on interest. Remove SNIFF_FREQ, ALCOHOL, PASSIVE_SMOK, and SNIFF_TOBA. 
+Analyze dataset for missing data using features on interest. Remove SNIFF_FREQ, ALCOHOL, PASSIVE_SMOK, and SNIFF_TOBA at weibull filtering. 
 ![alt text](https://github.com/jahaltom/mtDNA-Pre-term-birth-association-/blob/main/plots/MissingDataHeatmap.png?raw=true)
 
-## Outlier removal with Weibull (Do weibull filtering once, then EDA selecting for relevant features, then Weibull once more unhasing the lines marked ######
+## Outlier removal with Weibull
 ### WeibullFiltering.py:
-Takes in (Metadata.C.tsv and Metadata.M.tsv) and removes samples where GA "GAGEBRTH" is na. Fit the Weibull distribution to the data and defines cutoff thresholds for outlier detection (upper/lower GA in days ...1st percentile and 99th percentile). Filter the data on these threshholds. 
+Takes in (Metadata.C.tsv and Metadata.M.tsv) and removes samples where GA "GAGEBRTH" and PTB is na. Fit the Weibull distribution to the data and defines cutoff thresholds for outlier detection (upper/lower GA in days ...1st percentile and 99th percentile). Filter the data on these threshholds. 
 Outputs (Metadata.M.Weibull.tsv Metadata.C.Weibull.tsv).
 Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.M.png weibullFiltering.C.png).
 Also outputs C.txt and M.txt which are subset from (Metadata.M.Weibull.tsv Metadata.C.Weibull.tsv) and used for sample selection in plink2VCF.sh.
