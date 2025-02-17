@@ -5,12 +5,10 @@ import numpy as np
 from matplotlib.colors import ListedColormap
 
 # Load the data
-df = pd.read_csv("Metadata.M.Final.tsv", sep='\t')
+df = pd.read_csv("Metadata.M.tsv", sep='\t')
 
 
 
-df['SNIFF_FREQ'] = df['SNIFF_FREQ'].replace({-88: 0})
-df['SNIFF_FREQ'] = df['SNIFF_FREQ'].replace({-77: 0})
 
 
 # Extract the "site" column for row labels
@@ -25,7 +23,7 @@ site_colors = {site: site_palette[i] for i, site in enumerate(unique_sites)}
 row_colors = row_labels.map(site_colors)
 
 # Select relevant columns for the heatmap
-df = df[['PW_AGE', 'SNIFF_FREQ', 'PW_EDUCATION', 'MAT_HEIGHT',
+df = df[['PW_AGE', 'SNIFF_FREQ', 'PW_EDUCATION', 'MAT_HEIGHT', 'MAT_WEIGHT',
                    'TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
                        'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK', 'ALCOHOL', 'CHRON_HTN',
                        'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
