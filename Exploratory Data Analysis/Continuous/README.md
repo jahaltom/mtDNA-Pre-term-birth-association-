@@ -1,14 +1,8 @@
-- Takes in Metadata.M.Final.tsv
-
-- Replace SNIFF_FREQ (-88: 0, -77) with  0.
-
-
-- Define continuous columns and drop rows with values < 0 (in any).
-
-- Standardize continuous variables with StandardScaler.
+# ContinuousEDA.py
+- Takes in Metadata.M.Final.tsv. Replace SNIFF_FREQ (-88 -77) with  0. Defines continuous columns and drop rows with values < 0 (in any). Standardize continuous variables with StandardScaler.
 
 
-- Compute and visualize correlation matrix for all variables and PTB and GAGEBRTH.############################
+- Compute and visualize correlation matrix for all variables and PTB and GAGEBRTH. (See plots)
 
 
 - Analyze Point-Biserial Correlation for PTB (Binary Target)
@@ -79,7 +73,7 @@ C3: raw p = 1.0632e-05, corrected p = 3.0832e-04, significant = True
 C4: raw p = 5.4549e-02, corrected p = 1.0000e+00, significant = False
 C5: raw p = 1.2587e-01, corrected p = 1.0000e+00, significant = False
 ```
-- Visualize relationships for significant variables (for predicting PTB and GAGEBRTH)
+- Visualize relationships for significant variables (for predicting PTB and GAGEBRTH) (See plots)
 
 - VIF Multicollinearity Check
 ```        Variable          VIF
