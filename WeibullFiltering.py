@@ -11,10 +11,12 @@ for i in CoM:
 
 
 
-  wantedCol = ['DIABETES', 'PW_AGE', 'MAT_HEIGHT', "MainHap"]#######################
+  wantedCol = ['PW_AGE', 'PW_EDUCATION', 'MAT_HEIGHT', 'MAT_WEIGHT', 'TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
+                       'TOILET', 'WEALTH_INDEX', 'CHRON_HTN', 'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap','SMOKE_HIST']
+  
   # Apply filtering only in the wantedCol columns
-  md = md[~md[wantedCol].isin([-88, -77]).any(axis=1)]##############################
-  md = md[md['MainHap'].map(md['MainHap'].value_counts()) >= 25]
+  md = md[~md[wantedCol].isin([-88, -77]).any(axis=1)]
+  
 
   
   
@@ -32,6 +34,10 @@ for i in CoM:
   # Step 3: Filter the data
   filtered_data = md[(md["GAGEBRTH"] >= lower_cutoff) & (md["GAGEBRTH"] <= upper_cutoff)]
   
+
+
+   md = md[md['MainHap'].map(md['MainHap'].value_counts()) >= 25]#############################
+
   
   filtered_data.to_csv('Metadata.'+i+'.Weibull.tsv', index=False, sep="\t") 
   filtered_data[["Sample_ID"]].to_csv(i+".txt", index=False,header=False) 
