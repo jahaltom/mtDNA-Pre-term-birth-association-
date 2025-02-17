@@ -14,8 +14,7 @@ Use tree "rCRS PhyloTree 17.2" and  Kulczynski Distance function. Run this on me
 
 ## Metadata curration, filtering, and conversion. 
 ### MetadataMerge.py: 
-Takes in Haplogrep3 output and metadata files (momi_combined_data.txt and samples.tab) and performs merge. Filters for only high quality haplogroup calls "Quality">=0.9 and only live births "PREG_OUTCOME"==2. Identifies main and sub haplogroups. 
-Seperates mother and child in dataset, then filters to include only main haplogroups with at least 10 occurrences. Writes two tsvs (Metadata.C.tsv and Metadata.M.tsv). 
+Takes in Haplogrep3 output and metadata files (MOMI_derived_data.tsv and samples.tab) and performs merge. Filters for only high quality haplogroup calls "Quality">=0.9 and only live births "PREG_OUTCOME"==2. Identifies main and sub haplogroups. Seperates mother and child in dataset and writes two tsvs (Metadata.C.tsv and Metadata.M.tsv). 
 
 ## Outlier removal with Weibull (Do weibull filtering once, then EDA selecting for relevant features, then Weibull once more unhasing the lines marked ######
 ### WeibullFiltering.py:
