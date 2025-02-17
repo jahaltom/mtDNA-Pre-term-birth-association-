@@ -93,7 +93,6 @@ for col in significant_vars:
     plt.tight_layout()
     plt.savefig(f"{output_dir}GAGEBRTHScatter_{col}.png")
     plt.close()
-
     # Box plots for PTB
     plt.figure(figsize=(6, 4))
     sns.boxplot(x=df['PTB'], y=df[col])
