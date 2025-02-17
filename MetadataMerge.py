@@ -25,10 +25,7 @@ haplo=haplo.drop_duplicates(subset=['Subject_ID'])
 md=pd.read_csv('/scr1/users/haltomj/PTB/MOMI_derived_data.tsv',sep='\t')  
 md=md.drop_duplicates() 
 
-# ##Filter
-# md=md[(md["ALCOHOL"]!=4) ]
-# md=md[(md["SMOKE_HIST"]!=4) ]
-# md=md[(md["PASSIVE_SMOK"]!=1) ]
+
 
 # #Only live births
 md=md[md["PREG_OUTCOME"]==2]
@@ -71,23 +68,11 @@ df['SubHap'] = np.where(df['MainHap'].isin(speHaps), df['Haplogroup'].astype(str
 #Sep M and C 
 
 dfM=df[df["M/C"]=="M"]
-# Count occurrences of each category
-category_counts = dfM['MainHap'].value_counts()
-# Filter the DataFrame to include only categories with at least 10 occurrences 
-dfM = dfM[dfM['MainHap'].isin(category_counts[category_counts >= 10].index)]
-
+dfM["Sample_ID"]=("0_"+dfM["SampleID"])
+dfM.to_csv("Metadata.M.tsv", index=False, sep='\t')  
 
 
 dfC=df[df["M/C"]=="C"]
-# Count occurrences of each category
-category_counts = dfC['MainHap'].value_counts()
-# Filter the DataFrame to include only categories with at least 10 occurrences
-dfC = dfC[dfC['MainHap'].isin(category_counts[category_counts >= 10].index)]
-
-
-
-
-
 dfC["Sample_ID"]=("0_"+dfC["SampleID"])
 dfC.to_csv("Metadata.C.tsv", index=False, sep='\t')  
 
@@ -95,8 +80,7 @@ dfC.to_csv("Metadata.C.tsv", index=False, sep='\t')
 
 
 
-dfM["Sample_ID"]=("0_"+dfM["SampleID"])
-dfM.to_csv("Metadata.M.tsv", index=False, sep='\t')  
+
 
 
 
