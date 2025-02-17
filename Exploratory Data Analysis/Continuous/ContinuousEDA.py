@@ -10,8 +10,6 @@ import os
 # Load the dataset
 df = pd.read_csv("Metadata.M.Final.tsv", sep='\t')
 
-# Drop rows with missing target variables
-df = df.dropna(subset=["PTB", "GAGEBRTH"])
 
 # Replace specific missing value codes with NaN for cleaning
 df['SNIFF_FREQ'] = df['SNIFF_FREQ'].replace({-88: 0, -77: 0})
@@ -46,7 +44,7 @@ corr_matrix = dfCont.corr()
 sns.heatmap(corr_matrix, annot=False, cmap='coolwarm', center=0)
 plt.title("Correlation Matrix for Continuous Variables")
 plt.tight_layout()
-plt.savefig(f"{output_dir}GAGEBRTHCorr.png")
+plt.savefig(f"{output_dir}ContinuousCorrelationHeatmap.png")
 plt.close()
 
 # Analyze Point-Biserial Correlation for PTB (Binary Target)
@@ -80,6 +78,10 @@ for col, p, p_corr, sig in zip(continuous_vars, p_values_ga, corrected_ga[1], co
 # Visualize relationships for significant variables
 print("\nVisualizing Significant Variables...")
 significant_vars = [col for col, sig in zip(continuous_vars, corrected_ptb[0]) if sig]
+significant_vars2 = [col for col, sig in zip(continuous_vars, corrected_ga[0]) if sig]
+significant_vars=significant_vars+significant_vars2
+significant_vars=set(significant_vars)
+
 
 for col in significant_vars:
     # Scatter plots for GAGEBRTH
