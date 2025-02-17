@@ -73,7 +73,7 @@ C3: raw p = 1.0632e-05, corrected p = 3.0832e-04, significant = True
 C4: raw p = 5.4549e-02, corrected p = 1.0000e+00, significant = False
 C5: raw p = 1.2587e-01, corrected p = 1.0000e+00, significant = False
 ```
-- Visualize relationships for significant variables (for predicting PTB and GAGEBRTH) (See plots)
+- Visualize relationships for significant variables (form PTB and GAGEBRTH targets) (See plots)
 
 - VIF Multicollinearity Check
 ```        Variable          VIF
