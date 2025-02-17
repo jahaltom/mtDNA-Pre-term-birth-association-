@@ -4,14 +4,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import ListedColormap
 
+
+CoM=["C","M"]
+for i in CoM:
+    
 # Load the data
-df = pd.read_csv("Metadata.M.tsv", sep='\t')
+df = pd.read_csv("Metadata."+i+".tsv", sep='\t')
 
 
-
-
-
-# Extract the "site" column for row labels
+    # Extract the "site" column for row labels
 row_labels = df["site"]
 
 # Create a color palette for the site categories
