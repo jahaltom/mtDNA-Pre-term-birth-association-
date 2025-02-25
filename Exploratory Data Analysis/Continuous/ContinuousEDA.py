@@ -11,11 +11,9 @@ import os
 df = pd.read_csv("Metadata.M.Final.tsv", sep='\t')
 
 
-# Replace specific missing value codes with NaN for cleaning
-df['SNIFF_FREQ'] = df['SNIFF_FREQ'].replace({-88: 0, -77: 0})
 
 # Define continuous variables
-continuous_vars = ['PW_AGE', "SNIFF_FREQ", 'PW_EDUCATION', 'MAT_HEIGHT',
+continuous_vars = ['PW_AGE', 'PW_EDUCATION', 'MAT_HEIGHT', 'MAT_WEIGHT',
                    "PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10",
                    "PC11", "PC12", "PC13", "PC14", "PC15", "PC16", "PC17", "PC18", "PC19",
                    "PC20", "C1", "C2", "C3", "C4", "C5"]
@@ -24,7 +22,7 @@ continuous_vars = ['PW_AGE', "SNIFF_FREQ", 'PW_EDUCATION', 'MAT_HEIGHT',
 df = df[continuous_vars + ['PTB', 'GAGEBRTH']]
 
 # Drop rows with values < 0 for specific columns
-columns_to_check = ['PW_AGE', "SNIFF_FREQ", 'PW_EDUCATION', 'MAT_HEIGHT']
+columns_to_check = ['PW_AGE', 'PW_EDUCATION', 'MAT_HEIGHT', 'MAT_WEIGHT']
 df = df[df[columns_to_check].ge(0).all(axis=1)]
 
 # Create a deep copy of the DataFrame
