@@ -15,7 +15,9 @@ Use tree "rCRS PhyloTree 17.2" and  Kulczynski Distance function. Run this on me
 ## Metadata curration, filtering, and conversion. 
 ### MetadataMerge.py: 
 Takes in Haplogrep3 output and metadata files (MOMI_derived_data.tsv and samples.tab) and performs merge. Filters for only high quality haplogroup calls "Quality">=0.9 and only live births "PREG_OUTCOME"==2. Identifies main and sub haplogroups. Seperates mother and child in dataset and writes two tsvs (Metadata.C.tsv and Metadata.M.tsv). From here on out, I will only be analyzing the mother dataset.
-
+df.loc[df['ALCOHOL'] == 1, 'ALCOHOL_FREQ'] = 0
+df.loc[df['SMOKE_HIST'] == 1, 'SMOK_FREQ'] = 0
+df.loc[df['SNIFF_TOBA'] == 1, 'SNIFF_FREQ'] = 0
 
 ## MissingDataHeatmap.py
 Analyze dataset for missing data using features on interest. Remove SNIFF_FREQ, ALCOHOL, PASSIVE_SMOK, and SNIFF_TOBA at weibull filtering. 
