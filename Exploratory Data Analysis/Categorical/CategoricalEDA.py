@@ -75,6 +75,7 @@ vif_data["VIF"] = [variance_inflation_factor(add_constant(df_encoded).values, i)
 vif_data.to_csv("Categorical_Multicollinearity_VIF.csv", index=False)
 
 # Visualizations
+plt.figure(figsize=(12, 10))
 df_encoded = pd.get_dummies(df,drop_first=False,dtype=int)
 sns.heatmap(df_encoded.corr(), cmap='coolwarm', center=0, annot=False)
 plt.title("Correlation Heatmap for Encoded Categorical Variables")
