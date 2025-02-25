@@ -1,5 +1,5 @@
 # ContinuousEDA.py
-- Takes in Metadata.M.Final.tsv. Replace SNIFF_FREQ (-88 -77) with  0. Defines continuous columns and drop rows with values < 0 (in any). Standardize continuous variables with StandardScaler.
+- Takes in Metadata.M.Final.tsv.  Defines continuous columns and drop rows with values < 0 (in any). Standardize continuous variables with StandardScaler.
 
 
 - Compute and visualize correlation matrix for all variables and PTB and GAGEBRTH. (See plots)
