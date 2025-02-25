@@ -136,100 +136,95 @@ print(results_df)
 
 ## Stat results (Separate Bonferroni correction for each test type)
 ```
-           Variable            Test       P-Value Effect Size Significant
-0         TYP_HOUSE            Chi2  3.396992e-01    0.010432       False
-1         TYP_HOUSE           ANOVA  7.496995e-01        None       False
-2         TYP_HOUSE  Kruskal-Wallis  8.048174e-01        None       False
-3    HH_ELECTRICITY            Chi2  2.841368e-06    0.049289        True
-4    HH_ELECTRICITY           ANOVA  5.688943e-13        None        True
-5    HH_ELECTRICITY  Kruskal-Wallis  2.234656e-11        None        True
-6     FUEL_FOR_COOK            Chi2  3.520700e-18    0.098778        True
-7     FUEL_FOR_COOK           ANOVA  4.979702e-74        None        True
-8     FUEL_FOR_COOK  Kruskal-Wallis  2.125231e-79        None        True
+            Variable            Test       P-Value Effect Size Significant
+0         TYP_HOUSE            Chi2  5.261449e-01    0.007178       False
+1         TYP_HOUSE           ANOVA  8.775989e-01        None       False
+2         TYP_HOUSE  Kruskal-Wallis  7.388067e-01        None       False
+3    HH_ELECTRICITY            Chi2  3.081018e-06    0.052831        True
+4    HH_ELECTRICITY           ANOVA  2.006167e-14        None        True
+5    HH_ELECTRICITY  Kruskal-Wallis  3.395675e-13        None        True
+6     FUEL_FOR_COOK            Chi2  3.313437e-18    0.106299        True
+7     FUEL_FOR_COOK           ANOVA  1.934785e-62        None        True
+8     FUEL_FOR_COOK  Kruskal-Wallis  4.410464e-63        None        True
 9   DRINKING_SOURCE            Chi2           NaN  Low counts         NaN
-10  DRINKING_SOURCE           ANOVA  2.035932e-22        None        True
-11  DRINKING_SOURCE  Kruskal-Wallis  7.173723e-26        None        True
+10  DRINKING_SOURCE           ANOVA           NaN        None         NaN
+11  DRINKING_SOURCE  Kruskal-Wallis           NaN        None         NaN
 12           TOILET            Chi2           NaN  Low counts         NaN
-13           TOILET           ANOVA  1.499114e-25        None        True
-14           TOILET  Kruskal-Wallis  3.995459e-23        None        True
-15     WEALTH_INDEX            Chi2  1.296833e-02    0.038908       False
-16     WEALTH_INDEX           ANOVA  1.155273e-01        None       False
-17     WEALTH_INDEX  Kruskal-Wallis  2.155249e-01        None       False
-18     PASSIVE_SMOK            Chi2  7.548443e-01    0.003566       False
-19     PASSIVE_SMOK           ANOVA  1.289662e-01        None       False
-20     PASSIVE_SMOK  Kruskal-Wallis  5.704247e-02        None       False
-21        CHRON_HTN            Chi2  2.364234e-03    0.032023        True
-22        CHRON_HTN           ANOVA  1.728665e-01        None       False
-23        CHRON_HTN  Kruskal-Wallis  5.729685e-01        None       False
-24         DIABETES            Chi2  2.256225e-05    0.044607        True
-25         DIABETES           ANOVA  6.713991e-03        None       False
-26         DIABETES  Kruskal-Wallis  4.846272e-02        None       False
-27               TB          Fisher  6.583330e-01        None       False
-28               TB           ANOVA  9.043271e-01        None       False
-29               TB  Kruskal-Wallis  9.251903e-01        None       False
-30          THYROID            Chi2  1.304457e-02    0.026134       False
-31          THYROID           ANOVA  3.678319e-02        None       False
-32          THYROID  Kruskal-Wallis  5.313253e-02        None       False
-33         EPILEPSY          Fisher  1.000000e+00        None       False
-34         EPILEPSY           ANOVA  2.127072e-01        None       False
-35         EPILEPSY  Kruskal-Wallis  2.265318e-01        None       False
-36         BABY_SEX            Chi2  4.690950e-01    0.007633       False
-37         BABY_SEX           ANOVA  2.381770e-02        None       False
-38         BABY_SEX  Kruskal-Wallis  1.065444e-02        None       False
-39          MainHap            Chi2           NaN  Low counts         NaN
-40          MainHap           ANOVA  4.789909e-67        None        True
-41          MainHap  Kruskal-Wallis  1.243953e-73        None        True
-42       SNIFF_TOBA            Chi2           NaN  Low counts         NaN
-43       SNIFF_TOBA           ANOVA  1.176297e-04        None        True
-44       SNIFF_TOBA  Kruskal-Wallis  5.462073e-05        None        True
-45       SMOKE_HIST            Chi2           NaN  Low counts         NaN
-46       SMOKE_HIST           ANOVA           NaN        None         NaN
-47       SMOKE_HIST  Kruskal-Wallis           NaN        None         NaN
+13           TOILET           ANOVA  2.434031e-22        None        True
+14           TOILET  Kruskal-Wallis  9.006812e-21        None        True
+15     WEALTH_INDEX            Chi2  3.197613e-02      0.0368       False
+16     WEALTH_INDEX           ANOVA  8.633056e-02        None       False
+17     WEALTH_INDEX  Kruskal-Wallis  1.286651e-01        None       False
+18        CHRON_HTN            Chi2  1.067906e-02    0.028911       False
+19        CHRON_HTN           ANOVA  2.769465e-01        None       False
+20        CHRON_HTN  Kruskal-Wallis  5.792026e-01        None       False
+21         DIABETES            Chi2  5.643900e-04    0.039048        True
+22         DIABETES           ANOVA  9.474655e-03        None       False
+23         DIABETES  Kruskal-Wallis  5.431536e-02        None       False
+24               TB          Fisher  1.000000e+00        None       False
+25               TB           ANOVA  2.657548e-01        None       False
+26               TB  Kruskal-Wallis  2.447062e-01        None       False
+27          THYROID            Chi2  4.916194e-02    0.022277       False
+28          THYROID           ANOVA  9.452335e-02        None       False
+29          THYROID  Kruskal-Wallis  1.072453e-01        None       False
+30         EPILEPSY          Fisher  1.000000e+00        None       False
+31         EPILEPSY           ANOVA  1.853433e-01        None       False
+32         EPILEPSY  Kruskal-Wallis  1.961054e-01        None       False
+33         BABY_SEX            Chi2  3.544465e-01    0.010486       False
+34         BABY_SEX           ANOVA  1.258746e-02        None       False
+35         BABY_SEX  Kruskal-Wallis  5.904382e-03        None       False
+36          MainHap            Chi2           NaN  Low counts         NaN
+37          MainHap           ANOVA  1.050111e-53        None        True
+38          MainHap  Kruskal-Wallis  2.469218e-55        None        True
+39       SMOKE_HIST            Chi2           NaN  Low counts         NaN
+40       SMOKE_HIST           ANOVA  7.810725e-02        None       False
+41       SMOKE_HIST  Kruskal-Wallis  2.324281e-02        None       False
+42        SMOK_FREQ          Fisher  1.000000e+00        None       False
+43        SMOK_FREQ           ANOVA  4.367043e-02        None       False
+44        SMOK_FREQ  Kruskal-Wallis  9.874577e-03        None       False
+
 ```
 ## VIF results
 ```
-           Variable          VIF
-0         TYP_HOUSE  1492.133301
-1    HH_ELECTRICITY     1.338904
-2   DRINKING_SOURCE     1.933587
-3            TOILET     2.070086
-4      WEALTH_INDEX     1.532907
-5      PASSIVE_SMOK     1.519001
-6         CHRON_HTN     1.145544
-7          DIABETES     1.040461
-8                TB     1.023495
-9           THYROID     1.007865
-10         EPILEPSY     1.009333
-11         BABY_SEX     1.006067
-12       SNIFF_TOBA     1.004969
-13       SMOKE_HIST     1.082677
-14              PTB     1.008571
-15         GAGEBRTH     1.733009
-16  FUEL_FOR_COOK_2     1.782972
-17  FUEL_FOR_COOK_3     2.437520
-18  FUEL_FOR_COOK_4    11.640222
-19  FUEL_FOR_COOK_5     3.093030
-20        MainHap_D     1.711992
-21        MainHap_E     2.991917
-22        MainHap_F     2.149492
-23        MainHap_G     2.167560
-24        MainHap_H     1.894286
-25        MainHap_J     2.512088
-26        MainHap_K     1.868047
-27       MainHap_L0     1.629379
-28       MainHap_L1     9.678624
-29       MainHap_L2     4.164354
-30       MainHap_L3    16.140782
-31       MainHap_L4    26.885350
-32        MainHap_M     3.608939
-33        MainHap_N    30.204153
-34        MainHap_R     1.626251
-35        MainHap_T     6.092557
-36        MainHap_U     2.667763
-37        MainHap_W     9.398611
-38        MainHap_Z     2.810342
-
-
+            Variable          VIF
+0         TYP_HOUSE  2641.378443
+1    HH_ELECTRICITY     1.278385
+2   DRINKING_SOURCE     1.807912
+3            TOILET     2.024542
+4      WEALTH_INDEX     1.481074
+5         CHRON_HTN     1.458008
+6          DIABETES     1.043827
+7                TB     1.023076
+8           THYROID     1.019314
+9          EPILEPSY     1.008520
+10         BABY_SEX     1.005745
+11       SMOKE_HIST     1.004574
+12        SMOK_FREQ    11.688740
+13              PTB    11.711165
+14         GAGEBRTH     1.747014
+15  FUEL_FOR_COOK_2     1.790288
+16  FUEL_FOR_COOK_3     2.390498
+17  FUEL_FOR_COOK_4    11.965263
+18  FUEL_FOR_COOK_5     3.154946
+19        MainHap_D     3.041350
+20        MainHap_E     3.045946
+21        MainHap_F     2.157259
+22        MainHap_G     2.239849
+23        MainHap_H     1.941180
+24        MainHap_J     2.414375
+25        MainHap_K     1.797443
+26       MainHap_L0     1.650344
+27       MainHap_L1    10.848563
+28       MainHap_L2     5.565465
+29       MainHap_L3    17.415365
+30       MainHap_L4    28.783636
+31        MainHap_M     3.665280
+32        MainHap_N    31.550164
+33        MainHap_R     1.664170
+34        MainHap_T     6.177904
+35        MainHap_U     2.645051
+36        MainHap_W     9.654132
+37        MainHap_Z     2.968777
 ```
 
 
