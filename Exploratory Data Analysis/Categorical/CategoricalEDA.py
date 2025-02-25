@@ -17,10 +17,10 @@ df = pd.read_csv("Metadata.M.Final.tsv", sep='\t')
 #df['GAGEBRTH'] = pd.to_numeric(df['GAGEBRTH'], errors='coerce')
 
 # Clean and select categorical variables
-categorical_columns = ['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
-                       'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK', 'CHRON_HTN',
-                       'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
-                       "SNIFF_TOBA", "SMOKE_HIST"]
+categorical_columns = [  'TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
+                             'TOILET', 'WEALTH_INDEX','CHRON_HTN',
+                             'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
+                             'SMOKE_HIST','SMOK_FREQ']
 
 # Initialize results storage
 results = []
@@ -58,12 +58,12 @@ for test_type in ['Chi2', 'ANOVA', 'Kruskal-Wallis','Fisher']:
     results_df.loc[test_mask, 'Significant'] = results_df.loc[test_mask, 'P-Value'] < (0.05 / num_tests)
 results_df.to_csv("Categorical_Analysis_Results.csv", index=False)
 
-# Remove rows containing -88 or -77 in any column
-df=df[['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
-                       'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK', 'CHRON_HTN',
-                       'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
-                       "SNIFF_TOBA", "SMOKE_HIST","PTB","GAGEBRTH"]]
-df = df[~df.isin([-88, -77]).any(axis=1)]
+# Remove rows containing -88, -99, or -77 in any column
+df=df[[  'TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
+                             'TOILET', 'WEALTH_INDEX','CHRON_HTN',
+                             'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
+                             'SMOKE_HIST','SMOK_FREQ',"PTB","GAGEBRTH"]]
+df = df[~df.isin([-88, -77,-99]).any(axis=1)]
 
 
 # Multicollinearity Check
