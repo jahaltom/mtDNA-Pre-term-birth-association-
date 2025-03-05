@@ -18,7 +18,7 @@ Takes in Haplogrep3 output and metadata files (MOMI_derived_data.tsv and samples
 
  
 ## MissingDataHeatmap.py
-Takes in Metadata.C.tsv or Metadata.M.tsv and analyzes the dataset for missing data using features of interest. Outputs heatmaps (MissingDataHeatmap.png). Missing data is in yellow. 
+Takes in Metadata.C.tsv or Metadata.M.tsv and analyzes the dataset for missing data using features of interest. Outputs heatmap (MissingDataHeatmap.png). Missing data is in yellow. 
 ```
 python Metadata.C.tsv
 ```
