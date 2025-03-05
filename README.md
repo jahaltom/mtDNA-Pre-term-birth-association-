@@ -27,8 +27,23 @@ python MissingDataHeatmap.py Metadata.C.tsv
 ![alt text](https://github.com/jahaltom/mtDNA-Pre-term-birth-association-/blob/main/plots/MissingDataHeatmap.M.png?raw=true)
 ![alt text](https://github.com/jahaltom/mtDNA-Pre-term-birth-association-/blob/main/plots/MissingDataHeatmap.C.png?raw=true)
 
-## Outlier removal with Weibull
-### WeibullFiltering.py:
+
+
+
+## worfkflow.sh
+Specify input file
+```
+file="Metadata.M.tsv"
+# Define an array of column names for All features
+columnsAll=('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX','MainHap','SMOKE_HIST','SMOK_FREQ')
+# Define an array of column names for Categorical features
+columnsCat=('TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX','MainHap','SMOKE_HIST','SMOK_FREQ')
+# Define an array of column names for Continuous  features
+columnsCont=('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT',"PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10","PC11","PC12","PC13","PC14","PC15","PC16","PC17","PC18","PC19","PC20","C1","C2","C3","C4","C5")
+```
+
+
+### Outlier removal with Weibull (WeibullFiltering.py):
 Takes in (Metadata.C.tsv or Metadata.M.tsv) and removes samples where GA "GAGEBRTH" and PTB is na. Also removes missing data from  columns from "All features" in master.sh. 
 Fit the Weibull distribution to the data (GAGEBRTH) and defines cutoff thresholds for outlier detection (upper/lower GA in days ...1st percentile and 99th percentile). Filter the data on these threshholds (>= lower_cutoff) & <= upper_cutoff). Additionaly, removes samples who are in a haplogroup with <25 samples. 
 Reports Weibull Parameters (Shape, Scale, and Location) and upper/lower cutoffs in days. 
@@ -36,41 +51,26 @@ Outputs (Metadata.Weibull.tsv).Also outputs IDs.txt which are only SampleIDs sub
 Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
 
 
-
-
-
-
-
-
-
-
-
 ### Subset nDNA VCF: 
-Subsets nDNA vcf. Selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (C.txt and M.txt). Outputs two vcfs (plink2.C.vcf and plink2.M.vcf) that will used below. 
-```
-bcftools view --types snps -t ^26,24,23 -S IDs.txt --force-samples /scr1/users/haltomj/PTB/plink2.vcf   >  plink2.vcf
-
-```
+Subsets nDNA vcf. Selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (IDs.txt). Outputs  vcf (plink2.vcf) that will used below. 
+makes   plink2.vcf
 ## Dimensionality reduction via PCA and MDS.
-Generates PCs and MDS clusters for (plink2.C.vcf and plink2.M.vcf). 
-```
-mkdir PCA-MDS
-#Run plink PCA and MDS All
-plink --vcf plink2.vcf --pca --double-id --out PCA-MDS/C
-plink --vcf plink2.vcf --cluster --mds-plot 5 --double-id --out PCA-MDS/C
-rm listC
-```
-
 
 ## Combine PCA/MDS results with metadata. 
 ### CombinePCA-MDS.py: 
 Takes in eigenvec and mds files and adds this data to (Metadata.M.Weibull.tsv Metadata.C.Weibull.tsv). Outputs ("Metadata.M.Final.tsv" and "Metadata.C.Final.tsv"). 
 
-
-
 ## Plotting
 ### PCA-MDA_Plot.r:
 Takes in Metadata.M.Final.tsv, Metadata.C.Final.tsv, and eigenval, and makes PCA/MDS plots. Lables Main/Sub haplogroup and site.  Also splits data by child/mother. 
+
+
+## EDA!
+
+
+
+
+
 
 
 ## Check for mtDNA haplogroup association with nDNA PCA clusters.
