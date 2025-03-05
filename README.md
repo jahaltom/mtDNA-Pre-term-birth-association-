@@ -1,7 +1,7 @@
 # mtDNA Pre-term birth association
 
 
-### plink2VCF.sh: 
+## plink2VCF.sh: 
 Takes in plink files for nDNA and makes vcf.
 
 ## Run Haplogrep3 to assign haplogroups to samples.
