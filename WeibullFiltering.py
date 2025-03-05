@@ -6,15 +6,15 @@ import sys
 
 
 # Load metadata
-md = pd.read_csv("Metadata.M.tsv",sep='\t')
+md = pd.read_csv(sys.argv[1],sep='\t')
 md=md.dropna(subset=["GAGEBRTH","PTB"])
 
 
 
 #All columns we want analized
-wantedCol = sys.argv[1].split(',')
+wantedCol = sys.argv[2].split(',')
 
-# Apply filtering only in the wantedCol columns
+# Apply filtering only in the wantedCol columns. Remove missing data rows. 
 md = md[~md[wantedCol].isin([-88, -77,-99]).any(axis=1)]
 
 
@@ -39,8 +39,8 @@ filtered_data = md[(md["GAGEBRTH"] >= lower_cutoff) & (md["GAGEBRTH"] <= upper_c
 filtered_data = filtered_data[filtered_data['MainHap'].map(filtered_data['MainHap'].value_counts()) >= 25]
 
 
-filtered_data.to_csv('Metadata.M.Weibull.tsv', index=False, sep="\t") 
-filtered_data[["Sample_ID"]].to_csv("M.txt", index=False,header=False) 
+filtered_data.to_csv('Metadata.Weibull.tsv', index=False, sep="\t") 
+filtered_data[["Sample_ID"]].to_csv("IDs.txt", index=False,header=False) 
 
 
 # Step 4: Plot the original data, filtered data, and Weibull distribution
