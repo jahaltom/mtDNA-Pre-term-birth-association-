@@ -16,13 +16,13 @@ Use tree "rCRS PhyloTree 17.2" and  Kulczynski Distance function. Run this on me
 ### MetadataMerge.py: 
 Takes in Haplogrep3 output and metadata files (MOMI_derived_data.tsv and samples.tab) and performs merge. Filters for only high quality haplogroup calls "Quality">=0.9 and only live births "PREG_OUTCOME"==2. Identifies main and sub haplogroups. This script also sets (ALCOHOL_FREQ, SMOK_FREQ, and SNIFF_FREQ) to 0 if (ALCOHOL,SMOKE_HIST, and SNIFF_TOBA) = never. Seperates mother and child in dataset and writes two tsvs (Metadata.C.tsv and Metadata.M.tsv). 
 ```
-python MissingDataHeatmap.py MetadataMerge.py
+python  MetadataMerge.py
 ```
  
 ## MissingDataHeatmap.py
 Takes in Metadata.C.tsv or Metadata.M.tsv and analyzes the dataset for missing data using features of interest. Outputs heatmap (MissingDataHeatmap.png). Missing data is in yellow. 
 ```
-python Metadata.C.tsv
+python MissingDataHeatmap.py Metadata.C.tsv
 ```
 ![alt text](https://github.com/jahaltom/mtDNA-Pre-term-birth-association-/blob/main/plots/MissingDataHeatmap.M.png?raw=true)
 ![alt text](https://github.com/jahaltom/mtDNA-Pre-term-birth-association-/blob/main/plots/MissingDataHeatmap.C.png?raw=true)
