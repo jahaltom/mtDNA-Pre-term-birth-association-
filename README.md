@@ -29,14 +29,20 @@ python MissingDataHeatmap.py Metadata.C.tsv
 
 ## Outlier removal with Weibull
 ### WeibullFiltering.py:
-Takes in (Metadata.C.tsv and Metadata.M.tsv) and removes samples where GA "GAGEBRTH" and PTB is na. Fit the Weibull distribution to the data and defines cutoff thresholds for outlier detection (upper/lower GA in days ...1st percentile and 99th percentile). Filter the data on these threshholds. 
-Outputs (Metadata.M.Weibull.tsv Metadata.C.Weibull.tsv).
-Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.M.png weibullFiltering.C.png).
-Also outputs C.txt and M.txt which are subset from (Metadata.M.Weibull.tsv Metadata.C.Weibull.tsv) and used for sample selection in plink2VCF.sh.
+Takes in (Metadata.C.tsv or Metadata.M.tsv) and removes samples where GA "GAGEBRTH" and PTB is na. Also removes missing data from  columns from "All features" in master.sh. 
+Fit the Weibull distribution to the data (GAGEBRTH) and defines cutoff thresholds for outlier detection (upper/lower GA in days ...1st percentile and 99th percentile). Filter the data on these threshholds (>= lower_cutoff) & <= upper_cutoff). Additionaly, removes samples who are in a haplogroup with <25 samples. 
+Reports Weibull Parameters (Shape, Scale, and Location) and upper/lower cutoffs in days. 
+Outputs (Metadata.Weibull.tsv).Also outputs IDs.txt which are only SampleIDs subset from (Metadata.Weibull.tsv).              ### Will be used for sample selection in plink2VCF.sh.
+Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
 
-C: Lower Cutoff: 232.24832311358944, Upper Cutoff: 297.5082654877975
 
-M: Lower Cutoff: 229.40491328561183, Upper Cutoff: 298.6448367835414
+
+
+
+
+
+
+
 
 
 ### Subset nDNA VCF: 
