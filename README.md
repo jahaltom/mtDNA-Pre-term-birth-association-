@@ -52,7 +52,8 @@ Then run with
 bash workflow.sh
 ```
 
-### Outlier removal with Weibull (WeibullFiltering.py):
+
+#### Outlier removal with Weibull (WeibullFiltering.py):
 Takes in (file and columnsAll) and removes samples where GA "GAGEBRTH" and PTB is na. Also removes missing data from input columns "All features". 
 Fit the Weibull distribution to the data (GAGEBRTH) and defines cutoff thresholds for outlier detection (upper/lower GA in days ...1st percentile and 99th percentile). Filter the data on these threshholds (>= lower_cutoff) & <= upper_cutoff). Additionaly, removes samples who are in a haplogroup with <25 samples. 
 Reports Weibull Parameters (Shape, Scale, and Location) and upper/lower cutoffs in days. 
@@ -60,7 +61,7 @@ Outputs (Metadata.Weibull.tsv).Also outputs IDs.txt which are only SampleIDs sub
 Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
 
 
-### Subset nDNA VCF: 
+#### Subset nDNA VCF: 
 Subsets nDNA vcf. Selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (IDs.txt). Outputs  vcf (plink2.vcf) that will used below. 
 makes   plink2.vcf
 ## Dimensionality reduction via PCA and MDS.
