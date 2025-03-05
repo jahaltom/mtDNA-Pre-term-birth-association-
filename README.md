@@ -18,7 +18,10 @@ Takes in Haplogrep3 output and metadata files (MOMI_derived_data.tsv and samples
 
  
 ## MissingDataHeatmap.py
-Takes in Metadata.C.tsv and Metadata.M.tsv and analyzes these datasets for missing data using features of interest. Outputs heatmaps (MissingDataHeatmap.M.png and MissingDataHeatmap.C.png). Missing data is in yellow. 
+Takes in Metadata.C.tsv or Metadata.M.tsv and analyzes the dataset for missing data using features of interest. Outputs heatmaps (MissingDataHeatmap.png). Missing data is in yellow. 
+```
+python Metadata.C.tsv
+```
 ![alt text](https://github.com/jahaltom/mtDNA-Pre-term-birth-association-/blob/main/plots/MissingDataHeatmap.M.png?raw=true)
 ![alt text](https://github.com/jahaltom/mtDNA-Pre-term-birth-association-/blob/main/plots/MissingDataHeatmap.C.png?raw=true)
 
