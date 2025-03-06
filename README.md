@@ -62,25 +62,29 @@ bash workflow.sh
 - Additionaly, removes samples who are in a haplogroup with <25 samples.
 
 - Reports Weibull parameters (Shape, Scale, and Location) and upper/lower cutoffs in days. 
-- Outputs filtered metadata as (Metadata.Weibull.tsv). Also outputs IDs.txt which are only SampleIDs subset from (Metadata.Weibull.tsv) which will be used for sample selection for the PCA.
+- Outputs filtered metadata as (Metadata.Weibull.tsv). Also outputs IDs.txt which are only SampleIDs  from (Metadata.Weibull.tsv) which will be used for sample selection form the nDNA vcf..
 - Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
 
 
 #### Subset nDNA VCF: 
-Subsets nDNA vcf. Selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (IDs.txt). Outputs  vcf (plink2.vcf) that will used below. 
-makes   plink2.vcf
-## Dimensionality reduction via PCA and MDS.
+- Selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (IDs.txt). 
+- Outputs (plink2.vcf) that will used for PCA/MDS. 
 
-### Combine PCA/MDS results with metadata. 
-### CombinePCA-MDS.py: 
-Takes in eigenvec and mds files and adds this data to (Metadata.M.Weibull.tsv Metadata.C.Weibull.tsv). Outputs ("Metadata.M.Final.tsv" and "Metadata.C.Final.tsv"). 
-
-### Plotting
-### PCA-MDA_Plot.r:
-Takes in Metadata.M.Final.tsv, Metadata.C.Final.tsv, and eigenval, and makes PCA/MDS plots. Lables Main/Sub haplogroup and site.  Also splits data by child/mother. 
+#### Dimensionality reduction via PCA and MDS.
+- Runs plink PCA and MDS using plink2.vcf
+- MDS dimension count = 5. 
+- Outputs results into PCA-MDS
 
 
-### EDA!
+#### Combine PCA/MDS results with metadata (CombinePCA-MDS.py):
+- Takes in eigenvec and mds files and adds this data to (Metadata.Weibull.tsv). 
+- Outputs (Metadata.Final.tsv). 
+
+#### Plotting (PCA-MDA_Plot.r):
+Takes in Metadata.Final.tsv and eigenval, and makes PCA/MDS plots. Lables Main/Sub haplogroup and site.  
+
+
+#### EDA!
 
 
 
