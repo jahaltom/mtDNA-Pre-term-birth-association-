@@ -57,8 +57,8 @@ bash workflow.sh
 - Takes in (input file and columns in FeaturesPASS)  
 - Removes samples where gestational age "GAGEBRTH" or  PTB (0 or 1) is na. Also removes samples with missing data in any of the input columns "FeaturesPASS". 
 - Fits the Weibull distribution to the data for "GAGEBRTH".
- - Defines lower/upper cutoff thresholds, in days, for outlier detection (1st percentile and 99th percentile).
- - Filters the data on these threshholds (>= lower_cutoff) & <= upper_cutoff). 
+   - Defines lower/upper cutoff thresholds, in days, for outlier detection (1st percentile and 99th percentile).
+   - Filters the data on these threshholds (>= lower_cutoff) & <= upper_cutoff). 
 - Additionaly, removes samples who are in a haplogroup with <25 samples.
 
 - Reports Weibull parameters (Shape, Scale, and Location) and upper/lower cutoffs in days. 
