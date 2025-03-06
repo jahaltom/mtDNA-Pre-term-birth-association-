@@ -32,15 +32,15 @@ python MissingDataHeatmap.py Metadata.C.tsv
 
 ## worfkflow.sh
 Specify:
-- Input file (Metadata.M.tsv or Metadata.C.tsv)
-- Weibull: All features that have not to much missing data. 
+- Input file: (Metadata.M.tsv or Metadata.C.tsv)
+- FeaturesPASS: All features that passed missing data analysis. 
 - Categorical and continuous features to be used for EDA 
 
 In the script alter 4 lines:
 ```
 #Input file
 file="Metadata.M.tsv"
-# Define Weibull features
+# Define FeaturesPASS features
 columnsAll=('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX','MainHap','SMOKE_HIST','SMOK_FREQ')
 # Define Categorical features
 columnsCat=('TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX','MainHap','SMOKE_HIST','SMOK_FREQ')
@@ -54,11 +54,16 @@ bash workflow.sh
 
 
 #### Outlier removal with Weibull (WeibullFiltering.py):
-Takes in (file and columnsAll) and removes samples where GA "GAGEBRTH" and PTB is na. Also removes missing data from input columns "All features". 
-Fit the Weibull distribution to the data (GAGEBRTH) and defines cutoff thresholds for outlier detection (upper/lower GA in days ...1st percentile and 99th percentile). Filter the data on these threshholds (>= lower_cutoff) & <= upper_cutoff). Additionaly, removes samples who are in a haplogroup with <25 samples. 
-Reports Weibull Parameters (Shape, Scale, and Location) and upper/lower cutoffs in days. 
-Outputs (Metadata.Weibull.tsv).Also outputs IDs.txt which are only SampleIDs subset from (Metadata.Weibull.tsv) which will be used for sample selection from plink2.vcf below .
-Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
+- Takes in (input file and columns in FeaturesPASS)  
+- Removes samples where gestational age "GAGEBRTH" or  PTB (0 or 1) is na. Also removes samples with missing data in any of the input columns "FeaturesPASS". 
+- Fits the Weibull distribution to the data for "GAGEBRTH".
+ - Defines lower/upper cutoff thresholds, in days, for outlier detection (1st percentile and 99th percentile).
+ - Filters the data on these threshholds (>= lower_cutoff) & <= upper_cutoff). 
+- Additionaly, removes samples who are in a haplogroup with <25 samples.
+
+- Reports Weibull parameters (Shape, Scale, and Location) and upper/lower cutoffs in days. 
+- Outputs filtered metadata as (Metadata.Weibull.tsv). Also outputs IDs.txt which are only SampleIDs subset from (Metadata.Weibull.tsv) which will be used for sample selection for the PCA.
+- Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
 
 
 #### Subset nDNA VCF: 
