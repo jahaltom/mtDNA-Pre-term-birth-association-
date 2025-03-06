@@ -3,9 +3,6 @@ from functools import reduce
 
 
 
-
-
-
 sets=["M","C"]
 for s in sets:   
     header=["FID","IID"]+[f"PC{i}" for i in range(1, 21)]
