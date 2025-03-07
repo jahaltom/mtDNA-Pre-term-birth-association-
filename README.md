@@ -62,7 +62,7 @@ bash workflow.sh
 - Additionaly, removes samples who are in a haplogroup with <25 samples.
 
 - Reports Weibull parameters (Shape, Scale, and Location) and upper/lower cutoffs in days. 
-- Outputs filtered metadata as (Metadata.Weibull.tsv). Also outputs IDs.txt which are only SampleIDs  from (Metadata.Weibull.tsv) which will be used for sample selection form the nDNA vcf..
+- Outputs filtered metadata as (Metadata.Weibull.tsv). Also outputs IDs.txt which are only SampleIDs  from (Metadata.Weibull.tsv) which will be used for sample selection form the nDNA vcf. 
 - Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
 
 
@@ -76,7 +76,7 @@ bash workflow.sh
 - Outputs results into PCA-MDS
 
 
-#### Combine PCA/MDS results with metadata (CombinePCA-MDS.py):
+#### Combine PCA/MDS results with metadata (CombinePCA-MDS.py):    #############################################
 - Takes in eigenvec and mds files and adds this data to (Metadata.Weibull.tsv). 
 - Outputs (Metadata.Final.tsv). 
 
