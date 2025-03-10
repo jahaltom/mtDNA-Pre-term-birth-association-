@@ -16,8 +16,8 @@ df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 # Define continuous variables
 continuous_vars = sys.argv[1].split(',') + ["PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10","C1","C2","C3","C4","C5"]
 
+# Subset  continuous variables. Add in haplogroups (one-hot encoded)
 haplogroups= pd.get_dummies(df["MainHap"], drop_first=False).columns.to_list()
-# Filter for continuous variables
 df = pd.concat([df[continuous_vars + ['PTB', 'GAGEBRTH']], pd.get_dummies(df["MainHap"], drop_first=False).astype(int)],axis=1)
 
 # Drop rows with values < 0 for specific columns
@@ -46,7 +46,7 @@ plt.close()
 
 
 # Drop the haplogroup columns
-dfCont.drop(columns=haplogroups, axis=1, inplace=True) ##########################
+dfCont.drop(columns=haplogroups, axis=1, inplace=True) 
 
 
 
@@ -58,12 +58,11 @@ for col in continuous_vars:
     r, p = pointbiserialr(dfCont['PTB'], dfCont[col])
     p_values_ptb.append(p)
     r_values_ptb.append(r)
-    print(f"{col}: r = {r:.4f}, p = {p:.4e}")
+
 
 # Apply Bonferroni Correction for PTB
 corrected_ptb = multipletests(p_values_ptb, alpha=0.05, method='bonferroni')
-print("\nCorrected P-Values (Bonferroni) for PTB:")
-# Creating a DataFrame from the corrected results
+print("\nCorrected P-Values (Bonferroni):")
 df_results = pd.DataFrame({
     'Column': continuous_vars,
     'r_value': r_values_ptb,
@@ -76,16 +75,26 @@ print(df_results)
 # Analyze Pearson Correlation for GAGEBRTH (Continuous Target)
 print("\nPearson Correlation with GAGEBRTH (Continuous Target):")
 p_values_ga = []
+r_values_ga = []
 for col in continuous_vars:
     r, p = pearsonr(dfCont['GAGEBRTH'], dfCont[col])
     p_values_ga.append(p)
-    print(f"{col}: r = {r:.4f}, p = {p:.4e}")
+    r_values_ga.append(r)
+
 
 # Apply Bonferroni Correction for GAGEBRTH
 corrected_ga = multipletests(p_values_ga, alpha=0.05, method='bonferroni')
-print("\nCorrected P-Values (Bonferroni) for GAGEBRTH:")
-for col, p, p_corr, sig in zip(continuous_vars, p_values_ga, corrected_ga[1], corrected_ga[0]):
-    print(f"{col}: raw p = {p:.4e}, corrected p = {p_corr:.4e}, significant = {sig}")
+print("\nCorrected P-Values (Bonferroni):")
+df_results = pd.DataFrame({
+    'Column': continuous_vars,
+    'r_value': r_values_ga,
+    'raw_p_value': p_values_ga,
+    'corrected_p_value': corrected_ga[1],
+    'significant': corrected_ga[0]
+})
+print(df_results)
+
+
 
 # Visualize relationships for significant variables
 print("\nVisualizing Significant Variables...")
