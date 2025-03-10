@@ -6,23 +6,22 @@ from scipy.stats import pointbiserialr, pearsonr
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.stats.multitest import multipletests
 import os
+import sys
 
 # Load the dataset
-df = pd.read_csv("Metadata.M.Final.tsv", sep='\t')
+df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
 
 
 # Define continuous variables
-continuous_vars = ['PW_AGE', 'PW_EDUCATION', 'MAT_HEIGHT', 'MAT_WEIGHT',
-                   "PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10",
-                   "PC11", "PC12", "PC13", "PC14", "PC15", "PC16", "PC17", "PC18", "PC19",
-                   "PC20", "C1", "C2", "C3", "C4", "C5"]
+continuous_vars = sys.argv[1].split(',') + ["PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10","C1","C2","C3","C4","C5"]
 
+haplogroups= pd.get_dummies(df["MainHap"], drop_first=False).columns.to_list()
 # Filter for continuous variables
-df = df[continuous_vars + ['PTB', 'GAGEBRTH']]
+df = pd.concat([df[continuous_vars + ['PTB', 'GAGEBRTH']], pd.get_dummies(df["MainHap"], drop_first=False).astype(int)],axis=1)
 
 # Drop rows with values < 0 for specific columns
-columns_to_check = ['PW_AGE', 'PW_EDUCATION', 'MAT_HEIGHT', 'MAT_WEIGHT']
+columns_to_check = sys.argv[1].split(',')
 df = df[df[columns_to_check].ge(0).all(axis=1)]
 
 # Create a deep copy of the DataFrame
@@ -45,19 +44,34 @@ plt.tight_layout()
 plt.savefig(f"{output_dir}ContinuousCorrelationHeatmap.png")
 plt.close()
 
+
+# Drop the haplogroup columns
+dfCont.drop(columns=haplogroups, axis=1, inplace=True) ##########################
+
+
+
 # Analyze Point-Biserial Correlation for PTB (Binary Target)
 print("\nPoint-Biserial Correlation with PTB (Binary Target):")
 p_values_ptb = []
+r_values_ptb = []
 for col in continuous_vars:
     r, p = pointbiserialr(dfCont['PTB'], dfCont[col])
     p_values_ptb.append(p)
+    r_values_ptb.append(r)
     print(f"{col}: r = {r:.4f}, p = {p:.4e}")
 
 # Apply Bonferroni Correction for PTB
 corrected_ptb = multipletests(p_values_ptb, alpha=0.05, method='bonferroni')
 print("\nCorrected P-Values (Bonferroni) for PTB:")
-for col, p, p_corr, sig in zip(continuous_vars, p_values_ptb, corrected_ptb[1], corrected_ptb[0]):
-    print(f"{col}: raw p = {p:.4e}, corrected p = {p_corr:.4e}, significant = {sig}")
+# Creating a DataFrame from the corrected results
+df_results = pd.DataFrame({
+    'Column': continuous_vars,
+    'r_value': r_values_ptb,
+    'raw_p_value': p_values_ptb,
+    'corrected_p_value': corrected_ptb[1],
+    'significant': corrected_ptb[0]
+})
+print(df_results)
 
 # Analyze Pearson Correlation for GAGEBRTH (Continuous Target)
 print("\nPearson Correlation with GAGEBRTH (Continuous Target):")
