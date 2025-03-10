@@ -2,7 +2,7 @@
 - Takes in Metadata.Final.tsv. Defines continuous columns and drop rows with values < 0 (in any). Standardize continuous variables with StandardScaler.
 
 
-- Compute and visualize correlation matrix for all variables and PTB and GAGEBRTH. (See plots)
+- Compute and visualize correlation matrix for continuous variables (including haplogroup, PTB and GAGEBRTH). (See plots)
 
 
 - Analyze Point-Biserial Correlation for PTB (Binary Target)
@@ -42,7 +42,7 @@ C5: raw p = 3.0052e-02, corrected p = 8.7152e-01, significant = False
 
 
 - Analyze Pearson Correlation for GAGEBRTH (Continuous Target)
-	- Apply Bonferroni Correction for GAGEBRTH
+	- Apply Bonferroni Correction 
 ```
 PW_AGE: raw p = 5.3964e-02, corrected p = 1.0000e+00, significant = False
 PW_EDUCATION: raw p = 3.9130e-02, corrected p = 1.0000e+00, significant = False
@@ -74,7 +74,7 @@ C3: raw p = 1.1823e-10, corrected p = 3.4287e-09, significant = True
 C4: raw p = 1.5224e-03, corrected p = 4.4150e-02, significant = True
 C5: raw p = 1.6640e-01, corrected p = 1.0000e+00, significant = False
 ```
-- Visualize relationships for significant variables (form PTB and GAGEBRTH targets) (See plots)
+- Visualize relationships for significant variables (from PTB and GAGEBRTH targets) (See plots)
 
 - VIF Multicollinearity Check
 ```
