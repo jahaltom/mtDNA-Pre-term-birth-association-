@@ -81,7 +81,8 @@ bash workflow.sh
 - Outputs (Metadata.Final.tsv). 
 
 #### Plotting (PCA-MDA_Plot.r):
-Takes in Metadata.Final.tsv and eigenval, and makes PCA/MDS plots. Lables Main/Sub haplogroup and site.  
+- Takes in Metadata.Final.tsv and eigenval, and makes PCA/MDS plots.
+- Lables Main/Sub haplogroup and site.  
 
 
 #### EDA!
