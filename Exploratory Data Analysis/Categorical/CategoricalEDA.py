@@ -13,14 +13,11 @@ def cramers_v(contingency_table):
     return np.sqrt(chi2 / (n * (min(contingency_table.shape) - 1)))
 
 # Read dataset
-df = pd.read_csv("Metadata.M.Final.tsv", sep='\t')
+df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 #df['GAGEBRTH'] = pd.to_numeric(df['GAGEBRTH'], errors='coerce')
 
 # Clean and select categorical variables
-categorical_columns = [  'TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
-                             'TOILET', 'WEALTH_INDEX','CHRON_HTN',
-                             'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
-                             'SMOKE_HIST','SMOK_FREQ']
+categorical_columns = sys.argv[1].split(',')
 
 # Initialize results storage
 results = []
@@ -59,10 +56,7 @@ for test_type in ['Chi2', 'ANOVA', 'Kruskal-Wallis','Fisher']:
 results_df.to_csv("Categorical_Analysis_Results.csv", index=False)
 
 # Remove rows containing -88, -99, or -77 in any column
-df=df[[  'TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
-                             'TOILET', 'WEALTH_INDEX','CHRON_HTN',
-                             'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
-                             'SMOKE_HIST','SMOK_FREQ',"PTB","GAGEBRTH"]]
+df=df[sys.argv[1].split(',') + ["PTB","GAGEBRTH"]]
 df = df[~df.isin([-88, -77,-99]).any(axis=1)]
 
 
