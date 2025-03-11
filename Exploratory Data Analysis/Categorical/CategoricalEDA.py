@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import chi2_contingency, fisher_exact, f_oneway, kruskal
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.tools.tools import add_constant
+import sys
 
 # Define functions
 def cramers_v(contingency_table):
