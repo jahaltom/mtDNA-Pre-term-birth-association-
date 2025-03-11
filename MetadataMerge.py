@@ -72,6 +72,9 @@ df.loc[df['SNIFF_TOBA'] == 1, 'SNIFF_FREQ'] = 0
 
 
 
+# calulate BMI
+df["BMI"] = df["MAT_WEIGHT"]/(df["MAT_HEIGHT"]/100)**2
+
 
 #Sep M and C 
 
