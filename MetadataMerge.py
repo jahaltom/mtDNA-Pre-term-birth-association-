@@ -67,6 +67,13 @@ df['SubHap'] = np.where(df['MainHap'].isin(speHaps), df['Haplogroup'].astype(str
 df.loc[df['ALCOHOL'] == 1, 'ALCOHOL_FREQ'] = 0
 df.loc[df['SMOKE_HIST'] == 1, 'SMOK_FREQ'] = 0
 df.loc[df['SNIFF_TOBA'] == 1, 'SNIFF_FREQ'] = 0
+
+
+
+
+#BMI calulate
+df["BMI"] = df["MAT_WEIGHT"]/(df["MAT_HEIGHT"]/100)**2
+
 #Sep M and C 
 
 dfM=df[df["M/C"]=="M"]
@@ -77,16 +84,3 @@ dfM.to_csv("Metadata.M.tsv", index=False, sep='\t')
 dfC=df[df["M/C"]=="C"]
 dfC["Sample_ID"]=("0_"+dfC["SampleID"])
 dfC.to_csv("Metadata.C.tsv", index=False, sep='\t')  
-
-
-
-
-
-
-
-
-
-
-
-
-
