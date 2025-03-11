@@ -77,6 +77,45 @@ plt.clf()
 
 
 
+#### Get counts
+df = pd.read_csv("Metadata.Final.tsv", sep='\t')
+
+# Columns to analyze
+columns = sys.argv[1].split(',')
+
+df=df[columns+["PTB"]]
+
+
+# List to store results
+results = []
+
+# Loop through each column
+for col in columns:
+    dfT = df[~df[col].isin([-88, -77])]  # Remove rows with invalid entries (-88, -77)
+    unique_values = dfT[col].drop_duplicates().to_list()
+    for value in unique_values:
+        # Calculate counts
+        ptb_counts = dfT[dfT[col] == value]["PTB"].value_counts()
+        # Ensure there are no missing categories (0 or 1)
+        ptb_counts = ptb_counts.reindex([0, 1], fill_value=0)       
+        # Calculate percentage of PTB = 1 relative to all
+        percentage = (ptb_counts[1] / (ptb_counts[0] + ptb_counts[1] ) * 100) 
+        # Append results as a row
+        results.append({
+            "Column": col,
+            "Value": value,
+            "PTB_0_Count": ptb_counts[0],
+            "PTB_1_Count": ptb_counts[1],
+            "PTB_1_Percentage": percentage
+        })
+
+# Create a DataFrame from the results
+results_df = pd.DataFrame(results)
+
+# Display the table
+results_df.to_csv("Categorical_counts.csv", index=False)
+
+
 
 
 
