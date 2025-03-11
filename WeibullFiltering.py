@@ -12,7 +12,7 @@ md=md.dropna(subset=["GAGEBRTH","PTB"])
 
 
 #All columns we want analized
-wantedCol = sys.argv[2].split(',')
+wantedCol = sys.argv[2].split(',') + sys.argv[3].split(',')
 
 # Apply filtering only in the wantedCol columns. Remove missing data rows. 
 md = md[~md[wantedCol].isin([-88, -77,-99]).any(axis=1)]
