@@ -34,12 +34,10 @@ print(f"Lower Cutoff: {lower_cutoff}, Upper Cutoff: {upper_cutoff}")
 # Step 3: Filter the data
 filtered_data = md[(md["GAGEBRTH"] >= lower_cutoff) & (md["GAGEBRTH"] <= upper_cutoff)]
 
+filtered_data = filtered_data[filtered_data['MainHap'].map(filtered_data['MainHap'].value_counts()) >= 25]
 
 # calulate BMI
 filtered_data["BMI"] = filtered_data["MAT_WEIGHT"]/(filtered_data["MAT_HEIGHT"]/100)**2
-
-filtered_data = filtered_data[filtered_data['MainHap'].map(filtered_data['MainHap'].value_counts()) >= 25]
-
 
 
 filtered_data.to_csv('Metadata.Weibull.tsv', index=False, sep="\t") 
