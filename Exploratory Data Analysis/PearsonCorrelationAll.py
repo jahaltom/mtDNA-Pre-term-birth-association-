@@ -9,7 +9,7 @@ import sys
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
 # Clean the dataset
-df=df[argv[1].split(',')+sys.argv[2].split(',') + ["PC1", "PC2", "PC3", "PC4", "PC5"]+["PTB", "GAGEBRTH"]]
+df=df[sys.argv[1].split(',')+sys.argv[2].split(',') + ["PC1", "PC2", "PC3", "PC4", "PC5"]+["PTB", "GAGEBRTH"]]
 categorical_columns=sys.argv[1].split(',')
 continuous_columns=sys.argv[2].split(',') + ["PC1", "PC2", "PC3", "PC4", "PC5"]
 
