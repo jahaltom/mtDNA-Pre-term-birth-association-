@@ -5,13 +5,13 @@ import seaborn as sns
 
 
 # Load the dataset
-df = pd.read_csv("Metadata.M.Final.tsv", sep='\t')
+df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
 # Clean the dataset
-df['GAGEBRTH'] = pd.to_numeric(df['GAGEBRTH'], errors='coerce')  # Ensure GAGEBRTH is numeric
-df=df[[  'DIABETES','PW_AGE', 'MAT_HEIGHT',"PC1", "PC2", "PC3", "PC4", "PC5","MainHap","PTB", "GAGEBRTH"]]
-categorical_columns=["MainHap"]
-continuous_columns=['DIABETES', 'PW_AGE', 'MAT_HEIGHT', 'PC1', 'PC2', 'PC3', 'PC4', 'PC5']
+df=df[argv[1].split(',')+sys.argv[2].split(',') + ["PC1", "PC2", "PC3", "PC4", "PC5"]+["PTB", "GAGEBRTH"]]
+categorical_columns=sys.argv[1].split(',')
+continuous_columns=sys.argv[2].split(',') + ["PC1", "PC2", "PC3", "PC4", "PC5"]
+
 
 # Mixed Feature Correlation: One-Hot Encode categorical features
 encoded_df = pd.get_dummies(df[categorical_columns], drop_first=True)
