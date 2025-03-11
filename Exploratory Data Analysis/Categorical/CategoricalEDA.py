@@ -14,7 +14,6 @@ def cramers_v(contingency_table):
 
 # Read dataset
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
-#df['GAGEBRTH'] = pd.to_numeric(df['GAGEBRTH'], errors='coerce')
 
 # Clean and select categorical variables
 categorical_columns = sys.argv[1].split(',')
