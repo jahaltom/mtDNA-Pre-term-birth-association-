@@ -14,7 +14,12 @@ Use tree "rCRS PhyloTree 17.2" and  Kulczynski Distance function. Run this on me
 
 ## Metadata curration, filtering, and conversion. 
 ### MetadataMerge.py: 
-Takes in Haplogrep3 output and metadata files (MOMI_derived_data.tsv and samples.tab) and performs merge. Filters for only high quality haplogroup calls "Quality">=0.9 and only live births "PREG_OUTCOME"==2. Identifies main and sub haplogroups. This script also sets (ALCOHOL_FREQ, SMOK_FREQ, and SNIFF_FREQ) to 0 if (ALCOHOL,SMOKE_HIST, and SNIFF_TOBA) = never. Seperates mother and child in dataset and writes two tsvs (Metadata.C.tsv and Metadata.M.tsv). 
+- Takes in Haplogrep3 output and metadata files (MOMI_derived_data.tsv and samples.tab) and performs merge. 
+- Filters for only high quality haplogroup calls "Quality">=0.9 and only live births "PREG_OUTCOME"==2. 
+- Identifies main and sub haplogroups. 
+- This script also sets (ALCOHOL_FREQ, SMOK_FREQ, and SNIFF_FREQ) to 0 if (ALCOHOL,SMOKE_HIST, and SNIFF_TOBA) = never.
+- Calculates BMI. (df["BMI"] = df["MAT_WEIGHT"]/(df["MAT_HEIGHT"]/100)**2)
+- Seperates mother and child in dataset and writes two tsvs (Metadata.C.tsv and Metadata.M.tsv). 
 ```
 python  MetadataMerge.py
 ```
@@ -60,7 +65,6 @@ bash workflow.sh
    - Defines lower/upper cutoff thresholds, in days, for outlier detection (1st percentile and 99th percentile).
    - Filters the data on these threshholds (>= lower_cutoff) & <= upper_cutoff). 
 - Additionaly, removes samples who are in a haplogroup with <25 samples.
-- Calulates BMI
 
 - Reports Weibull parameters (Shape, Scale, and Location) and upper/lower cutoffs in days. 
 - Outputs filtered metadata as (Metadata.Weibull.tsv). Also outputs IDs.txt which are only SampleIDs  from (Metadata.Weibull.tsv) which will be used for sample selection form the nDNA vcf. 
