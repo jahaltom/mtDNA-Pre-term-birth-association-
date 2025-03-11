@@ -7,7 +7,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.stats.multitest import multipletests
 import os
 import sys
-
+ 
 # Load the dataset
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
@@ -70,7 +70,7 @@ df_results = pd.DataFrame({
     'corrected_p_value': corrected_ptb[1],
     'significant': corrected_ptb[0]
 })
-print(df_results)
+df_results.to_csv("Point-Biserial-PTB.csv", index=False)
 
 # Analyze Pearson Correlation for GAGEBRTH (Continuous Target)
 print("\nPearson Correlation with GAGEBRTH (Continuous Target):")
@@ -92,7 +92,7 @@ df_results = pd.DataFrame({
     'corrected_p_value': corrected_ga[1],
     'significant': corrected_ga[0]
 })
-print(df_results)
+df_results.to_csv("PearsonCorr-GAGEBRTH.csv", index=False)
 
 
 
@@ -130,6 +130,6 @@ vif_data = pd.DataFrame()
 vif_data['Variable'] = continuous_vars
 vif_data['VIF'] = [variance_inflation_factor(dfCont[continuous_vars].values, i)
                    for i in range(len(continuous_vars))]
-print(vif_data.sort_values(by='VIF', ascending=False))
+vif_data.sort_values(by='VIF', ascending=False).to_csv("Continuous_Multicollinearity_VIF.csv", index=False)
 
 
