@@ -12,7 +12,7 @@ df=df[sys.argv[1].split(',')+sys.argv[2].split(',') + ["PC1", "PC2", "PC3", "PC4
 categorical_columns=sys.argv[1].split(',')
 continuous_columns=sys.argv[2].split(',') + ["PC1", "PC2", "PC3", "PC4", "PC5"]
 
-
+df["FUEL_FOR_COOK"] = df["FUEL_FOR_COOK"].astype(str)
 # Mixed Feature Correlation: One-Hot Encode categorical features
 encoded_df = pd.get_dummies(df[categorical_columns], drop_first=False)
 encoded_df = encoded_df.astype(int)
