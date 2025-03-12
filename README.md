@@ -147,7 +147,7 @@ for k in range(2, 10):
 
 ```
 
-#### Discretize PCA components into clusters ( KMeans)
+#### Discretize PCA components into clusters ( KMeans) and calculate Cohen's Kappa
 ```python
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import cohen_kappa_score
