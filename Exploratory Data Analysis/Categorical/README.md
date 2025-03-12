@@ -11,7 +11,7 @@
           
 - Output results:Separate Bonferroni correction for each test type (Categorical_Analysis_Results.csv).
   
-- Subsets df to specific columns and removes missing data across the board. 
+- Subsets df to specific columns and removes missing data across any column. 
 - VIF is used to asses each variable for multicollinearity. MainHap and FUEL_FOR_COOK are one-hot encoded and the 1st is dropped. Outputs results in Categorical_Multicollinearity_VIF.csv.
 - Pearson correlation: Using same df from above except 1st is not droped. (CategoricalCorrelationHeatmap.png)
 
