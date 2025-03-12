@@ -98,7 +98,7 @@ bash workflow.sh
 
 
 
-## Check for mtDNA haplogroup association with nDNA PCA clusters (checking for assortative mating).
+## Check for mtDNA haplogroup association with nDNA PCA clusters (assortative mating).
 
 
 
