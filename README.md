@@ -118,6 +118,8 @@ Both of these should agree. In this case it was n_clusters=4
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 
+df = pd.read_csv("Metadata.Final.tsv", sep='\t')
+
 distortions = []
 K = range(1, 10)  # Try different numbers of clusters
 for k in K:
