@@ -98,8 +98,8 @@ bash workflow.sh
 
 
 
-## Check for mtDNA haplogroup association with nDNA PCA clusters.
-To determine whether the nDNA PCA clusters correlated with the mtDNA haplogroups due to assortative mating;
+## Check for mtDNA haplogroup association with nDNA PCA clusters (checking for assortative mating).
+
 
 
 ### Discretize PCA components into clusters and Calculate Cohen's Kappa
@@ -107,11 +107,9 @@ To determine whether the nDNA PCA clusters correlated with the mtDNA haplogroups
 
 
 #### Use this to inform your KMeans clustering. 
-Pick the elbow in the plot (where an increase in the x-axis is no longer making a notable changein y-axis). 
-
-Chose the highest Silhouett score. 
-
-Both of these should agree. In this case it was n_clusters=4
+- Pick the elbow in the plot (where an increase in the x-axis is no longer making a notable changein y-axis). 
+- Chose the highest Silhouett score. 
+- Both of these should agree. In this case it was n_clusters=4
 
 ```python 
 #Elbow Method (for KMeans)
