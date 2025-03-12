@@ -152,24 +152,19 @@ for k in range(2, 10):
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import cohen_kappa_score
 from sklearn.cluster import KMeans
-kmeans = KMeans(n_clusters=4, random_state=42)
-df['PC1_cluster'] = kmeans.fit_predict(df[['PC1']])
-df['PC2_cluster'] = kmeans.fit_predict(df[['PC2']])
 
+# Clustering using both PC1 and PC2
+kmeans = KMeans(n_clusters=4, random_state=42)
+df['combined_cluster'] = kmeans.fit_predict(df[['PC1', 'PC2']])
 
 # Step 1: Convert 'MainHap' to numeric labels
 label_encoder = LabelEncoder()
 df['MainHap_numeric'] = label_encoder.fit_transform(df['MainHap'])
 
+# Step 2: Calculate Cohen's Kappa for the combined PCA clusters and MainHap
+kappa_combined = cohen_kappa_score(df['combined_cluster'], df['MainHap_numeric'])
+print(f"Cohen's Kappa for combined PCA clusters and mtDNA Haplogroups: {kappa_combined:.3f}")
 
-
-# Step 2: Calculate Cohen's Kappa for PCA1 and MainHap
-kappa_pca1_hap = cohen_kappa_score(df['PC1_cluster'], df['MainHap_numeric'])
-print(f"Weighted Cohen's Kappa for PCA1 and mtDNA Haplogroups: {kappa_pca1_hap:.3f}")
-
-# You can do the same for PCA2 and MainHap
-kappa_pca2_hap = cohen_kappa_score(df['PC2_cluster'], df['MainHap_numeric'])
-print(f"Weighted Cohen's Kappa for PCA2 and mtDNA Haplogroups: {kappa_pca2_hap:.3f}")
 ```
 
 Negative values (PC1 -0.001 and PC2 -0.007) suggest no agreement or random association.
