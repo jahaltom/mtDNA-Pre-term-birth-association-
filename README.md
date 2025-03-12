@@ -102,7 +102,7 @@ bash workflow.sh
 
 
 
-### Discretize PCA components into clusters and Calculate Cohen's Kappa
+### Discretize PCA components into clusters (Kmeans) and calculate Cohen's Kappa
 
 
 
