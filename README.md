@@ -117,6 +117,7 @@ Both of these should agree. In this case it was n_clusters=4
 #Elbow Method (for KMeans)
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
+import pandas as pd
 
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
