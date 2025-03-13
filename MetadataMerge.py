@@ -76,6 +76,17 @@ df.loc[df['SNIFF_TOBA'] == 1, 'SNIFF_FREQ'] = 0
 df["BMI"] = df["MAT_WEIGHT"]/(df["MAT_HEIGHT"]/100)**2
 
 
+# Function to categorize population based on site
+def categorize_population(site):
+    if 'Pemba' in site or 'Zambia' in site:
+        return 'African'
+    else:
+        return 'South Asian'
+# Apply function to create a new column
+df['population'] = df['site'].apply(categorize_population)
+
+
+
 #Sep M and C 
 
 dfM=df[df["M/C"]=="M"]
