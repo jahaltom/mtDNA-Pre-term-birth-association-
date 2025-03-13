@@ -184,27 +184,23 @@ print(f"Cohen's Kappa for combined PCA clusters and mtDNA Haplogroups: {kappa_co
 
 Also do this for site and population.
 
-```
-
-
-# Convert 'MainHap' to numeric labels
+```python
+# Convert 'site' to numeric labels
 label_encoder = LabelEncoder()
 df['site'] = label_encoder.fit_transform(df['site'])
 
-# Calculate Cohen's Kappa for the combined PCA clusters and MainHap
+# Calculate Cohen's Kappa for site and MainHap
 kappa_combined = cohen_kappa_score(df['site'], df['MainHap_numeric'])
 print(f"Cohen's Kappa for combined PCA clusters and mtDNA Haplogroups: {kappa_combined:.3f}")
 
 
 
-
-
-# Convert 'MainHap' to numeric labels
+# Convert 'population' to numeric labels
 label_encoder = LabelEncoder()
 df['population'] = label_encoder.fit_transform(df['population'])
 
-# Calculate Cohen's Kappa for the combined PCA clusters and MainHap
-kappa_combined = cohen_kappa_score(df['site'], df['MainHap_numeric'])
+# Calculate Cohen's Kappa for population and MainHap
+kappa_combined = cohen_kappa_score(df['population'], df['MainHap_numeric'])
 print(f"Cohen's Kappa for combined PCA clusters and mtDNA Haplogroups: {kappa_combined:.3f}")
 ```
 
