@@ -148,15 +148,29 @@ for k in range(2, 10):
 
 ```
 
-#### Discretize PCA components into clusters ( KMeans) and calculate Cohen's Kappa
+#### Discretize PCA components into clusters ( KMeans), plot, and calculate Cohen's Kappa
 ```python
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import cohen_kappa_score
-from sklearn.cluster import KMeans
+import seaborn as sns
 
 # Clustering using both PC1 and PC2
 kmeans = KMeans(n_clusters=4, random_state=42)
 df['combined_cluster'] = kmeans.fit_predict(df[['PC1', 'PC2']])
+
+
+# Visualize 
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x='PC1', y='PC2', hue='combined_cluster', data=df, palette='viridis', style=df['combined_cluster'], markers=True, s=100)
+plt.title('KMeans Clustering on PCA Components')
+plt.xlabel('Principal Component 1 (PC1)')
+plt.ylabel('Principal Component 2 (PC2)')
+plt.legend(title='Cluster')
+plt.grid(True)  # Optional: adds a grid for easier visualization
+plt.savefig("KmeansPlot.png")
+plt.clf()
+
+
 
 # Step 1: Convert 'MainHap' to numeric labels
 label_encoder = LabelEncoder()
@@ -168,7 +182,29 @@ print(f"Cohen's Kappa for combined PCA clusters and mtDNA Haplogroups: {kappa_co
 
 ```
 
-Negative values (PC1 -0.001 and PC2 -0.007) suggest no agreement or random association.
-Conclusion: No significant evidence of assortative mating effecting the mtDNA haplogroups.
+Also do this for site and population.
 
+```
+
+
+# Convert 'MainHap' to numeric labels
+label_encoder = LabelEncoder()
+df['site'] = label_encoder.fit_transform(df['site'])
+
+# Calculate Cohen's Kappa for the combined PCA clusters and MainHap
+kappa_combined = cohen_kappa_score(df['site'], df['MainHap_numeric'])
+print(f"Cohen's Kappa for combined PCA clusters and mtDNA Haplogroups: {kappa_combined:.3f}")
+
+
+
+
+
+# Convert 'MainHap' to numeric labels
+label_encoder = LabelEncoder()
+df['population'] = label_encoder.fit_transform(df['population'])
+
+# Calculate Cohen's Kappa for the combined PCA clusters and MainHap
+kappa_combined = cohen_kappa_score(df['site'], df['MainHap_numeric'])
+print(f"Cohen's Kappa for combined PCA clusters and mtDNA Haplogroups: {kappa_combined:.3f}")
+```
 
