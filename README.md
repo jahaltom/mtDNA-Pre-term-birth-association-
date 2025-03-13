@@ -199,7 +199,7 @@ print(f"Cohen's Kappa for site and mtDNA Haplogroups: {kappa_combined:.3f}")
 label_encoder = LabelEncoder()
 df['population'] = label_encoder.fit_transform(df['population'])
 
-# Calculate Cohen's Kappa for site and MainHap
+# Calculate Cohen's Kappa for population and MainHap
 kappa_combined = cohen_kappa_score(df['population'], df['MainHap_numeric'])
 print(f"Cohen's Kappa for population and mtDNA Haplogroups: {kappa_combined:.3f}")
 
