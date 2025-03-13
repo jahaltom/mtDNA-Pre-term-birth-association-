@@ -182,7 +182,7 @@ print(f"Cohen's Kappa for combined PCA clusters and mtDNA Haplogroups: {kappa_co
 
 ```
 
-Also do this for site and population.
+Calculate Cohen's Kappa for site and population.
 
 ```python
 # Convert 'site' to numeric labels
