@@ -39,17 +39,19 @@ python WeibullFiltering.py $file "$columnCat_string" "$columnCont_string"
 
 bcftools view --types snps -t ^26,24,23 -S IDs.txt --force-samples /scr1/users/haltomj/PTB/plink2.vcf   >  plink2.vcf
 
+conda activate plink
+
 mkdir PCA-MDS
 #Run plink PCA and MDS All
 plink --vcf plink2.vcf --pca --double-id --out PCA-MDS/out
 plink --vcf plink2.vcf --cluster --mds-plot 5 --double-id --out PCA-MDS/out
 
-
+conda activate ML
 
 python  CombinePCA-MDS.py
 
 
-#Rscript PCA-MDA_Plot.r
+
 
 
 
