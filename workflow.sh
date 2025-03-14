@@ -5,6 +5,7 @@
 #SBATCH --mail-user=haltomj@chop.edu
 #SBATCH --mail-type=ALL
 
+source /home/haltomj/miniconda3/etc/profile.d/conda.sh
 
 
 conda activate ML
