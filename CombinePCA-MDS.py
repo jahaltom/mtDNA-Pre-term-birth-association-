@@ -3,7 +3,6 @@ from functools import reduce
 
 
 
- 
 
 
 header=["FID","IID"]+[f"PC{i}" for i in range(1, 21)]
@@ -37,25 +36,29 @@ pc_percentage = (eigenvalues / total_variance) * 100
 features = ["MainHap", "SubHap", "site"]
 
 for f in features:
-    # Map categorical data to colors
-    unique_categories = md[f].unique()
-    color_map = {category: i for i, category in enumerate(unique_categories)}
-    colors = md[f].map(color_map)
-    # Create PC1 vs PC2 scatter plot with color by feature
-    plt.figure()
-    scatter = plt.scatter(md['PC1'], md['PC2'], c=colors, cmap='viridis', alpha=0.8, s=1)
-    plt.colorbar(scatter, label=f)
+    plt.figure(figsize=(12, 8))  # Adjusted figure size to accommodate legend
+    # Create a scatter plot for each category within the feature
+    categories = md[f].unique()
+    for category in categories:
+        subset = md[md[f] == category]
+        plt.scatter(subset['PC1'], subset['PC2'], label=category, alpha=0.8, s=10)  # s increased for visibility
     plt.title("PC1 vs PC2")
-    plt.xlabel(f"PC1 ({round(pc_percentage.iloc[0], 1)}% variance)")
-    plt.ylabel(f"PC2 ({round(pc_percentage.iloc[1], 1)}% variance)")
+    plt.xlabel(f"PC1 ({round(pc_percentage.iloc[0], 1)[0]}% variance)")
+    plt.ylabel(f"PC2 ({round(pc_percentage.iloc[1], 1)[0]}% variance)")
+    # Adjust legend to be outside the plot
+    plt.legend(title=f, markerscale=2, loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.tight_layout(rect=[0, 0, 0.75, 1])  # Adjust the plot area to make room for the legend
     plt.savefig(f"{f}.PCA.png")
     plt.close()
-    # Create C1 vs C2 scatter plot with color by feature
-    plt.figure()
-    scatter = plt.scatter(md['C1'], md['C2'], c=colors, cmap='viridis', alpha=0.8, s=1)
-    plt.colorbar(scatter, label=f)
+    # Repeat for C1 vs C2
+    plt.figure(figsize=(12, 8))
+    for category in categories:
+        subset = md[md[f] == category]
+        plt.scatter(subset['C1'], subset['C2'], label=category, alpha=0.8, s=10)
     plt.title("C1 vs C2")
     plt.xlabel("C1")
     plt.ylabel("C2")
+    plt.legend(title=f, markerscale=2, loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.tight_layout(rect=[0, 0, 0.75, 1])  # Adjust the plot area to make room for the legend
     plt.savefig(f"{f}.MDS.png")
     plt.close()
