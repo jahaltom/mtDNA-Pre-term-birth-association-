@@ -27,19 +27,13 @@ def evaluate_model_regression(model, X_test, y_test, model_name):
 df = pd.read_csv("Metadata.M.Final.tsv", sep='\t')
 
 #df['GAGEBRTH'] = pd.to_numeric(df['GAGEBRTH'], errors='coerce')  # Ensure GAGEBRTH is numeric
-df = df[['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
-                       'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK', 'CHRON_HTN',
-                       'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
-                       "SNIFF_TOBA","GAGEBRTH",'PW_AGE', 'MAT_HEIGHT', "PC1", "PC2", "PC3", "PC4", "PC5"]]
+df = df[sys.argv[1].split(',') + sys.argv[2].split(',') + ["GAGEBRTH"]]
 df = df[~df.isin([-88, -77]).any(axis=1)]  # Remove rows with invalid entries (-88, -77)
 df = df[df['MainHap'].map(df['MainHap'].value_counts()) >= 25]
 
 # Define features
-categorical_columns = ['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
-                       'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK', 'CHRON_HTN',
-                       'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
-                       "SNIFF_TOBA"]
-continuous_columns = ['PW_AGE', 'MAT_HEIGHT', "PC1", "PC2", "PC3", "PC4", "PC5"]
+categorical_columns = sys.argv[1].split(',')
+continuous_columns = sys.argv[2].split(',')
 
 X = df[categorical_columns + continuous_columns]
 y = df['GAGEBRTH']  
