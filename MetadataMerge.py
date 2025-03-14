@@ -22,7 +22,7 @@ haplo=haplo.drop_duplicates(subset=['Subject_ID'])
 
 
 #Read in other metadata 
-md=pd.read_csv('/scr1/users/haltomj/PTB/MOMI_derived_data.tsv',sep='\t')  
+md=pd.read_csv('/scr1/users/haltomj/PTB/MOMI_derived_data.csv')  
 md=md.drop_duplicates() 
 
 
