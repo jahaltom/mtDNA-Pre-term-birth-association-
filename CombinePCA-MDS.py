@@ -1,6 +1,7 @@
 import pandas as pd
 from functools import reduce
-
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 
@@ -21,11 +22,8 @@ dfFinal.to_csv("Metadata.Final.tsv", index=False,sep="\t")
 
 
 
-import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
 
-
+######PCA/MDS plots
 
 # Read eigenvalues
 eigenvalues = pd.read_csv("PCA-MDS/out.eigenval", header=None)
