@@ -25,8 +25,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Read in raw counts
-md = pd.read_csv("Metadata.Final.tsv", sep='\t', quotechar='"')
+
 
 # Read eigenvalues
 eigenvalues = pd.read_csv("PCA-MDS/out.eigenval", header=None)
@@ -38,9 +37,9 @@ features = ["MainHap", "SubHap", "site"]
 for f in features:
     plt.figure(figsize=(12, 8))  # Adjusted figure size to accommodate legend
     # Create a scatter plot for each category within the feature
-    categories = md[f].unique()
+    categories = dfFinal[f].unique()
     for category in categories:
-        subset = md[md[f] == category]
+        subset = dfFinal[dfFinal[f] == category]
         plt.scatter(subset['PC1'], subset['PC2'], label=category, alpha=0.8, s=10)  # s increased for visibility
     plt.title("PC1 vs PC2")
     plt.xlabel(f"PC1 ({round(pc_percentage.iloc[0], 1)[0]}% variance)")
@@ -53,7 +52,7 @@ for f in features:
     # Repeat for C1 vs C2
     plt.figure(figsize=(12, 8))
     for category in categories:
-        subset = md[md[f] == category]
+        subset = dfFinal[dfFinal[f] == category]
         plt.scatter(subset['C1'], subset['C2'], label=category, alpha=0.8, s=10)
     plt.title("C1 vs C2")
     plt.xlabel("C1")
