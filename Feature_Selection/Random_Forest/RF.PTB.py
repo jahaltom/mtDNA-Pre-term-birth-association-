@@ -13,7 +13,7 @@ from sklearn.neural_network import MLPClassifier
 import shap
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+import sys
 
 
 # Helper function for evaluation
@@ -41,22 +41,16 @@ def evaluate_model(model, X_test, y_test, model_name):
 
 
 # Load the dataset
-df = pd.read_csv("Metadata.M.Final.tsv", sep='\t')
+df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
 
-df = df[['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
-                       'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK', 'CHRON_HTN',
-                       'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
-                       "SNIFF_TOBA","PTB",'PW_AGE', 'MAT_HEIGHT', "PC1", "PC2", "PC3", "PC4", "PC5"]]
+df = df[sys.argv[1].split(',') + sys.argv[2].split(',') + ["PTB"]]
 df = df[~df.isin([-88, -77]).any(axis=1)]  # Remove rows with invalid entries (-88, -77)
 df = df[df['MainHap'].map(df['MainHap'].value_counts()) >= 25]
 
 # Define features
-categorical_columns = ['TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
-                       'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK', 'CHRON_HTN',
-                       'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
-                       "SNIFF_TOBA"]
-continuous_columns = ['PW_AGE', 'MAT_HEIGHT', "PC1", "PC2", "PC3", "PC4", "PC5"]
+categorical_columns = sys.argv[1].split(',')
+continuous_columns = sys.argv[2].split(',')
 
 X = df[categorical_columns + continuous_columns]
 y = df['PTB'] 
