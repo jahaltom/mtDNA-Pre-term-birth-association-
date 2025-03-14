@@ -15,7 +15,7 @@ import sys
 
 
 # Load the dataset
-df = pd.read_csv("Metadata.M.Final.tsv", sep='\t')
+df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
 
 df = df[sys.argv[1].split(',') + sys.argv[2].split(',') + ["GAGEBRTH"]]
