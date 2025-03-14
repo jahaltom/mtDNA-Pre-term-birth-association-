@@ -82,17 +82,15 @@ bash workflow.sh
 - Outputs results into PCA-MDS
 
 
-#### Combine PCA/MDS results with metadata (CombinePCA-MDS.py):    #############################################
+#### Combine PCA/MDS results with metadata and plot PCA/MDS (CombinePCA-MDS.py):    
 - Takes in eigenvec and mds files and adds this data to (Metadata.Weibull.tsv). 
 - Outputs (Metadata.Final.tsv). 
-
-#### Plotting (PCA-MDA_Plot.r):
-- Takes in Metadata.Final.tsv and eigenval, and makes PCA/MDS plots.
+- Takes in eigenval(for PCA), and makes PCA/MDS plots.
 - Lables Main/Sub haplogroup and site.  
 
 
-#### EDA!
-
+#### Exploratory Data Analysis (EDA)
+- see EDA folder.
 
 
 
