@@ -26,7 +26,7 @@ df = df[['PW_AGE', 'PW_EDUCATION', 'MAT_HEIGHT', 'MAT_WEIGHT', 'BMI', 'ALCOHOL_F
                    'TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
                        'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK','CHRON_HTN',
                        'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
-                       'ALCOHOL' ,' ,'SMOKE_HIST','SMOK_FREQ', 'SMOK_TYP'','SNIFF_TOBA']]
+                       'ALCOHOL' ,'SMOKE_HIST','SMOK_FREQ', 'SMOK_TYP','SNIFF_TOBA']]
                       
 
 
