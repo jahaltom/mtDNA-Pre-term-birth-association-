@@ -22,11 +22,11 @@ site_colors = {site: site_palette[i] for i, site in enumerate(unique_sites)}
 row_colors = row_labels.map(site_colors)
 
 # Select relevant columns for the heatmap
-df = df[['PW_AGE', 'PW_EDUCATION', 'MAT_HEIGHT', 'MAT_WEIGHT',
+df = df[['PW_AGE', 'PW_EDUCATION', 'MAT_HEIGHT', 'MAT_WEIGHT', 'BMI', 'ALCOHOL_FREQ', 'SMOK_YR', 'SNIFF_FREQ', 
                    'TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
                        'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK','CHRON_HTN',
                        'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
-                       'ALCOHOL' , 'ALCOHOL_FREQ' ,'SMOKE_HIST','SMOK_FREQ', 'SMOK_TYP','SMOK_YR','SNIFF_TOBA','SNIFF_FREQ']]
+                       'ALCOHOL' ,' ,'SMOKE_HIST','SMOK_FREQ', 'SMOK_TYP'','SNIFF_TOBA']]
                       
 
 
