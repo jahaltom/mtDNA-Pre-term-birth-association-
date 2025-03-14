@@ -63,7 +63,7 @@ def evaluate_model(model, X_test, y_test, model_name):
 
 
 # Load the dataset
-df = pd.read_csv("Metadata.M.Final.tsv", sep='\t')
+df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
 df = df[sys.argv[1].split(',') + sys.argv[2].split(',') + ["PTB"]]
 df = df[~df.isin([-88, -77]).any(axis=1)]  # Remove rows with invalid entries (-88, -77)
