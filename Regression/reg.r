@@ -80,7 +80,6 @@ stats(glm.fit)
 
 
 
-
 ref="M" 
 #Set reference haplogroups
 df$MainHap= relevel(factor(df$MainHap), ref=ref)
@@ -112,15 +111,6 @@ glm.fit=glm( PTB ~ MainHap + PC1 + PC2 + PC3 + PC4 + PC5 + DIABETES + PW_AGE + M
 print(summary (glm.fit ))
 stats(glm.fit)
 
-# print(paste("Hapologroup and MDS - GA, Ref=", ref ," Dataset: ",CoM,sep=""))
-# glm.fit=glm( GAGEBRTH ~ MainHap + C1 + C2 + C3 + C4 + C5  , data=df  )
-# print(summary (glm.fit ))
-# print(paste("Hapologroup and MDS - PTB, Ref=", ref ," Dataset: ",CoM,sep=""))
-# glm.fit=glm( PTB ~ MainHap + C1 + C2 + C3 + C4 + C5  , family="binomial", data=df  )
-# print(summary (glm.fit ))
-# stats(glm.fit)
-    
-    
 ref="L0" 
 #Set reference haplogroups
 df$MainHap= relevel(factor(df$MainHap), ref=ref)
@@ -131,15 +121,6 @@ print(paste("Hapologroup and PCA - PTB, Ref=", ref ," Dataset: ",CoM,sep=""))
 glm.fit=glm( PTB ~ MainHap + PC1 + PC2 + PC3 + PC4 + PC5 + DIABETES + PW_AGE + MAT_HEIGHT  , family="binomial", data=df  )
 print(summary (glm.fit ))
 stats(glm.fit)
-
-# print(paste("Hapologroup and MDS - GA, Ref=", ref ," Dataset: ",CoM,sep=""))
-# glm.fit=glm( GAGEBRTH ~ MainHap + C1 + C2 + C3 + C4 + C5  , data=df  )
-# print(summary (glm.fit ))
-# print(paste("Hapologroup and MDS - PTB, Ref=", ref ," Dataset: ",CoM,sep=""))
-# glm.fit=glm( PTB ~ MainHap + C1 + C2 + C3 + C4 + C5  , family="binomial", data=df  )
-# print(summary (glm.fit ))
-# stats(glm.fit)
-
 
 ref="D" 
 #Set reference haplogroups
@@ -152,15 +133,6 @@ glm.fit=glm( PTB ~ MainHap + PC1 + PC2 + PC3 + PC4 + PC5 + DIABETES + PW_AGE + M
 print(summary (glm.fit ))
 stats(glm.fit)
 
-# print(paste("Hapologroup and MDS - GA, Ref=", ref ," Dataset: ",CoM,sep=""))
-# glm.fit=glm( GAGEBRTH ~ MainHap + C1 + C2 + C3 + C4 + C5  , data=df  )
-# print(summary (glm.fit ))
-# print(paste("Hapologroup and MDS - PTB, Ref=", ref ," Dataset: ",CoM,sep=""))
-# glm.fit=glm( PTB ~ MainHap + C1 + C2 + C3 + C4 + C5  , family="binomial", data=df  )
-# print(summary (glm.fit ))
-# stats(glm.fit)
-    
-    
 ref="G" 
 #Set reference haplogroups
 df$MainHap= relevel(factor(df$MainHap), ref=ref)
@@ -172,59 +144,6 @@ glm.fit=glm( PTB ~ MainHap + PC1 + PC2 + PC3 + PC4 + PC5 + DIABETES + PW_AGE + M
 print(summary (glm.fit ))
 stats(glm.fit)
 
-# print(paste("Hapologroup and MDS - GA, Ref=", ref ," Dataset: ",CoM,sep=""))
-# glm.fit=glm( GAGEBRTH ~ MainHap + C1 + C2 + C3 + C4 + C5  , data=df  )
-# print(summary (glm.fit ))
-# print(paste("Hapologroup and MDS - PTB, Ref=", ref ," Dataset: ",CoM,sep=""))
-# glm.fit=glm( PTB ~ MainHap + C1 + C2 + C3 + C4 + C5  , family="binomial", data=df  )
-# print(summary (glm.fit ))
-# stats(glm.fit)
-    
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# table(df$SubHap)
-# df <- df %>%
-#         group_by(SubHap) %>%
-#         filter(n() >= 25) %>%
-#         ungroup()
-
-# table(df$SubHap)
-
-# ref="M3" 
-# #Set reference haplogroups
-# df$SubHap= relevel(factor(df$SubHap), ref=ref)
-# print(paste("Hapologroup and PCA - GA, Ref=", ref ," Dataset: ",CoM,sep=""))
-# glm.fit=glm( GAGEBRTH ~ SubHap + PC1 + PC2 + PC3 + PC4 + PC5  , data=df  )
-# print(summary (glm.fit ))
-# print(paste("Hapologroup and PCA - PTB, Ref=", ref ," Dataset: ",CoM,sep=""))
-# glm.fit=glm( PTB ~ SubHap + PC1 + PC2 + PC3 + PC4 + PC5  , family="binomial", data=df  )
-# print(summary (glm.fit ))
-# stats(glm.fit)
-# print(paste("Hapologroup and MDS - GA, Ref=", ref ," Dataset: ",CoM,sep=""))
-# glm.fit=glm( GAGEBRTH ~ SubHap + C1 + C2 + C3 + C4 + C5  , data=df  )
-# print(summary (glm.fit ))
-# print(paste("Hapologroup and MDS - PTB, Ref=", ref ," Dataset: ",CoM,sep=""))
-# glm.fit=glm( PTB ~ SubHap + C1 + C2 + C3 + C4 + C5  , family="binomial", data=df  )
-# print(summary (glm.fit ))
-# stats(glm.fit)
 
