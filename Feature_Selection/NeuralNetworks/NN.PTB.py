@@ -139,7 +139,7 @@ evaluate_model(best_model, X_test_preprocessed, y_test, "NN")
 
 # SHAP values and summary plot
 explainer = shap.DeepExplainer(best_model, X_train_balanced)
-shap_values = explainer.shap_values(X_test_preprocessed)
+shap_values = explainer.shap_values(X_test_preprocessed.toarray())
 # Squeeze the SHAP values to remove the unnecessary dimension
 shap_values_squeezed = np.squeeze(np.array(shap_values), axis=2)
 
