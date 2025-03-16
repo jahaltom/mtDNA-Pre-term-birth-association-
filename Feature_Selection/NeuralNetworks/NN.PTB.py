@@ -144,7 +144,7 @@ shap_values = explainer.shap_values(X_test_preprocessed.toarray())
 shap_values_squeezed = np.squeeze(np.array(shap_values), axis=2)
 
 # Now try plotting with the corrected shape
-shap.summary_plot(shap_values_squeezed, X_test_preprocessed, feature_names=preprocessor.get_feature_names_out(), show=True)
+shap.summary_plot(shap_values_squeezed, X_test_preprocessed.toarray(), feature_names=preprocessor.get_feature_names_out(), show=True)
 plt.savefig("shap_summary_plot.NN.PTB.png")
 plt.clf()
 
@@ -162,7 +162,7 @@ for feature, value in zip(top_feature_names, top_shap_values):
     print(f"{feature}: {value:.4f}")
 
 for feature in top_feature_names:
-    shap.dependence_plot(feature, shap_values_squeezed, X_test_preprocessed, feature_names=preprocessor.get_feature_names_out())
+    shap.dependence_plot(feature, shap_values_squeezed, X_test_preprocessed.toarray(), feature_names=preprocessor.get_feature_names_out())
     plt.savefig("shap.dependence_plot.NN.PTB."+feature+".png")
     plt.clf()
 
