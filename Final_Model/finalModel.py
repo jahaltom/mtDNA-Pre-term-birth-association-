@@ -54,7 +54,7 @@ df['MainHap'] = pd.Categorical(df['MainHap'], categories=np.unique(df['MainHap']
 print(df['MainHap'].value_counts())
 
 
-features = sys.argv[1].split(',') + sys.argv[2].split(',') + [
+features = sys.argv[1].split(',') + sys.argv[2].split(',') 
 formula_PTB = 'PTB ~ ' + ' + '.join(features) + ' + PC1 + PC2'
 
 formula_GA = 'GAGEBRTH ~ ' + ' + '.join(features) + ' + PC1 + PC2'
