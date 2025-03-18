@@ -19,8 +19,8 @@ dfFinal=pd.merge(md,df,on=["Sample_ID"])
 dfFinal.to_csv("Metadata.Final.tsv", index=False,sep="\t") 
 
 
-
-
+###Move Ms to the end of the df so the are plotted last. (For visualizing the Ms in the African population).
+dfFinal = dfFinal.sort_values(by='MainHap', key=lambda x: x == 'M')
 
 
 ######PCA/MDS plots
