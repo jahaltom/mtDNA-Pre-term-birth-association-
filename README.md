@@ -86,7 +86,8 @@ bash workflow.sh
 - Takes in eigenvec and mds files and adds this data to (Metadata.Weibull.tsv). 
 - Outputs (Metadata.Final.tsv). 
 - Takes in eigenval(for PCA), and makes PCA/MDS plots.
-- Lables Main/Sub haplogroup and site.  
+- Lables Main/Sub haplogroup and site.
+- Move Ms to the end of the df so the are plotted last. (For visualizing the Ms in the African population).
 
 
 #### Exploratory Data Analysis (EDA)
