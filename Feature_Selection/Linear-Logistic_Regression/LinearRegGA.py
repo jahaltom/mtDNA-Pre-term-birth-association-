@@ -1,9 +1,7 @@
 import pandas as pd 
 import numpy as np
 from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
-from sklearn.linear_model import Ridge
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-from sklearn.linear_model import ElasticNetCV
+from sklearn.linear_model import ElasticNetCV, LassoCV, Ridge
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
