@@ -95,12 +95,12 @@ ref="African"
 df['population'] = pd.Categorical(df['population'], categories=np.unique(df['population']), ordered=True)
 df['population'] = relevel_category(df['population'], ref)
 # Fit models for GAGEBRTH
-print(f"Population and CoVar -> GA, Hapologroup Ref={ref}")
+print(f"Population and CoVar -> GA, Ref={ref}")
 glm_fit_ga = smf.glm("GAGEBRTH ~ population + DIABETES + PW_AGE + BMI", data=df).fit()
 summary_df_ga = detailed_model_summary(glm_fit_ga, df, 'population')
 print(summary_df_ga)
 # Fit models for PTB
-print(f"Population and CoVar -> PTB, Hapologroup Ref={ref}")
+print(f"Population and CoVar -> PTB, Ref={ref}")
 glm_fit_ptb = smf.glm("PTB ~ population  + DIABETES + PW_AGE + BMI", family=sm.families.Binomial(), data=df).fit()
 summary_df_ptb = detailed_model_summary(glm_fit_ptb, df, 'population', is_logistic=True)
 print(summary_df_ptb)
@@ -112,12 +112,12 @@ ref="GAPPS-Bangladesh"
 df['site'] = pd.Categorical(df['site'], categories=np.unique(df['site']), ordered=True)
 df['site'] = relevel_category(df['site'], ref)
 # Fit models for GAGEBRTH
-print(f"Site and CoVar -> GA, Hapologroup Ref={ref}")
-glm_fit_ga = smf.glm("GAGEBRTH ~ site  + DIABETES + PW_AGE + BMI", data=df).fit()
+print(f"site and CoVar -> GA, Ref={ref}")
+glm_fit_ga = smf.glm("GAGEBRTH ~ site + DIABETES + PW_AGE + BMI", data=df).fit()
 summary_df_ga = detailed_model_summary(glm_fit_ga, df, 'site')
 print(summary_df_ga)
 # Fit models for PTB
-print(f"Site and CoVar -> PTB, Hapologroup Ref={ref}")
+print(f"site and CoVar -> PTB, Ref={ref}")
 glm_fit_ptb = smf.glm("PTB ~ site  + DIABETES + PW_AGE + BMI", family=sm.families.Binomial(), data=df).fit()
 summary_df_ptb = detailed_model_summary(glm_fit_ptb, df, 'site', is_logistic=True)
 print(summary_df_ptb)
