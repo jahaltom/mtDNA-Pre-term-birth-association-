@@ -260,7 +260,8 @@ display = PartialDependenceDisplay.from_estimator(
     feature_names=selected_features,
     grid_resolution=20,
     n_cols=5,
-    ax=ax
+    ax=ax,
+    percentiles=(0.001, 0.999)  # Adjust these values if necessary
 )
 plt.subplots_adjust(top=0.9)
 plt.savefig("PDP_RFE.GB.PTB.png", bbox_inches="tight")
