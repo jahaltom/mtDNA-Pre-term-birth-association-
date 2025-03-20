@@ -34,7 +34,7 @@ python MissingDataHeatmap.py Metadata.C.tsv
 
 
 
-
+#### Use the missing data plot to exclude Categorical/Continuous features from those below (columnsCat and columnsCont). Then run WeibullFiltering.py.
 
 ```
 #Input file
@@ -52,8 +52,8 @@ columnCont_string=$( echo "${columnsCont[*]}")
 python WeibullFiltering.py $file "$columnCat_string" "$columnCont_string"
 ```
 #### Outlier removal with Weibull (WeibullFiltering.py):
-- Takes in (input file and columns in FeaturesPASS)  
-- Removes samples where gestational age "GAGEBRTH" or  PTB (0 or 1) is na. Also removes samples with missing data in any of the input columns "FeaturesPASS". 
+- Takes in (input file and Categorical/Continuous features)  
+- Removes samples where gestational age "GAGEBRTH" or  PTB (0 or 1) is na. Also removes samples with missing data in any of the input columns. 
 - Fits the Weibull distribution to the data for "GAGEBRTH".
    - Defines lower/upper cutoff thresholds, in days, for outlier detection (1st percentile and 99th percentile).
    - Filters the data on these threshholds (>= lower_cutoff) & <= upper_cutoff). 
@@ -63,7 +63,11 @@ python WeibullFiltering.py $file "$columnCat_string" "$columnCont_string"
 - Outputs filtered metadata as (Metadata.Weibull.tsv). Also outputs IDs.txt which are only SampleIDs  from (Metadata.Weibull.tsv) which will be used for sample selection form the nDNA vcf. 
 - Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
 
-#### Do once more
+-For each categorical variable class, determine the number of pre-term births and normal births (PTB=1 normal=0) and the % of PTB=1.  (Categorical_counts.csv). All continuous features are ploted against PTB and GAGEBRTH (in plotsAll). 
+
+
+#### Look at Categorical_counts.csv (below) for features to exclude. Look for outliers in continuous features in plotsAll. Then run WeibullFiltering.py once more. 
+
 ```
              Column Value  PTB_0_Count  PTB_1_Count  PTB_1_Percentage
 0         TYP_HOUSE     1         3961          307          7.193065
@@ -126,6 +130,7 @@ python WeibullFiltering.py $file "$columnCat_string" "$columnCont_string"
 57        SMOK_FREQ     0         7241          547          7.023626
 58        SMOK_FREQ     1           10            0          0.000000
 ```
+#### Remove all unwanted features and re-run WeibullFiltering.py.
 ```python
 import pandas as pd
 
@@ -150,9 +155,9 @@ python WeibullFiltering.py $file "$columnCat_string" "$columnCont_string"
 ```
 
 
-```
-workflow begins
-```
+
+#### workflow begins
+
 #### Subset nDNA VCF: 
 - Selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (IDs.txt). 
 - Outputs (plink2.vcf) that will used for PCA/MDS. 
