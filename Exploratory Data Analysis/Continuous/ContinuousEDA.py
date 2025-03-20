@@ -133,27 +133,3 @@ vif_data['VIF'] = [variance_inflation_factor(dfCont[continuous_vars].values, i)
 vif_data.sort_values(by='VIF', ascending=False).to_csv("Continuous_Multicollinearity_VIF.csv", index=False)
 
 
-##########One last
-# Output directory for plots
-output_dir = "plotsAll/"
-os.makedirs(output_dir, exist_ok=True)
-
-for col in sys.argv[1].split(','):
-    # Scatter plots for GAGEBRTH
-    plt.figure(figsize=(6, 4))
-    sns.regplot(x=df[col], y=df['GAGEBRTH'], scatter_kws={'alpha': 0.6})
-    plt.title(f"{col} vs. GAGEBRTH")
-    plt.xlabel(col)
-    plt.ylabel("GAGEBRTH (Gestational Age in Days)")
-    plt.tight_layout()
-    plt.savefig(f"{output_dir}GAGEBRTHScatter_{col}.All.png")
-    plt.close()
-    # Box plots for PTB
-    plt.figure(figsize=(6, 4))
-    sns.boxplot(x=df['PTB'], y=df[col])
-    plt.title(f"{col} vs. PTB")
-    plt.xlabel("PTB (0 = Full-term, 1 = Pre-term)")
-    plt.ylabel(col)
-    plt.tight_layout()
-    plt.savefig(f"{output_dir}PTBBox_{col}.All.png")
-    plt.close()
