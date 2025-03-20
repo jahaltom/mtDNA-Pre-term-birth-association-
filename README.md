@@ -63,7 +63,7 @@ python WeibullFiltering.py $file "$columnCat_string" "$columnCont_string"
 - Outputs filtered metadata as (Metadata.Weibull.tsv). Also outputs IDs.txt which are only SampleIDs  from (Metadata.Weibull.tsv) which will be used for sample selection form the nDNA vcf. 
 - Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
 
--For each categorical variable class, determine the number of pre-term births and normal births (PTB=1 normal=0) and the % of PTB=1.  (Categorical_counts.csv). All continuous features are ploted against PTB and GAGEBRTH (in plotsAll). 
+- For each categorical variable class, determine the number of pre-term births and normal births (PTB=1 normal=0) and the % of PTB=1.  (Categorical_counts.csv). All continuous features are ploted against PTB and GAGEBRTH (in plotsAll). 
 
 
 #### Look at Categorical_counts.csv (below) for features to exclude. Look for outliers in continuous features in plotsAll. Then run WeibullFiltering.py once more. 
