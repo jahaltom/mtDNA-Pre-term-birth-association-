@@ -31,34 +31,26 @@ Takes in Metadata.C.tsv or Metadata.M.tsv and analyzes the dataset for missing d
 python MissingDataHeatmap.py Metadata.C.tsv
 ```
 ![alt text](https://github.com/jahaltom/mtDNA-Pre-term-birth-association-/blob/main/plots/MissingDataHeatmap.M.png?raw=true)
-![alt text](https://github.com/jahaltom/mtDNA-Pre-term-birth-association-/blob/main/plots/MissingDataHeatmap.C.png?raw=true)
 
 
 
 
-## worfkflow.sh
-Specify:
-- Input file: (Metadata.M.tsv or Metadata.C.tsv)
-- FeaturesPASS: All features that passed missing data analysis. 
-- Categorical and continuous features to be used for EDA 
 
-In the script alter 4 lines:
 ```
 #Input file
 file="Metadata.M.tsv"
-# Define FeaturesPASS features
-columnsAll=('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX','MainHap','SMOKE_HIST','SMOK_FREQ')
 # Define Categorical features
-columnsCat=('TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX','MainHap','SMOKE_HIST','SMOK_FREQ')
+columnsCat=('TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','PASSIVE_SMOK','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX','MainHap','ALCOHOL','SMOKE_HIST','SMOK_FREQ','SMOK_TYP','SNIFF_TOBA')
 # Define Continuous  features
-columnsCont=('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT',"PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10","PC11","PC12","PC13","PC14","PC15","PC16","PC17","PC18","PC19","PC20","C1","C2","C3","C4","C5")
-```
-Then run with 
-```
-bash workflow.sh
-```
+columnsCont=('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI','ALCOHOL_FREQ','SMOK_YR','SNIFF_FREQ')
 
+# Convert the array to a comma-separated string
+columnCat_string=$( echo "${columnsCat[*]}")
+columnCont_string=$( echo "${columnsCont[*]}")
 
+# Call the Python script with the column string as an argument
+python WeibullFiltering.py $file "$columnCat_string" "$columnCont_string"
+```
 #### Outlier removal with Weibull (WeibullFiltering.py):
 - Takes in (input file and columns in FeaturesPASS)  
 - Removes samples where gestational age "GAGEBRTH" or  PTB (0 or 1) is na. Also removes samples with missing data in any of the input columns "FeaturesPASS". 
@@ -71,7 +63,27 @@ bash workflow.sh
 - Outputs filtered metadata as (Metadata.Weibull.tsv). Also outputs IDs.txt which are only SampleIDs  from (Metadata.Weibull.tsv) which will be used for sample selection form the nDNA vcf. 
 - Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
 
+#### Do once more
+```
+#Input file
+file="Metadata.M.tsv"
+# Define Categorical features
+columnsCat=('TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','PASSIVE_SMOK','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX','MainHap','ALCOHOL','SMOKE_HIST','SMOK_FREQ','SMOK_TYP','SNIFF_TOBA')
+# Define Continuous  features
+columnsCont=('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI','ALCOHOL_FREQ','SMOK_YR','SNIFF_FREQ')
 
+# Convert the array to a comma-separated string
+columnCat_string=$( echo "${columnsCat[*]}")
+columnCont_string=$( echo "${columnsCont[*]}")
+
+# Call the Python script with the column string as an argument
+python WeibullFiltering.py $file "$columnCat_string" "$columnCont_string"
+```
+
+
+```
+workflow begins
+```
 #### Subset nDNA VCF: 
 - Selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (IDs.txt). 
 - Outputs (plink2.vcf) that will used for PCA/MDS. 
