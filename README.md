@@ -64,6 +64,13 @@ python WeibullFiltering.py $file "$columnCat_string" "$columnCont_string"
 - Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
 
 #### Do once more
+```python
+import pandas as pd
+
+df = pd.read_csv('Metadata.Weibull.tsv',sep='\t')
+df=df[df["DRINKING_SOURCE"]!=3]
+dfto_csv('Metadata.Weibull.tsv', index=False, sep="\t")
+```
 ```
 #Input file
 file="Metadata.M.tsv"
