@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import weibull_min
 import sys
 import os
+import seaborn as sns
 
 # Load metadata
 md = pd.read_csv(sys.argv[1],sep='\t')
