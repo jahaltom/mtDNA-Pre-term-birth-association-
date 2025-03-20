@@ -106,7 +106,7 @@ results_df.to_csv("Categorical_counts.csv", index=False)
 print(results_df)
 
 ############
-##########Plot at features 
+##########Plot continuous features 
 # Output directory for plots
 output_dir = "plotsAll/"
 os.makedirs(output_dir, exist_ok=True)
