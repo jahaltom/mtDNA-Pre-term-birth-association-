@@ -72,7 +72,7 @@ plt.savefig("weibullFiltering.png", bbox_inches="tight")
 plt.clf()
 
 
-###########################Look at categorical features PTB 0/1 counts and %s.
+###########################For each categorical variable class, determine the number of pre-term births and normal births (PTB=1 normal=0) and the % of PTB=1.
 #### Get counts
 df = filtered_data
 
@@ -106,7 +106,7 @@ results_df.to_csv("Categorical_counts.csv", index=False)
 print(results_df)
 
 ############
-##########Look at continuous columns
+##########Plot at features 
 # Output directory for plots
 output_dir = "plotsAll/"
 os.makedirs(output_dir, exist_ok=True)
