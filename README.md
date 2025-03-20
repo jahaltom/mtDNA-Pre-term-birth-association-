@@ -64,6 +64,68 @@ python WeibullFiltering.py $file "$columnCat_string" "$columnCont_string"
 - Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
 
 #### Do once more
+```
+             Column Value  PTB_0_Count  PTB_1_Count  PTB_1_Percentage
+0         TYP_HOUSE     1         3961          307          7.193065
+1         TYP_HOUSE     2         3290          240          6.798867
+2    HH_ELECTRICITY     1         4309          381          8.123667
+3    HH_ELECTRICITY     0         2942          166          5.341055
+4     FUEL_FOR_COOK     1         1258          154         10.906516
+5     FUEL_FOR_COOK     4         2825          259          8.398184
+6     FUEL_FOR_COOK     3         2614          105          3.861714
+7     FUEL_FOR_COOK     5          358           22          5.789474
+8     FUEL_FOR_COOK     2          196            7          3.448276
+9   DRINKING_SOURCE     1         4059          260          6.019912
+10  DRINKING_SOURCE     2         2771          259          8.547855
+11  DRINKING_SOURCE     4          420           28          6.250000
+12  DRINKING_SOURCE     3            1            0          0.000000
+13           TOILET     1         3765          360          8.727273
+14           TOILET     2         2280          110          4.602510
+15           TOILET     3         1193           76          5.988968
+16           TOILET     4           13            1          7.142857
+17     WEALTH_INDEX     5         1583          120          7.046389
+18     WEALTH_INDEX     1         1364           96          6.575342
+19     WEALTH_INDEX     3         1439          114          7.340631
+20     WEALTH_INDEX     2         1412           83          5.551839
+21     WEALTH_INDEX     4         1453          134          8.443604
+22        CHRON_HTN     0         7071          523          6.887016
+23        CHRON_HTN     1          180           24         11.764706
+24         DIABETES     0         7219          538          6.935671
+25         DIABETES     1           32            9         21.951220
+26               TB     0         7213          545          7.025006
+27               TB     1           38            2          5.000000
+28          THYROID     0         7229          542          6.974649
+29          THYROID     1           22            5         18.518519
+30         EPILEPSY     0         7239          547          7.025430
+31         EPILEPSY     1           12            0          0.000000
+32         BABY_SEX     1         3675          289          7.290616
+33         BABY_SEX     2         3576          258          6.729264
+34          MainHap     M         2692          288          9.664430
+35          MainHap     U          503           55          9.856631
+36          MainHap     R          305           20          6.153846
+37          MainHap     N           37            3          7.500000
+38          MainHap     D          112           13         10.400000
+39          MainHap     T           87           10         10.309278
+40          MainHap     F           70            5          6.666667
+41          MainHap     J           43            4          8.510638
+42          MainHap     H           74            9         10.843373
+43          MainHap     W          109           11          9.166667
+44          MainHap     G           56            1          1.754386
+45          MainHap     Z           23            2          8.000000
+46          MainHap     K           32            7         17.948718
+47          MainHap     A           57            3          5.000000
+48          MainHap    L1          203            5          2.403846
+49          MainHap    L2          768           39          4.832714
+50          MainHap    L3         1465           53          3.491436
+51          MainHap    L0          451           11          2.380952
+52          MainHap    L4          115            6          4.958678
+53          MainHap     E           49            2          3.921569
+54       SMOKE_HIST     1         7241          547          7.023626
+55       SMOKE_HIST     4            8            0          0.000000
+56       SMOKE_HIST     2            2            0          0.000000
+57        SMOK_FREQ     0         7241          547          7.023626
+58        SMOK_FREQ     1           10            0          0.000000
+```
 ```python
 import pandas as pd
 
