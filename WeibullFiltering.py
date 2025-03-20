@@ -69,12 +69,68 @@ plt.axvline(upper_cutoff, color='purple', linestyle='--', label="99th Percentile
 plt.show()
 plt.savefig("weibullFiltering.png", bbox_inches="tight")
 plt.clf()
-    
 
 
+###########################Look at catigorical features PTB 0/1 counts and %s.
+#### Get counts
+df = filtered_data
+
+# Columns to analyze
+columns = sys.argv[2].split(',')
+
+df=df[columns+["PTB"]]
 
 
+# List to store results
+results = []
 
+# Loop through each column
+for col in columns:
+    unique_values = df[col].drop_duplicates().to_list()
+    for value in unique_values:
+        # Calculate counts
+        ptb_counts = df[df[col] == value]["PTB"].value_counts()
+        # Ensure there are no missing categories (0 or 1)
+        ptb_counts = ptb_counts.reindex([0, 1], fill_value=0)       
+        # Calculate percentage of PTB = 1 relative to all
+        percentage = (ptb_counts[1] / (ptb_counts[0] + ptb_counts[1] ) * 100) 
+        # Append results as a row
+        results.append({
+            "Column": col,
+            "Value": value,
+            "PTB_0_Count": ptb_counts[0],
+            "PTB_1_Count": ptb_counts[1],
+            "PTB_1_Percentage": percentage
+        })
 
+# Create a DataFrame from the results
+results_df = pd.DataFrame(results)
 
+# Display the table
+results_df.to_csv("Categorical_counts.csv", index=False)
 
+############
+##########Look at continuous columns
+# Output directory for plots
+output_dir = "plotsAll/"
+os.makedirs(output_dir, exist_ok=True)
+
+for col in sys.argv[3].split(','):
+    # Scatter plots for GAGEBRTH
+    plt.figure(figsize=(6, 4))
+    sns.regplot(x=df[col], y=df['GAGEBRTH'], scatter_kws={'alpha': 0.6})
+    plt.title(f"{col} vs. GAGEBRTH")
+    plt.xlabel(col)
+    plt.ylabel("GAGEBRTH (Gestational Age in Days)")
+    plt.tight_layout()
+    plt.savefig(f"{output_dir}GAGEBRTHScatter_{col}.All.png")
+    plt.close()
+    # Box plots for PTB
+    plt.figure(figsize=(6, 4))
+    sns.boxplot(x=df['PTB'], y=df[col])
+    plt.title(f"{col} vs. PTB")
+    plt.xlabel("PTB (0 = Full-term, 1 = Pre-term)")
+    plt.ylabel(col)
+    plt.tight_layout()
+    plt.savefig(f"{output_dir}PTBBox_{col}.All.png")
+    plt.close()
