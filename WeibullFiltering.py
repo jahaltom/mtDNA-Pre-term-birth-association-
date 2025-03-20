@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import weibull_min
 import sys
-
+import os
 
 # Load metadata
 md = pd.read_csv(sys.argv[1],sep='\t')
