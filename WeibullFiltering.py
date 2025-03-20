@@ -103,6 +103,7 @@ results_df = pd.DataFrame(results)
 
 # Display the table
 results_df.to_csv("Categorical_counts.csv", index=False)
+print(results_df)
 
 ############
 ##########Look at continuous columns
