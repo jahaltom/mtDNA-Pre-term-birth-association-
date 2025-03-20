@@ -76,17 +76,11 @@ plt.clf()
 #### Get counts
 df = filtered_data
 
-# Columns to analyze
-columns = sys.argv[2].split(',')
-
-df=df[columns+["PTB"]]
-
-
 # List to store results
 results = []
 
 # Loop through each column
-for col in columns:
+for col in sys.argv[2].split(','):
     unique_values = df[col].drop_duplicates().to_list()
     for value in unique_values:
         # Calculate counts
