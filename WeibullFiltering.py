@@ -72,7 +72,7 @@ plt.savefig("weibullFiltering.png", bbox_inches="tight")
 plt.clf()
 
 
-###########################Look at catigorical features PTB 0/1 counts and %s.
+###########################Look at categorical features PTB 0/1 counts and %s.
 #### Get counts
 df = filtered_data
 
