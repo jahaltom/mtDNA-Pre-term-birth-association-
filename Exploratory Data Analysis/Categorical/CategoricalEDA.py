@@ -55,7 +55,7 @@ for test_type in ['Chi2', 'ANOVA', 'Kruskal-Wallis','Fisher']:
 results_df.to_csv("Categorical_Analysis_Results.csv", index=False)
 
 
-df=df[sys.argv[1].split(',') + ["PTB","GAGEBRTH"]]
+df=df[categorical_columns  + ["PTB","GAGEBRTH"]]
 
 
 
@@ -78,19 +78,11 @@ plt.clf()
 
 
 #### Get counts
-df = pd.read_csv("Metadata.Final.tsv", sep='\t')
-
-# Columns to analyze
-columns = sys.argv[1].split(',')
-
-df=df[columns+["PTB"]]
-
-
 # List to store results
 results = []
 
 # Loop through each column
-for col in columns:
+for col in categorical_columns:
     unique_values = df[col].drop_duplicates().to_list()
     for value in unique_values:
         # Calculate counts
