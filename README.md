@@ -138,7 +138,7 @@ import pandas as pd
 
 df = pd.read_csv('Metadata.M.tsv',sep='\t')
 df=df[df["DRINKING_SOURCE"]!=3]
-dfto_csv('Metadata.M.tsv', index=False, sep="\t")
+df.to_csv('Metadata.M.tsv', index=False, sep="\t")
 ```
 
 #### workflow.sh
