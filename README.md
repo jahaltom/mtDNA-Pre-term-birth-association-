@@ -40,9 +40,11 @@ python MissingDataHeatmap.py Metadata.M.tsv
 #Input file
 file="Metadata.M.tsv"
 # Define Categorical features
-columnsCat=('TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX','MainHap','SMOKE_HIST','SMOK_FREQ') #'SNIFF_TOBA','PASSIVE_SMOK','ALCOHOL','SMOK_TYP'
+#Excluded: 'SNIFF_TOBA','PASSIVE_SMOK','ALCOHOL','SMOK_TYP'
+columnsCat=('TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX','MainHap','SMOKE_HIST','SMOK_FREQ') 
 # Define Continuous  features
-columnsCont=('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI')#'SNIFF_FREQ','ALCOHOL_FREQ','SMOK_YR'
+#Excluded:  'SNIFF_FREQ','ALCOHOL_FREQ','SMOK_YR'
+columnsCont=('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI')
 
 # Convert the array to a comma-separated string
 columnCat_string=$( echo "${columnsCat[*]}")
