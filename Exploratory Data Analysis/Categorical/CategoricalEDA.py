@@ -24,8 +24,7 @@ results = []
 
 # Categorical Analysis
 for column in categorical_columns:
-    df_cleaned = df[(df[column] != -77) & (df[column] != -88)]
-    contingency_table = pd.crosstab(df_cleaned[column], df_cleaned['PTB'])
+    contingency_table = pd.crosstab(df[column], df['PTB'])
     # Chi-Square and Fisher's Exact Test
     if (contingency_table.values < 5).any():
         if contingency_table.shape == (2, 2):
@@ -38,7 +37,7 @@ for column in categorical_columns:
         cramers_v_value = cramers_v(contingency_table)
         results.append((column, 'Chi2', p, cramers_v_value))
     # ANOVA and Kruskal-Wallis
-    groups = [df_cleaned[df_cleaned[column] == level]['GAGEBRTH'].dropna() for level in df_cleaned[column].unique()]
+    groups = [df[df[column] == level]['GAGEBRTH'].dropna() for level in df[column].unique()]
     if len(groups) > 1:
         anova_p = f_oneway(*groups).pvalue if all(len(g) > 1 for g in groups) else None
         kruskal_p = kruskal(*groups).pvalue if all(len(g) > 1 for g in groups) else None
@@ -55,9 +54,9 @@ for test_type in ['Chi2', 'ANOVA', 'Kruskal-Wallis','Fisher']:
     results_df.loc[test_mask, 'Significant'] = results_df.loc[test_mask, 'P-Value'] < (0.05 / num_tests)
 results_df.to_csv("Categorical_Analysis_Results.csv", index=False)
 
-# Remove rows containing -88, -99, or -77 in any column
+
 df=df[sys.argv[1].split(',') + ["PTB","GAGEBRTH"]]
-df = df[~df.isin([-88, -77,-99]).any(axis=1)]
+
 
 
 # Multicollinearity Check
@@ -92,11 +91,10 @@ results = []
 
 # Loop through each column
 for col in columns:
-    dfT = df[~df[col].isin([-88, -77])]  # Remove rows with invalid entries (-88, -77)
-    unique_values = dfT[col].drop_duplicates().to_list()
+    unique_values = df[col].drop_duplicates().to_list()
     for value in unique_values:
         # Calculate counts
-        ptb_counts = dfT[dfT[col] == value]["PTB"].value_counts()
+        ptb_counts = df[df[col] == value]["PTB"].value_counts()
         # Ensure there are no missing categories (0 or 1)
         ptb_counts = ptb_counts.reindex([0, 1], fill_value=0)       
         # Calculate percentage of PTB = 1 relative to all
@@ -115,21 +113,5 @@ results_df = pd.DataFrame(results)
 
 # Display the table
 results_df.to_csv("Categorical_counts.csv", index=False)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
