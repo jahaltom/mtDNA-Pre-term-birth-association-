@@ -132,7 +132,7 @@ python WeibullFiltering.py $file "$columnCat_string" "$columnCont_string"
 57        SMOK_FREQ     0         7241          547          7.023626
 58        SMOK_FREQ     1           10            0          0.000000
 ```
-#### Remove all unwanted features and re-run WeibullFiltering.py.
+#### Remove all unwanted features and re-run WeibullFiltering.py. Here I get rid of 
 ```python
 import pandas as pd
 
@@ -140,22 +140,6 @@ df = pd.read_csv('Metadata.Weibull.tsv',sep='\t')
 df=df[df["DRINKING_SOURCE"]!=3]
 dfto_csv('Metadata.Weibull.tsv', index=False, sep="\t")
 ```
-```
-#Input file
-file="Metadata.M.tsv"
-# Define Categorical features
-columnsCat=('TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','PASSIVE_SMOK','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX','MainHap','ALCOHOL','SMOKE_HIST','SMOK_FREQ','SMOK_TYP','SNIFF_TOBA')
-# Define Continuous  features
-columnsCont=('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI','ALCOHOL_FREQ','SMOK_YR','SNIFF_FREQ')
-
-# Convert the array to a comma-separated string
-columnCat_string=$( echo "${columnsCat[*]}")
-columnCont_string=$( echo "${columnsCont[*]}")
-
-# Call the Python script with the column string as an argument
-python WeibullFiltering.py $file "$columnCat_string" "$columnCont_string"
-```
-
 
 
 #### workflow begins
