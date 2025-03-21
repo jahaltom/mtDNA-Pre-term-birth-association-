@@ -68,7 +68,7 @@ python WeibullFiltering.py $file "$columnCat_string" "$columnCont_string"
 - For each categorical variable class, determine the number of pre-term births and normal births (PTB=1 normal=0) and the % of PTB=1.  (Categorical_counts.csv). All continuous features are ploted against PTB and GAGEBRTH (in plotsAll). 
 
 
-#### Look at Categorical_counts.csv (below) for features to exclude. Look for outliers in continuous features in plotsAll. Then run WeibullFiltering.py once more. 
+#### Look at Categorical_counts.csv (below) for features to exclude. Look for outliers in continuous features in plotsAll. 
 
 ```
              Column Value  PTB_0_Count  PTB_1_Count  PTB_1_Percentage
@@ -132,17 +132,26 @@ python WeibullFiltering.py $file "$columnCat_string" "$columnCont_string"
 57        SMOK_FREQ     0         7241          547          7.023626
 58        SMOK_FREQ     1           10            0          0.000000
 ```
-#### Remove all unwanted features and re-run WeibullFiltering.py. Here I get rid of 
+#### Here I choose to get rid of: DRINKING_SOURCE 3,EPILEPSY, SMOKE_HIST, and SMOK_FREQ. Edit in workflow.sh.
 ```python
 import pandas as pd
 
-df = pd.read_csv('Metadata.Weibull.tsv',sep='\t')
+df = pd.read_csv('Metadata.M.tsv',sep='\t')
 df=df[df["DRINKING_SOURCE"]!=3]
-dfto_csv('Metadata.Weibull.tsv', index=False, sep="\t")
+dfto_csv('Metadata.M.tsv', index=False, sep="\t")
 ```
 
+#### workflow.sh
+- Edit workflow.sh
+  - Define Categorical features in "columnsCat"
+  - Define Continuous  features in "columnsCont"
+- Run workflow.sh
+```
+sbatch workflow.sh
+```
 
-#### workflow begins
+#### Re-runs WeibullFiltering.py 
+
 
 #### Subset nDNA VCF: 
 - Selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (IDs.txt). 
