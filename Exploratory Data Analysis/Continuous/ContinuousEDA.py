@@ -20,9 +20,7 @@ continuous_vars = sys.argv[1].split(',') + ["PC1","PC2","PC3","PC4","PC5","PC6",
 haplogroups= pd.get_dummies(df["MainHap"], drop_first=False).columns.to_list()
 df = pd.concat([df[continuous_vars + ['PTB', 'GAGEBRTH']], pd.get_dummies(df["MainHap"], drop_first=False).astype(int)],axis=1)
 
-# Drop rows with values < 0 for specific columns
-columns_to_check = sys.argv[1].split(',')
-df = df[df[columns_to_check].ge(0).all(axis=1)]
+
 
 # Create a deep copy of the DataFrame
 dfCont = df.copy(deep=True)
