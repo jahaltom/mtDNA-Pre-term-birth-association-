@@ -86,9 +86,11 @@ sed -i "s/CONT/$columnCont/g" workflow.sh
 
 columnCat="('TYP_HOUSE','HH_ELECTRICITY','TOILET','WEALTH_INDEX','THYROID','CHRON_HTN','DIABETES','TB','FUEL_FOR_COOK','MainHap','DRINKING_SOURCE','BABY_SEX')"
 columnCont="('PC1','PC2','PC3','PC4','PC5')"
+columnBin="('PC1','PC2','PC3','PC4','PC5')"
 
 sed -i "s/CAT/$columnCat/g" featureSelection.sh
 sed -i "s/CONT/$columnCont/g" featureSelection.sh
+sed -i "s/BIN/$columnBin/g" featureSelection.sh
 
 sbatch workflow.sh
 ```
