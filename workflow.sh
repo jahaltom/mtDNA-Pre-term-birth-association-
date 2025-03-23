@@ -10,26 +10,15 @@ source /home/haltomj/miniconda3/etc/profile.d/conda.sh
 
 conda activate ML
 
-#Input file
-file="Metadata.M.tsv"
+
 # Define Categorical features
-#Excluded: 'SNIFF_TOBA','PASSIVE_SMOK','ALCOHOL','SMOK_TYP', 'EPILEPSY','SMOKE_HIST','SMOK_FREQ'
-columnsCat=('TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID','BABY_SEX','MainHap') 
+columnsCat=CAT
 # Define Continuous  features
-#Excluded:  'SNIFF_FREQ','ALCOHOL_FREQ','SMOK_YR'
-columnsCont=('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI')
+columnsCont=CONT
 
 # Convert the array to a comma-separated string
 columnCat_string=$( echo "${columnsCat[*]}")
 columnCont_string=$( echo "${columnsCont[*]}")
-
-
-
-
-
-
-# Call the Python script with the column string as an argument
-python WeibullFiltering.py $file "$columnCat_string" "$columnCont_string" 
 
 
 
