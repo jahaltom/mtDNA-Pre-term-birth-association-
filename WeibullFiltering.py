@@ -38,9 +38,78 @@ filtered_data = md[(md["GAGEBRTH"] >= lower_cutoff) & (md["GAGEBRTH"] <= upper_c
 filtered_data = filtered_data[filtered_data['MainHap'].map(filtered_data['MainHap'].value_counts()) >= 25]
 
 
+#############################      More filtering
+# For each categorical variable class, determine the number of pre-term births and normal births (PTB=1 normal=0) and the % of PTB=1. 
+# Remove rows(samples) corresponding to a class from a categorical variable that total counts (PTB=1 normal=0) < 25. If only 1 class would remain after the prior filtering, don't exclude any samples and simply exclude the categorical variable from any future model.
+# Reports categorical variables to keep/exclude for future models. Also reports those classes removed due to low counts. 
+
+
+
+results = []
+troubleClass=[]
+
+# Loop through each column
+for col in Cat:
+    unique_values = filtered_data[col].drop_duplicates().to_list()
+    for value in unique_values:
+        # Calculate counts
+        ptb_counts = filtered_data[filtered_data[col] == value]["PTB"].value_counts()
+        # Ensure there are no missing categories (0 or 1)
+        ptb_counts = ptb_counts.reindex([0, 1], fill_value=0)
+        total_counts = ptb_counts.sum() 
+        if total_counts < 25:
+            percentage = (ptb_counts[1] / total_counts * 100) 
+            troubleClass.append({
+                "Column": col,
+                "Value": value,
+                "PTB_0_Count": ptb_counts[0],
+                "PTB_1_Count": ptb_counts[1],
+                "PTB_1_Percentage": percentage
+            })
+        # Only add to results if total counts are >= 25
+        if total_counts >= 25:
+            percentage = (ptb_counts[1] / total_counts * 100) 
+            results.append({
+                "Column": col,
+                "Value": value,
+                "PTB_0_Count": ptb_counts[0],
+                "PTB_1_Count": ptb_counts[1],
+                "PTB_1_Percentage": percentage
+            })
+#Unfiltered Categorical Variables
+print("Unfiltered Categorical Variables")
+print(pd.concat([pd.DataFrame(troubleClass),pd.DataFrame(results)]).sort_values(by=['Column','Value']))
+#df for troublesome classes
+troubleClass= pd.DataFrame(troubleClass)
+print("Troublesome classes") 
+print(troubleClass)
+##Construct final table for categorical variables
+results= pd.DataFrame(results)
+# Identify categorical variables where there is only 1 class. These will not be used for future model.
+featToExclude = results[~results["Column"].duplicated(keep=False)]["Column"].to_list()
+# Remove categorical variables where there is only 1 class. 
+final=results[results["Column"].duplicated(keep=False)].sort_values(by=['Column','Value']) 
+final.to_csv('CategoricalVariablesToKeepTable.tsv', index=False, sep="\t") 
+#df of troublesome classes to remove 
+classToRemove = troubleClass[~troubleClass['Column'].isin(featToExclude)]
+# Remove unwanted class's
+for idx, row in classToRemove.iterrows():
+    filtered_data = filtered_data[filtered_data[row['Column']] != row['Value']]
+#categorical variables to keep
+print("Categorical variables to keep for future model")
+print(set(results[results["Column"].duplicated(keep=False)]["Column"].to_list()))
+print("Categorical variables excluded from future model")
+print(featToExclude)
+print("Categorical variable classes removed from data")
+print(classToRemove) 
+
+
 
 filtered_data.to_csv('Metadata.Weibull.tsv', index=False, sep="\t") 
 filtered_data[["Sample_ID"]].to_csv("IDs.txt", index=False,header=False) 
+
+
+
 
 
 # Step 4: Plot the original data, filtered data, and Weibull distribution
@@ -71,39 +140,6 @@ plt.show()
 plt.savefig("weibullFiltering.png", bbox_inches="tight")
 plt.clf()
 
-
-###########################For each categorical variable class, determine the number of pre-term births and normal births (PTB=1 normal=0) and the % of PTB=1.
-#### Get counts
-df = filtered_data
-
-# List to store results
-results = []
-
-# Loop through each column
-for col in sys.argv[2].split(','):
-    unique_values = df[col].drop_duplicates().to_list()
-    for value in unique_values:
-        # Calculate counts
-        ptb_counts = df[df[col] == value]["PTB"].value_counts()
-        # Ensure there are no missing categories (0 or 1)
-        ptb_counts = ptb_counts.reindex([0, 1], fill_value=0)       
-        # Calculate percentage of PTB = 1 relative to all
-        percentage = (ptb_counts[1] / (ptb_counts[0] + ptb_counts[1] ) * 100) 
-        # Append results as a row
-        results.append({
-            "Column": col,
-            "Value": value,
-            "PTB_0_Count": ptb_counts[0],
-            "PTB_1_Count": ptb_counts[1],
-            "PTB_1_Percentage": percentage
-        })
-
-# Create a DataFrame from the results
-results_df = pd.DataFrame(results)
-
-# Display the table
-results_df.to_csv("Categorical_counts.csv", index=False)
-print(results_df)
 
 ############
 ##########Plot continuous features 
