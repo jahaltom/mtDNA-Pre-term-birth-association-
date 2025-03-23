@@ -105,6 +105,18 @@ print(classToRemove)
 
 
 
+# Count the number of unique classes for each categorical variable
+class_counts = results.groupby('Column')['Value'].nunique()
+# Identify columns with exactly two unique classes
+columns_with_two_classes = class_counts[class_counts == 2].index.tolist()
+print("Categorical variables with exactly two classes and continuous variables.  Will be used as continuous variables for Feature selection:", columns_with_two_classes + + sys.argv[3].split(','))
+columns_with_moreThantwo_classes = class_counts[class_counts > 2].index.tolist()
+print("Categorical variables for Feature selection:", columns_with_moreThantwo_classes)
+
+
+
+
+
 filtered_data.to_csv('Metadata.Weibull.tsv', index=False, sep="\t") 
 filtered_data[["Sample_ID"]].to_csv("IDs.txt", index=False,header=False) 
 
