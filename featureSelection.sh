@@ -56,11 +56,14 @@ wait
 # source /home/haltomj/miniconda3/etc/profile.d/conda.sh
 
 # # Define Categorical and Continuous features
-# columnsCat=CAT
-# columnsCont=CONT
+#columnsCat=CAT
+#columnsCont=CONT
+#columnsBiN=BIN
+
 # # Convert the arrays to comma-separated strings
-# columnCat_string=$( echo "${columnsCat[*]}")
-# columnCont_string=$( echo "${columnsCont[*]}")
+#columnCat_string=$( echo "${columnsCat[*]}")
+#columnCont_string=$( echo "${columnsCont[*]}")
+#columnBiN_string=$( echo "${columnsBiN[*]}")
 
 # # Load your Python environment
 # conda activate ML
@@ -71,7 +74,7 @@ wait
 #     local dir_name=$2
 #     cp Metadata.Final.tsv "$dir_name"
 #     cd "$dir_name"
-#     sbatch --ntasks=1 --cpus-per-task=4 --time=24:00:00 --wrap="python $script_name '$columnCat_string' '$columnCont_string' > out.$script_name.txt"
+#     sbatch --ntasks=1 --cpus-per-task=4 --time=24:00:00 --wrap="python $script_name '$columnCat_string' '$columnCont_string' '$columnBiN_string'> out.$script_name.txt"
     
 #     cd ../../
 # }
