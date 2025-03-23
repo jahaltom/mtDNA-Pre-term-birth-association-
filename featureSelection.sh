@@ -10,8 +10,8 @@ source /home/haltomj/miniconda3/etc/profile.d/conda.sh
 #Input file
 
 # Define Categorical and Continuous features
-columnsCat=('FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','MainHap')
-columnsCont=('PW_AGE','PW_EDUCATION','BMI','PC1','PC2','PC3','PC4','PC5','TYP_HOUSE','HH_ELECTRICITY','PASSIVE_SMOK','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX')
+columnsCat=CAT
+columnsCont=CONT
 
 # Convert the arrays to comma-separated strings
 columnCat_string=$( echo "${columnsCat[*]}")
@@ -54,9 +54,8 @@ wait
 # source /home/haltomj/miniconda3/etc/profile.d/conda.sh
 
 # # Define Categorical and Continuous features
-# columnsCat=('FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','MainHap')
-# columnsCont=('PW_AGE','PW_EDUCATION','BMI','PC1','PC2','PC3','PC4','PC5','TYP_HOUSE','HH_ELECTRICITY','PASSIVE_SMOK','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX')
-
+# columnsCat=CAT
+# columnsCont=CONT
 # # Convert the arrays to comma-separated strings
 # columnCat_string=$( echo "${columnsCat[*]}")
 # columnCont_string=$( echo "${columnsCont[*]}")
