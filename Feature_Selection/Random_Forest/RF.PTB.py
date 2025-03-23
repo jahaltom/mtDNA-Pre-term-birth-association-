@@ -51,6 +51,7 @@ df = df[df['MainHap'].map(df['MainHap'].value_counts()) >= 25]
 # Define features
 categorical_columns = sys.argv[1].split(',')
 continuous_columns = sys.argv[2].split(',')
+binary_columns = sys.argv[3].split(',')
 
 X = df[categorical_columns + continuous_columns]
 y = df['PTB'] 
@@ -62,6 +63,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_
 preprocessor = ColumnTransformer(
     transformers=[
         ('num', StandardScaler(), continuous_columns),
+        ('bin', binary_transformer, binary_columns),
         ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_columns)
     ]
 )
