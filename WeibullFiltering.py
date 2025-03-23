@@ -150,7 +150,7 @@ os.makedirs(output_dir, exist_ok=True)
 for col in sys.argv[3].split(','):
     # Scatter plots for GAGEBRTH
     plt.figure(figsize=(6, 4))
-    sns.regplot(x=df[col], y=df['GAGEBRTH'], scatter_kws={'alpha': 0.6})
+    sns.regplot(x=filtered_data[col], y=filtered_data['GAGEBRTH'], scatter_kws={'alpha': 0.6})
     plt.title(f"{col} vs. GAGEBRTH")
     plt.xlabel(col)
     plt.ylabel("GAGEBRTH (Gestational Age in Days)")
@@ -159,7 +159,7 @@ for col in sys.argv[3].split(','):
     plt.close()
     # Box plots for PTB
     plt.figure(figsize=(6, 4))
-    sns.boxplot(x=df['PTB'], y=df[col])
+    sns.boxplot(x=filtered_data['PTB'], y=filtered_data[col])
     plt.title(f"{col} vs. PTB")
     plt.xlabel("PTB (0 = Full-term, 1 = Pre-term)")
     plt.ylabel(col)
