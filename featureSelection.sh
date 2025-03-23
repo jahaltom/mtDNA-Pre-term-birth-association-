@@ -12,10 +12,12 @@ source /home/haltomj/miniconda3/etc/profile.d/conda.sh
 # Define Categorical and Continuous features
 columnsCat=CAT
 columnsCont=CONT
+columnsBIN=BIN
 
 # Convert the arrays to comma-separated strings
 columnCat_string=$( echo "${columnsCat[*]}")
 columnCont_string=$( echo "${columnsCont[*]}")
+columnBIN_string=$( echo "${columnsBIN[*]}")
 
 # Load your Python environment
 conda activate ML
@@ -24,7 +26,7 @@ conda activate ML
 function run_analysis {
     cp Metadata.Final.tsv $1
     cd $1
-    srun --exclusive  --cpu-bind=none --time=10:00:00 python $2 "$columnCat_string" "$columnCont_string" > "out.$2.txt" &
+    srun --exclusive  --cpu-bind=none --time=10:00:00 python $2 "$columnCat_string" "$columnCont_string" "$columnBIN_string"> "out.$2.txt" &
     cd ../../
 }
 
