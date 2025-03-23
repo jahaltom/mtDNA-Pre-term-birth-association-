@@ -1,0 +1,91 @@
+#!/bin/bash
+#SBATCH --nodes=2 
+#SBATCH --ntasks=8
+#SBATCH --ntasks-per-node=6
+#SBATCH --cpus-per-task=4
+#SBATCH --time=24:00:00
+
+source /home/haltomj/miniconda3/etc/profile.d/conda.sh
+
+#Input file
+
+# Define Categorical and Continuous features
+columnsCat=('FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','MainHap')
+columnsCont=('PW_AGE','PW_EDUCATION','BMI','PC1','PC2','PC3','PC4','PC5','TYP_HOUSE','HH_ELECTRICITY','PASSIVE_SMOK','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX')
+
+# Convert the arrays to comma-separated strings
+columnCat_string=$( echo "${columnsCat[*]}")
+columnCont_string=$( echo "${columnsCont[*]}")
+
+# Load your Python environment
+conda activate ML
+
+# Directory and script execution
+function run_analysis {
+    cp Metadata.Final.tsv $1
+    cd $1
+    srun --exclusive  --cpu-bind=none --time=10:00:00 python $2 "$columnCat_string" "$columnCont_string" > "out.$2.txt" &
+    cd ../../
+}
+
+run_analysis "Feature_Selection/Gradient_Boosting" "GB.GA.py"
+run_analysis "Feature_Selection/Gradient_Boosting" "GB.PTB.py"
+run_analysis "Feature_Selection/NeuralNetworks" "NN.GA.py"
+run_analysis "Feature_Selection/NeuralNetworks" "NN.PTB.py"
+run_analysis "Feature_Selection/Random_Forest" "RF.GA.py"
+run_analysis "Feature_Selection/Random_Forest" "RF.PTB.py"
+run_analysis "Feature_Selection/Linear-Logistic_Regression" "LinearRegGA.py"
+run_analysis "Feature_Selection/Linear-Logistic_Regression" "LogisticRegPTB.py"
+
+# Wait for all background processes to finish
+wait
+
+
+
+
+
+
+
+
+
+# #!/bin/bash
+# #SBATCH --time=24:00:00
+
+# source /home/haltomj/miniconda3/etc/profile.d/conda.sh
+
+# # Define Categorical and Continuous features
+# columnsCat=('FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','MainHap')
+# columnsCont=('PW_AGE','PW_EDUCATION','BMI','PC1','PC2','PC3','PC4','PC5','TYP_HOUSE','HH_ELECTRICITY','PASSIVE_SMOK','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX')
+
+# # Convert the arrays to comma-separated strings
+# columnCat_string=$( echo "${columnsCat[*]}")
+# columnCont_string=$( echo "${columnsCont[*]}")
+
+# # Load your Python environment
+# conda activate ML
+
+# # Function 
+# function run_analysis {
+#     local script_name=$1
+#     local dir_name=$2
+#     cp Metadata.Final.tsv "$dir_name"
+#     cd "$dir_name"
+#     sbatch --ntasks=1 --cpus-per-task=4 --time=24:00:00 --wrap="python $script_name '$columnCat_string' '$columnCont_string' > out.$script_name.txt"
+    
+#     cd ../../
+# }
+
+# # Testing different configurations
+# run_analysis "GB.GA.py" "Feature_Selection/Gradient_Boosting"
+# run_analysis "GB.PTB.py" "Feature_Selection/Gradient_Boosting"
+# run_analysis "NN.GA.py" "Feature_Selection/NeuralNetworks"
+# run_analysis "NN.PTB.py" "Feature_Selection/NeuralNetworks"
+# run_analysis "RF.GA.py" "Feature_Selection/Random_Forest"
+# run_analysis "RF.PTB.py" "Feature_Selection/Random_Forest"
+# run_analysis "LinearRegGA.py" "Feature_Selection/Linear-Logistic_Regression"
+# run_analysis "LogisticRegPTB.py" "Feature_Selection/Linear-Logistic_Regression"
+
+# # Wait for all SLURM jobs to finish
+# wait
+
+
