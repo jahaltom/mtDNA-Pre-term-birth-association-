@@ -102,9 +102,6 @@ print("Categorical variables excluded from future model")
 print(featToExclude)
 print("Categorical variable classes removed from data")
 print(classToRemove) 
-
-
-
 # Count the number of unique classes for each categorical variable
 class_counts = results.groupby('Column')['Value'].nunique()
 # Identify columns with exactly two unique classes
