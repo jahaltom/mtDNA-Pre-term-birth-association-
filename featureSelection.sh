@@ -3,7 +3,7 @@
 #SBATCH --ntasks=8
 #SBATCH --ntasks-per-node=6
 #SBATCH --cpus-per-task=4
-#SBATCH --time=24:00:00
+#SBATCH --time=120:00:00
 
 source /home/haltomj/miniconda3/etc/profile.d/conda.sh
 
@@ -26,7 +26,7 @@ conda activate ML
 function run_analysis {
     cp Metadata.Final.tsv $1
     cd $1
-    srun --exclusive  --cpu-bind=none --time=10:00:00 python $2 "$columnCat_string" "$columnCont_string" "$columnBiN_string"> "out.$2.txt" &
+    srun --exclusive  --cpu-bind=none --time=120:00:00 python $2 "$columnCat_string" "$columnCont_string" "$columnBiN_string"> "out.$2.txt" &
     cd ../../
 }
 
