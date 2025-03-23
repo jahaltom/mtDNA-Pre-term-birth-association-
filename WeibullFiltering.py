@@ -97,7 +97,7 @@ for idx, row in classToRemove.iterrows():
     filtered_data = filtered_data[filtered_data[row['Column']] != row['Value']]
 #categorical variables to keep
 print("Categorical variables to keep for future model")
-print(set(results[results["Column"].duplicated(keep=False)]["Column"].to_list()))
+print(str(set(results[results["Column"].duplicated(keep=False)]["Column"].to_list())).replace(" ", ""))
 print("Categorical variables excluded from future model")
 print(featToExclude)
 print("Categorical variable classes removed from data")
@@ -106,9 +106,9 @@ print(classToRemove)
 class_counts = results.groupby('Column')['Value'].nunique()
 # Identify columns with exactly two unique classes
 columns_with_two_classes = class_counts[class_counts == 2].index.tolist()
-print("Categorical variables with exactly two classes and continuous variables.  Will be used as continuous variables for Feature selection:", columns_with_two_classes + + sys.argv[3].split(','))
+print("Categorical variables with exactly two classes and continuous variables.  Will be used as continuous variables for Feature selection:", str(columns_with_two_classes  + sys.argv[3].split(',')).replace(" ", ""))
 columns_with_moreThantwo_classes = class_counts[class_counts > 2].index.tolist()
-print("Categorical variables for Feature selection:", columns_with_moreThantwo_classes)
+print("Categorical variables for Feature selection:", str(columns_with_moreThantwo_classes).replace(" ", ""))
 
 
 
