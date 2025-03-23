@@ -108,6 +108,17 @@ sbatch workflow.sh
 - see EDA folder.
 
 #### featureSelection.sh
+- Looking at out.txt from above, place "Categorical variables to keep for future model" in columnCat below.
+- Update featureSelection.sh and run.
+```
+columnCat="('TYP_HOUSE','HH_ELECTRICITY','TOILET','WEALTH_INDEX','THYROID','CHRON_HTN','DIABETES','TB','FUEL_FOR_COOK','MainHap','DRINKING_SOURCE','BABY_SEX')"
+columnCont="('PC1','PC2','PC3','PC4','PC5')"
+
+sed -i "s/CAT/$columnCat/g" featureSelection.sh
+sed -i "s/CONT/$columnCont/g" featureSelection.sh
+
+sbatch featureSelection.sh
+```
 
 
 
