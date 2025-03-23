@@ -49,7 +49,7 @@ results = []
 troubleClass=[]
 
 # Loop through each column
-for col in Cat:
+for col in sys.argv[2].split(','):
     unique_values = filtered_data[col].drop_duplicates().to_list()
     for value in unique_values:
         # Calculate counts
