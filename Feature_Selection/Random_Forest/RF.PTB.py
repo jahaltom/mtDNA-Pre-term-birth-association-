@@ -220,6 +220,7 @@ PartialDependenceDisplay.from_estimator(
     feature_names=feature_names,
     grid_resolution=20,
     ax=ax
+    percentiles=(0.001, 0.999)  # Adjust these values if necessary
 )
 plt.savefig("PDP_Top5.RF.PTB.png", bbox_inches="tight")
 plt.clf()
