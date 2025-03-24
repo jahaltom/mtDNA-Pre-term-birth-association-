@@ -74,7 +74,7 @@ categorical_columns = sys.argv[1].split(',')
 continuous_columns = sys.argv[2].split(',')
 binary_columns = sys.argv[3].split(',')
 
-X = df[categorical_columns + continuous_columns]
+X = df[categorical_columns + continuous_columns + binary_columns]
 y = df['PTB']  
 
 # Train-test split
