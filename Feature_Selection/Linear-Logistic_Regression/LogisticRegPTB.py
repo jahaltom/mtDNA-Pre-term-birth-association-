@@ -65,7 +65,7 @@ def evaluate_model(model, X_test, y_test, model_name):
 # Load the dataset
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
-df = df[sys.argv[1].split(',') + sys.argv[2].split(',') + ["PTB"]]
+df = df[sys.argv[1].split(',') + sys.argv[2].split(',') + sys.argv[3].split(',') + ["PTB"]]
 df = df[~df.isin([-88, -77]).any(axis=1)]  # Remove rows with invalid entries (-88, -77)
 df = df[df['MainHap'].map(df['MainHap'].value_counts()) >= 25]
 
@@ -84,7 +84,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_
 preprocessor = ColumnTransformer(
     transformers=[
         ('num', StandardScaler(), continuous_columns),
-        ('bin', binary_transformer, binary_columns),
+        ('bin', 'passthrough', binary_columns),
         ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_columns)
     ]
 )
