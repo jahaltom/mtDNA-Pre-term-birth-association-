@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --time=120:00:00
+#SBATCH --time=1:00:00
 
 source /home/haltomj/miniconda3/etc/profile.d/conda.sh
 
