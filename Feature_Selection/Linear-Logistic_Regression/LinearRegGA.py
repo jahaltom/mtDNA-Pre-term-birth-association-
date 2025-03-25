@@ -11,6 +11,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
 
+# Set to display all columns
+pd.set_option('display.max_columns', None)
+# Set to display all rows
+pd.set_option('display.max_rows', None)
+
 ##For LASSO, Ridge and ElasticNet
 def plot_feat(coefMat, model_name):
     top_features = coefMat.copy()  # Adjusted to show top features
