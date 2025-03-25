@@ -56,8 +56,7 @@ cd ../Categorical
 python CategoricalEDA.py "$columnCat_string"
 rm Metadata.Final.tsv
 
-cd ../../
-sbatch featureSelection.sh
+
 
 
 
