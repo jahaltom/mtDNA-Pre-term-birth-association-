@@ -22,7 +22,7 @@ function run_analysis {
     local dir_name=$2
     cp Metadata.Final.tsv "$dir_name"
     cd "$dir_name"
-    sbatch --ntasks=1 --cpus-per-task=4 --time=120:00:00 --wrap="python $script_name '$columnCat_string' '$columnCont_string' '$columnBiN_string'> out.$script_name.txt"
+    sbatch --ntasks=1 --cpus-per-task=4 --time=120:00:00 --mail-user=haltomj@chop.edu --mail-type=ALL --wrap="python $script_name '$columnCat_string' '$columnCont_string' '$columnBiN_string'> out.$script_name.txt"
     
     cd ../../
 }
