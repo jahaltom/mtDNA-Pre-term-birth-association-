@@ -15,6 +15,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
 
+# Set to display all columns
+pd.set_option('display.max_columns', None)
+# Set to display all rows
+pd.set_option('display.max_rows', None)
 
 # Helper function for evaluation
 def evaluate_model(model, X_test, y_test, model_name):
