@@ -117,6 +117,7 @@ columnBin="('BABY_SEX','CHRON_HTN','DIABETES','HH_ELECTRICITY','TB','THYROID','T
 sed -i "s/CAT/$columnCat/g" featureSelection.sh
 sed -i "s/CONT/$columnCont/g" featureSelection.sh
 sed -i "s/BIN/$columnBin/g" featureSelection.sh
+sbatch featureSelection.sh
 ```
 
 
