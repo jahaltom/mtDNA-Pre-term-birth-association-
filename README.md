@@ -108,7 +108,7 @@ sbatch workflow.sh
 - see EDA folder.
 
 #### featureSelection.sh
-
+- Remove weight and heigth if using BMI.
 ```
 columnCat="('DRINKING_SOURCE','FUEL_FOR_COOK','MainHap','TOILET','WEALTH_INDEX')"
 columnCont="('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI','PC1','PC2','PC3','PC4','PC5')"
