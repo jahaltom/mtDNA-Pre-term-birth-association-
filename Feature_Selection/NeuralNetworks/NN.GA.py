@@ -12,7 +12,10 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, r2_score
 import sys
 
-
+# Set to display all columns
+pd.set_option('display.max_columns', None)
+# Set to display all rows
+pd.set_option('display.max_rows', None)
 
 # Load the dataset
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
