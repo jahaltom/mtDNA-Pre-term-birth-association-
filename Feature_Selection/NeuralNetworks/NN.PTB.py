@@ -14,6 +14,11 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, roc_auc_score, roc_curve
 import sys
 
+# Set to display all columns
+pd.set_option('display.max_columns', None)
+# Set to display all rows
+pd.set_option('display.max_rows', None)
+
 # Helper function for evaluation
 def evaluate_model(model, X_test, y_test, model_name):
     y_pred_proba = model.predict(X_test).ravel()  # Get probabilities
