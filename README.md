@@ -108,7 +108,13 @@ sbatch workflow.sh
 - see EDA folder.
 
 #### featureSelection.sh
-- Remove weight and heigth if using BMI.
+- Remove weight and heigth if using BMI (columnCont).
+- Look at MPA/MDS plots and make sure they look good.
+- See out.txt for;
+	- Categorical variables with exactly two classes.  Will be used as binary variables for Feature selection. Place in columnBin
+	- Categorical variables for Feature selection. Place in columnCat
+
+
 ```
 columnCat="('DRINKING_SOURCE','FUEL_FOR_COOK','MainHap','TOILET','WEALTH_INDEX')"
 columnCont="('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI','PC1','PC2','PC3','PC4','PC5')"
