@@ -73,7 +73,7 @@ for ref in haplogroups:
     glm_fit_ga = smf.glm(formula_GA, data=df).fit()
     summary_df_ga = detailed_model_summary(glm_fit_ga, df, 'MainHap')
     print(summary_df_ga)
-    summary_df_ga.to_csv('summary_df_ga.'+ref+',tsv', index=False, sep="\t") 
+    summary_df_ga.to_csv('summary_df_ga.'+ref+'.tsv', index=False, sep="\t") 
 
 
     # Fit models for PTB
