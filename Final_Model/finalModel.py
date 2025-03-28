@@ -64,7 +64,7 @@ print(formula_PTB)
 print(formula_GA)
 
 # Processing the haplogroups
-haplogroups = ['M']
+haplogroups = ['M','L3']
 for ref in haplogroups:
     df['MainHap'] = relevel_category(df['MainHap'], ref)
     
@@ -73,7 +73,7 @@ for ref in haplogroups:
     glm_fit_ga = smf.glm(formula_GA, data=df).fit()
     summary_df_ga = detailed_model_summary(glm_fit_ga, df, 'MainHap')
     print(summary_df_ga)
-    summary_df_ga.to_csv('summary_df_ga.tsv', index=False, sep="\t") 
+    summary_df_ga.to_csv('summary_df_ga.'+ref+',tsv', index=False, sep="\t") 
 
 
     # Fit models for PTB
@@ -81,7 +81,7 @@ for ref in haplogroups:
     glm_fit_ptb = smf.glm(formula_PTB, family=sm.families.Binomial(), data=df).fit()
     summary_df_ptb = detailed_model_summary(glm_fit_ptb, df, 'MainHap', is_logistic=True)
     print(summary_df_ptb)
-    summary_df_ptb.to_csv('summary_df_ptb.tsv', index=False, sep="\t") 
+    summary_df_ptb.to_csv('summary_df_ptb.'+ref+'.tsv', index=False, sep="\t") 
 
 
 
