@@ -4,6 +4,47 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from statsmodels.stats.multitest import multipletests
 import sys
+import matplotlib.pyplot as plt
+
+
+
+
+
+
+
+def plot(df, ref):
+    # Data for the plot
+    df["Haplogroup"] = df.index
+    df = df[df['Haplogroup'].str.contains('MainHap', na=False)]
+    df['Haplogroup'] = df['Haplogroup'].str.replace(r'MainHap\[T\.([A-Z0-9]+)\]', r'\1', regex=True)
+    # Plot setup
+    fig, ax = plt.subplots()
+    ax.errorbar(df['Haplogroup'], df['Odds Ratios'], 
+                yerr=[df['Odds Ratios'] - df['95% CI Lower (OR)'], df['95% CI Upper (OR)'] - df['Odds Ratios']],
+                fmt='o', color='blue', ecolor='black', elinewidth=1, capsize=0)
+    ax.set_xlabel('Haplogroup')
+    ax.set_ylabel('Odds Ratios')
+    ax.set_title('Odds Ratios of PTB relative to Haplogroup ' + ref + ' (n= )')
+    # Add asterisks for significant adjusted p-values
+    for i, p in enumerate(df['Adjusted P-Values']):
+        if p < 0.05:
+            ax.text(df['Haplogroup'][i], df['Odds Ratios'][i] + 0.1, '**', color='red', ha='center', fontsize=12)
+    # Adding a key for significance
+    ax.text(1.0, -0.2, '** = (p < 0.05)', transform=ax.transAxes, ha='right', color='red', fontsize=12)
+    # Adding sample sizes at the very bottom of the plot
+    for i, haplogroup in enumerate(df['Haplogroup']):
+        ax.text(i / len(df['Haplogroup']), -0.25, f'n={df["n"][i]}', transform=ax.transAxes, ha='center', color='black', fontsize=10)
+    plt.xticks(rotation=45)  # Rotate x-axis labels for better visibility
+    plt.subplots_adjust(left=0.15, right=0.9, top=0.9, bottom=0.2)  # Increase the bottom margin to ensure space for n= labels
+    plt.savefig('high_resolution_plot.' + ref + '.png', dpi=300)
+    plt.clf()
+
+# Example usage
+# Assuming you have a DataFrame 'df' and a reference haplogroup 'ref'
+# plot(df, 'M')
+    
+    
+
 
 def relevel_category(series, ref):
     """Relevels a pandas categorical series by setting 'ref' as the first category."""
@@ -55,9 +96,11 @@ print(df['MainHap'].value_counts())
 
 
 features = sys.argv[1].split(',') + sys.argv[2].split(',') 
-formula_PTB = 'PTB ~ ' + ' + '.join(features) + ' + PC1 + PC2'
+features=[item for item in features if item != ''] 
 
-formula_GA = 'GAGEBRTH ~ ' + ' + '.join(features) + ' + PC1 + PC2'
+formula_PTB = 'PTB ~ ' + ' + '.join(features) + ' + PC1 + PC2 + PC3'
+
+formula_GA = 'GAGEBRTH ~ ' + ' + '.join(features) + ' + PC1 + PC2 + PC3'
 
 
 print(formula_PTB)
@@ -67,23 +110,19 @@ print(formula_GA)
 haplogroups = ['M','L3']
 for ref in haplogroups:
     df['MainHap'] = relevel_category(df['MainHap'], ref)
-    
     # Fit models for GAGEBRTH
     print(f"Hapologroup and CoVar -> GA, Hapologroup Ref={ref}")
     glm_fit_ga = smf.glm(formula_GA, data=df).fit()
     summary_df_ga = detailed_model_summary(glm_fit_ga, df, 'MainHap')
     print(summary_df_ga)
     summary_df_ga.to_csv('summary_df_ga.'+ref+'.tsv', index=True, sep="\t") 
-
-
     # Fit models for PTB
     print(f"Hapologroup and CoVar -> PTB, Hapologroup Ref={ref}")
     glm_fit_ptb = smf.glm(formula_PTB, family=sm.families.Binomial(), data=df).fit()
     summary_df_ptb = detailed_model_summary(glm_fit_ptb, df, 'MainHap', is_logistic=True)
     print(summary_df_ptb)
     summary_df_ptb.to_csv('summary_df_ptb.'+ref+'.tsv', index=True, sep="\t") 
-
-
+    plot(summary_df_ptb,ref)
 
 
 
