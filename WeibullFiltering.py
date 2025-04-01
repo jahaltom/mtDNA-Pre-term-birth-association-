@@ -11,9 +11,14 @@ md = pd.read_csv(sys.argv[1],sep='\t')
 md=md.dropna(subset=["GAGEBRTH","PTB"])
 
 
+catigoricalFeat= [item for item in sys.argv[2].split(',') if item != ''] 
+contFeat= [item for item in sys.argv[3].split(',') if item != ''] 
+
+
+
 
 #All columns we want analized
-wantedCol = sys.argv[2].split(',') + sys.argv[3].split(',')
+wantedCol = catigoricalFeat + contFeat
 
 # Apply filtering only in the wantedCol columns. Remove missing data rows. 
 md = md[~md[wantedCol].isin([-88, -77,-99]).any(axis=1)]
@@ -49,7 +54,7 @@ results = []
 troubleClass=[]
 
 # Loop through each column
-for col in sys.argv[2].split(','):
+for col in catigoricalFeat:
     unique_values = filtered_data[col].drop_duplicates().to_list()
     for value in unique_values:
         # Calculate counts
@@ -90,11 +95,17 @@ featToExclude = results[~results["Column"].duplicated(keep=False)]["Column"].to_
 # Remove categorical variables where there is only 1 class. 
 final=results[results["Column"].duplicated(keep=False)].sort_values(by=['Column','Value']) 
 final.to_csv('CategoricalVariablesToKeepTable.tsv', index=False, sep="\t") 
-#df of troublesome classes to remove 
-classToRemove = troubleClass[~troubleClass['Column'].isin(featToExclude)]
-# Remove unwanted class's
-for idx, row in classToRemove.iterrows():
-    filtered_data = filtered_data[filtered_data[row['Column']] != row['Value']]
+
+
+try: #df of troublesome classes to remove 
+    classToRemove = troubleClass[~troubleClass['Column'].isin(featToExclude)]
+    # Remove unwanted class's
+    for idx, row in classToRemove.iterrows():
+        filtered_data = filtered_data[filtered_data[row['Column']] != row['Value']]
+except:
+    classToRemove="Nothing got removed"
+
+
 #categorical variables to keep
 print("Categorical variables to keep for future model")
 print(str(set(results[results["Column"].duplicated(keep=False)]["Column"].to_list())).replace(" ", ""))
@@ -156,7 +167,7 @@ plt.clf()
 output_dir = "plotsAll/"
 os.makedirs(output_dir, exist_ok=True)
 
-for col in sys.argv[3].split(','):
+for col in contFeat:
     # Scatter plots for GAGEBRTH
     plt.figure(figsize=(6, 4))
     sns.regplot(x=filtered_data[col], y=filtered_data['GAGEBRTH'], scatter_kws={'alpha': 0.6})
