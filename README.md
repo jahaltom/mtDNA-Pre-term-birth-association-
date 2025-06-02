@@ -88,18 +88,24 @@ sbatch workflow.sh
 
 #### Subset nDNA VCF: 
 - Selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (IDs.txt). 
-- Outputs (plink2.vcf) that will used for PCA/MDS. 
+- Outputs (plink2.vcf) that will used for PCA. 
 
-#### Dimensionality reduction via PCA and MDS.
-- Runs plink PCA and MDS using plink2.vcf
-- MDS dimension count = 5. 
-- Outputs results into PCA-MDS
+#### Dimensionality reduction via PCA.
+- Runs plink PCA using plink2.vcf
+- Outputs results into PCA
 
+#### outlierPCA.py
+- Loads PLINK .eigenvec and .eigenval
+- Computes how many PCs are needed to reach ~85% variance
+- Calculates site-wise Euclidean distance
+- Flags the top 1% as outliers per site
+- Saves a keep_samples.txt file
+- Creates a before/after PCA plot
 
-#### Combine PCA/MDS results with metadata and plot PCA/MDS (CombinePCA-MDS.py):    
-- Takes in eigenvec and mds files and adds this data to (Metadata.Weibull.tsv). 
+#### Combine PCA results with metadata and plot PCA (CombinePCA.py):    
+- Takes in eigenvec and adds this data to (Metadata.Weibull.tsv). 
 - Outputs (Metadata.Final.tsv). 
-- Takes in eigenval(for PCA), and makes PCA/MDS plots.
+- Takes in eigenval(for PCA), and makes PCA plots.
 - Lables Main/Sub haplogroup and site.
 
 
@@ -109,7 +115,7 @@ sbatch workflow.sh
 
 #### featureSelection.sh
 - Remove weight and heigth if using BMI (columnCont).
-- Look at MPA/MDS plots and make sure they look good.
+- Look at PCA plots and make sure they look good.
 - See out.txt for;
 	- Categorical variables with exactly two classes.  Will be used as binary variables for Feature selection. Place in columnBin
 	- Categorical variables for Feature selection. Place in columnCat
