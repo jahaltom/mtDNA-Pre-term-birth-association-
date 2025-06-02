@@ -10,12 +10,9 @@ header=["FID","IID"]+[f"PC{i}" for i in range(1, 21)]
 pca = pd.read_csv("PCA/out.eigenvec",sep='\s+',header=None)
 pca.columns=header
 pca = pca.drop(columns=['IID'])
-mds = pd.read_csv("PCA/out.mds",sep='\s+')
-mds = mds.drop(columns=['IID','SOL'])
-df=pd.merge(pca,mds,on=["FID"]) 
-df = df.rename(columns={"FID":"Sample_ID"})
+pca = pca.rename(columns={"FID":"Sample_ID"})
 md = pd.read_csv("Metadata.Weibull.tsv",sep='\t')  
-dfFinal=pd.merge(md,df,on=["Sample_ID"])     
+dfFinal=pd.merge(md,pca,on=["Sample_ID"])     
 dfFinal.to_csv("Metadata.Final.tsv", index=False,sep="\t") 
 
 
@@ -46,15 +43,5 @@ for f in features:
     plt.tight_layout(rect=[0, 0, 0.75, 1])  # Adjust the plot area to make room for the legend
     plt.savefig(f"{f}.PCA.png")
     plt.close()
-    # Repeat for C1 vs C2
-    plt.figure(figsize=(12, 8))
-    for category in categories:
-        subset = dfFinal[dfFinal[f] == category]
-        plt.scatter(subset['C1'], subset['C2'], label=category, alpha=0.8, s=10)
-    plt.title("C1 vs C2")
-    plt.xlabel("C1")
-    plt.ylabel("C2")
-    plt.legend(title=f, markerscale=2, loc='center left', bbox_to_anchor=(1, 0.5))
-    plt.tight_layout(rect=[0, 0, 0.75, 1])  # Adjust the plot area to make room for the legend
-    plt.savefig(f"{f}.MDS.png")
-    plt.close()
+   
+  
