@@ -27,14 +27,21 @@ bcftools view --types snps -t ^26,24,23 -S IDs.txt --force-samples /scr1/users/h
 
 conda activate plink
 
-mkdir PCA-MDS
-#Run plink PCA and MDS All
-plink --vcf plink2.vcf --pca --double-id --out PCA-MDS/out
-plink --vcf plink2.vcf --cluster --mds-plot 5 --double-id --out PCA-MDS/out
+mkdir PCA
+#Run plink PCA
+plink --vcf plink2.vcf --pca --double-id --out PCA/out
 
 conda activate ML
+python outlierPCA.py
 
-python  CombinePCA-MDS.py
+conda activate plink
+# Recompute PCA using filtered samples
+plink --vcf plink2.vcf --keep keep_samples.txt --pca --double-id --out PCA/cleaned
+
+
+
+conda activate ML
+python  CombinePCA.py
 
 
 
