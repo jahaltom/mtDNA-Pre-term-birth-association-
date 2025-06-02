@@ -40,15 +40,15 @@ def flag_outliers(site_df):
     site_df["is_outlier"] = site_df["PC_dist"] > cutoff
     return site_df
 
-df = df.groupby("Site", group_keys=False).apply(flag_outliers)
+df = df.groupby("site", group_keys=False).apply(flag_outliers)
 
 # --- Plot before and after ---
 fig, axes = plt.subplots(1, 2, figsize=(14, 6), sharex=True, sharey=True)
-sns.scatterplot(data=df, x="PC1", y="PC2", hue="Site", ax=axes[0], s=10, alpha=0.8)
+sns.scatterplot(data=df, x="PC1", y="PC2", hue="site", ax=axes[0], s=10, alpha=0.8)
 axes[0].set_title("Before Outlier Removal")
-sns.scatterplot(data=df[~df["is_outlier"]], x="PC1", y="PC2", hue="Site", ax=axes[1], s=10, alpha=0.8)
+sns.scatterplot(data=df[~df["is_outlier"]], x="PC1", y="PC2", hue="site", ax=axes[1], s=10, alpha=0.8)
 axes[1].set_title("After Outlier Removal")
-plt.suptitle("PCA Before and After Site-wise Outlier Removal", fontsize=14)
+plt.suptitle("PCA Before and After site-wise Outlier Removal", fontsize=14)
 plt.tight_layout()
 plt.savefig(plot_output, dpi=300)
 plt.close()
