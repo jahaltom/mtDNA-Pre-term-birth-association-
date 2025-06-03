@@ -33,6 +33,7 @@ columnCont_string=$( echo "${columnsCont[*]}")
 cp "$file" Final_Model/
 cp WeibullFiltering.py Final_Model/
 cp CombinePCA.py Final_Model/
+cp outlierPCA.py Final_Model/
 cd Final_Model/
 
 # Call the Python script with the column string as an argument
