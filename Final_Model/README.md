@@ -3,7 +3,7 @@
   
 
 
-
+# PCA cumulative explained variance
 ```python
 import numpy as np
 
@@ -26,16 +26,12 @@ array([0.8414837 , 0.8601727 , 0.87277484, 0.88431504, 0.89527309,
 
 
 
-
+# Chi-squared test for correlation: mtDNA haplogroup vs. site
 ```python
 import pandas as pd
-df = pd.read_csv("Metadata.Final.tsv", sep='\t', quotechar='"')
-
-
-
-
-#Test for correlation: mtDNA haplogroup vs. site
 from scipy.stats import chi2_contingency
+
+df = pd.read_csv("Metadata.Final.tsv", sep='\t', quotechar='"')
 
 hap_site_table = pd.crosstab(df['MainHap'], df['site'])
 chi2, pval, dof, expected = chi2_contingency(hap_site_table)
@@ -45,8 +41,9 @@ print(f"Chi-squared p-value for MainHap ~ site: {pval:.4g}")
 Chi-squared p-value for MainHap ~ site: 0
 ```
 
+# ANOVA test for correlation: mtDNA haplogroup vs. nDNA PCs
 ```python
-#Test for correlation: mtDNA haplogroup vs. nDNA PCs
+
 from statsmodels.stats.anova import anova_lm
 import statsmodels.formula.api as smf
 
@@ -63,9 +60,9 @@ PC3 ~ MainHap: p-value = 7.321e-59
 PC4 ~ MainHap: p-value = 3.047e-38
 PC5 ~ MainHap: p-value = 2.913e-34
 ```
-
+# ANOVA test for correlation: site vs. nDNA PCs
 ```python
-#Test for correlation: site vs. nDNA PCs
+
 for i in range(1, 6):
     model = smf.ols(f"PC{i} ~ C(site)", data=df).fit()
     anova_results = anova_lm(model, typ=2)
