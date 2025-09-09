@@ -98,11 +98,24 @@ save_forest_ptb <- function(tbl, title, file, label_col = "term", or = "OR", lo 
 make_priors_ptb <- function(dframe) {
   ref <- levels(dframe$MainHap)[1]
   hap_lvls <- setdiff(levels(dframe$MainHap), ref)
-  c(
-    lapply(hap_lvls, function(h) prior(normal(0, 0.5), class="b", coef=paste0("MainHap", h))),
-    prior(normal(0, 1), class="b"),                    # for BMI_s, AGE_s
-    prior(student_t(3, 0, 2.5), class="sd")
+
+  # skeptical priors only on haplogroup betas
+  hap_prs <- lapply(hap_lvls, function(h)
+    prior(normal(0, 0.5), class = "b", coef = paste0("MainHap", h))
   )
+
+  # broader priors on other betas + mildly informative RE SDs
+  base_prs <- c(
+    prior(normal(0, 1), class = "b"),              # applies to BMI_s, AGE_s
+    prior(student_t(3, 0, 2.5), class = "sd")
+  )
+
+  # IMPORTANT: stitch all priors into a single brmsprior object
+  if (length(hap_prs)) {
+    do.call(c, c(hap_prs, list(base_prs)))
+  } else {
+    base_prs  # handles corner case: only one hap level left
+  }
 }
 
 pri_ga <- c(
@@ -184,12 +197,13 @@ capture.output(bayes_R2(brm_ga), file = file.path(OUTDIR, "ga_brm_bayesR2.txt"))
 
 # PTB (Bernoulli) with targeted hap priors
 pri_ptb <- make_priors_ptb(df)
+
 brm_ptb <- brm(
-  PTB ~ MainHap + BMI_s + AGE_s + (1|site),
+  PTB ~ MainHap + BMI_s + AGE_s + (1 | site),
   data = df, family = bernoulli(),
   prior = pri_ptb,
   chains = 4, iter = 4000, cores = 4,
-  control = ctrl_ptb, inits = 0, seed = 2025
+  control = ctrl_ptb, init = 0, seed = 2025   # <-- init, not inits
 )
 sink(file.path(OUTDIR, "ptb_brm_summary.txt")); print(summary(brm_ptb)); sink()
 
