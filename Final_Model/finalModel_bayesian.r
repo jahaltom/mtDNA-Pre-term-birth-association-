@@ -99,25 +99,25 @@ make_priors_ptb <- function(dframe) {
   ref <- levels(dframe$MainHap)[1]
   hap_lvls <- setdiff(levels(dframe$MainHap), ref)
 
-  # skeptical priors only on haplogroup betas
+  # priors ONLY for hap terms (one per non-ref level)
   hap_prs <- lapply(hap_lvls, function(h)
     prior(normal(0, 0.5), class = "b", coef = paste0("MainHap", h))
   )
 
-  # broader priors on other betas + mildly informative RE SDs
-  base_prs <- c(
-    prior(normal(0, 1), class = "b"),              # applies to BMI_s, AGE_s
-    prior(student_t(3, 0, 2.5), class = "sd")
+  # explicit priors for *named* covariates (so we don't collide with hap betas)
+  cov_prs <- c(
+    prior(normal(0, 1), class = "b", coef = "BMI_s"),
+    prior(normal(0, 1), class = "b", coef = "AGE_s")
   )
 
-  # IMPORTANT: stitch all priors into a single brmsprior object
-  if (length(hap_prs)) {
-    do.call(c, c(hap_prs, list(base_prs)))
-  } else {
-    base_prs  # handles corner case: only one hap level left
-  }
-}
+  # random-effect SDs and intercept
+  other <- c(
+    prior(student_t(3, 0, 2.5), class = "sd"),
+    prior(student_t(3, 0, 2.5), class = "Intercept")
+  )
 
+  do.call(c, c(hap_prs, list(cov_prs, other)))
+}
 pri_ga <- c(
   prior(normal(0, 0.5), class = "b"),
   prior(student_t(3, 0, 2.5), class = "sd"),
