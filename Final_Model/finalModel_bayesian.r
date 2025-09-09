@@ -183,7 +183,7 @@ inits0 <- 0
 
 ## GA (Gaussian) on standardized outcome
 brm_ga <- brm(
-  GAGEBRTH_s ~ MainHap + BMI_s + AGE_s + (1|site) + (0 + MainHap | site),
+  GAGEBRTH_s ~ MainHap + BMI_s + AGE_s + (1|site),
   data = df, family = gaussian(),
   prior = pri_ga,
   chains = 4, iter = 4000, cores = 4,
@@ -199,7 +199,7 @@ readr::write_csv(fx_brm_ga, file.path(outdir, "ga_brm_site_fixed.csv"))
 
 ## PTB (Bernoulli) — NOTE: no sigma prior here
 brm_ptb <- brm(
-  PTB ~ MainHap + BMI_s + AGE_s + (1|site) + (0 + MainHap || site),
+  PTB ~ MainHap + BMI_s + AGE_s + (1|site),
   data = df, family = bernoulli(),
   prior = pri_ptb,
   chains = 4, iter = 4000, cores = 4,
