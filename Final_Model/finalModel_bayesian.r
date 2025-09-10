@@ -118,11 +118,11 @@ save_forest_ptb <- function(tbl, title, file, label_col = "term", or = "OR", lo 
 
 #   do.call(c, c(hap_prs, list(cov_prs, other)))
 # }
-# pri_ga <- c(
-#   prior(normal(0, 0.5), class = "b"),
-#   prior(student_t(3, 0, 2.5), class = "sd"),
-#   prior(student_t(3, 0, 2.5), class = "sigma")
-# )
+pri_ga <- c(
+  prior(normal(0, 0.5), class = "b"),
+  prior(student_t(3, 0, 2.5), class = "sd"),
+  prior(student_t(3, 0, 2.5), class = "sigma")
+)
 
 ctrl_ga  <- list(adapt_delta = 0.999, max_treedepth = 15)
 ctrl_ptb <- list(adapt_delta = 0.99,  max_treedepth = 13)
