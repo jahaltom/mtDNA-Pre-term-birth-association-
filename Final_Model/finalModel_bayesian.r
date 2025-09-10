@@ -95,34 +95,34 @@ save_forest_ptb <- function(tbl, title, file, label_col = "term", or = "OR", lo 
 }
 
 # Targeted hap priors: skeptical on MainHap only; mild on others; mildly informative RE SDs
-make_priors_ptb <- function(dframe) {
-  ref <- levels(dframe$MainHap)[1]
-  hap_lvls <- setdiff(levels(dframe$MainHap), ref)
+# make_priors_ptb <- function(dframe) {
+#   ref <- levels(dframe$MainHap)[1]
+#   hap_lvls <- setdiff(levels(dframe$MainHap), ref)
 
-  # priors ONLY for hap terms (one per non-ref level)
-  hap_prs <- lapply(hap_lvls, function(h)
-    prior(normal(0, 0.5), class = "b", coef = paste0("MainHap", h))
-  )
+#   # priors ONLY for hap terms (one per non-ref level)
+#   hap_prs <- lapply(hap_lvls, function(h)
+#     prior(normal(0, 0.5), class = "b", coef = paste0("MainHap", h))
+#   )
 
-  # explicit priors for *named* covariates (so we don't collide with hap betas)
-  cov_prs <- c(
-    prior(normal(0, 1), class = "b", coef = "BMI_s"),
-    prior(normal(0, 1), class = "b", coef = "AGE_s")
-  )
+#   # explicit priors for *named* covariates (so we don't collide with hap betas)
+#   cov_prs <- c(
+#     prior(normal(0, 1), class = "b", coef = "BMI_s"),
+#     prior(normal(0, 1), class = "b", coef = "AGE_s")
+#   )
 
-  # random-effect SDs and intercept
-  other <- c(
-    prior(student_t(3, 0, 2.5), class = "sd"),
-    prior(student_t(3, 0, 2.5), class = "Intercept")
-  )
+#   # random-effect SDs and intercept
+#   other <- c(
+#     prior(student_t(3, 0, 2.5), class = "sd"),
+#     prior(student_t(3, 0, 2.5), class = "Intercept")
+#   )
 
-  do.call(c, c(hap_prs, list(cov_prs, other)))
-}
-pri_ga <- c(
-  prior(normal(0, 0.5), class = "b"),
-  prior(student_t(3, 0, 2.5), class = "sd"),
-  prior(student_t(3, 0, 2.5), class = "sigma")
-)
+#   do.call(c, c(hap_prs, list(cov_prs, other)))
+# }
+# pri_ga <- c(
+#   prior(normal(0, 0.5), class = "b"),
+#   prior(student_t(3, 0, 2.5), class = "sd"),
+#   prior(student_t(3, 0, 2.5), class = "sigma")
+# )
 
 ctrl_ga  <- list(adapt_delta = 0.999, max_treedepth = 15)
 ctrl_ptb <- list(adapt_delta = 0.99,  max_treedepth = 13)
@@ -195,27 +195,27 @@ pp_check(brm_ga, ndraws=200)
 dev.off()
 capture.output(bayes_R2(brm_ga), file = file.path(OUTDIR, "ga_brm_bayesR2.txt"))
 
-# PTB (Bernoulli) with targeted hap priors
-pri_ptb <- make_priors_ptb(df)
+# # PTB (Bernoulli) with targeted hap priors
+# pri_ptb <- make_priors_ptb(df)
 
-brm_ptb <- brm(
-  PTB ~ MainHap + BMI_s + AGE_s + (1 | site),
-  data = df, family = bernoulli(),
-  prior = pri_ptb,
-  chains = 4, iter = 4000, cores = 4,
-  control = ctrl_ptb, init = 0, seed = 2025   # <-- init, not inits
-)
-sink(file.path(OUTDIR, "ptb_brm_summary.txt")); print(summary(brm_ptb)); sink()
+# brm_ptb <- brm(
+#   PTB ~ MainHap + BMI_s + AGE_s + (1 | site),
+#   data = df, family = bernoulli(),
+#   prior = pri_ptb,
+#   chains = 4, iter = 4000, cores = 4,
+#   control = ctrl_ptb, init = 0, seed = 2025   # <-- init, not inits
+# )
+# sink(file.path(OUTDIR, "ptb_brm_summary.txt")); print(summary(brm_ptb)); sink()
 
-fx_brm_ptb <- as.data.frame(summary(brm_ptb)$fixed) %>%
-  tibble::rownames_to_column("term") %>%
-  bh_on_hap_wald(term_col="term", mean_col="Estimate", se_col="Est.Error") %>%
-  mutate(OR     = exp(Estimate),
-         OR_low = exp(`l-95% CI`),
-         OR_hi  = exp(`u-95% CI`),
-         label  = robust_hap_label(term))
-write_csv(fx_brm_ptb, file.path(OUTDIR, "ptb_brm_site_fixed.csv"))
-save_forest_ptb(fx_brm_ptb, "PTB brms (Joint/All)", file.path(OUTDIR, "ptb_brm_site_forest.png"))
+# fx_brm_ptb <- as.data.frame(summary(brm_ptb)$fixed) %>%
+#   tibble::rownames_to_column("term") %>%
+#   bh_on_hap_wald(term_col="term", mean_col="Estimate", se_col="Est.Error") %>%
+#   mutate(OR     = exp(Estimate),
+#          OR_low = exp(`l-95% CI`),
+#          OR_hi  = exp(`u-95% CI`),
+#          label  = robust_hap_label(term))
+# write_csv(fx_brm_ptb, file.path(OUTDIR, "ptb_brm_site_fixed.csv"))
+# save_forest_ptb(fx_brm_ptb, "PTB brms (Joint/All)", file.path(OUTDIR, "ptb_brm_site_forest.png"))
 
 # Posterior-based probabilities Pr(OR>1) per haplogroup
 draws <- as_draws_df(brm_ptb)
@@ -237,3 +237,103 @@ capture.output(loo(brm_ptb), file = file.path(OUTDIR, "ptb_brm_loo.txt"))
 
 cat(sprintf("\n[Joint/All] ref haplogroup = %s; N = %d; sites = %d\nOutputs written under: %s\n",
             ref_name, nrow(df), dplyr::n_distinct(df$site), normalizePath(OUTDIR)))
+
+
+
+
+
+
+library(dplyr); library(tibble); library(posterior)
+
+# 0) From your earlier step:
+# tmp_ptb <- brm(PTB ~ MainHap + BMI_s + AGE_s + (1|site), data=df, family=bernoulli(),
+#                prior=NULL, chains=1, iter=1000, warmup=500, control=ctrl_ptb, init=0, seed=2025)
+coef_names <- rownames(as.data.frame(summary(tmp_ptb)$fixed))
+hap_names  <- coef_names[grepl("^MainHap", coef_names)]
+
+# 1) Helper to build hap-only priors with a given SD (use prior_string to avoid NSE)
+make_hap_priors <- function(hap_names, sd_hap = 0.5) {
+  pri_list <- lapply(hap_names, function(nm)
+    prior_string(sprintf("normal(0, %g)", sd_hap), class = "b", coef = nm)
+  )
+  do.call(c, pri_list)
+}
+
+# 2) Define prior settings to try
+prior_grid <- list(
+  shrink_05 = make_hap_priors(hap_names, sd_hap = 0.5),   # your current skeptical prior
+  shrink_10 = make_hap_priors(hap_names, sd_hap = 1.0),   # milder
+  wide_25   = make_hap_priors(hap_names, sd_hap = 2.5),   # weakly-informative
+  flat      = NULL                                        # no hap prior (brms default for b’s)
+)
+
+# 3) Fit under each prior (same model structure)
+fit_under_prior <- function(pr) {
+  brm(
+    PTB ~ MainHap + BMI_s + AGE_s + (1|site),
+    data = df, family = bernoulli(),
+    prior = pr,
+    chains = 2, iter = 3000, warmup = 1000, cores = 2,
+    control = modifyList(ctrl_ptb, list(adapt_delta = 0.995)),
+    init = 0, seed = 2025
+  )
+}
+
+fits <- lapply(prior_grid, fit_under_prior)
+
+# 4) Extract per-hap results
+summarize_haps <- function(fit, label) {
+  fx   <- as.data.frame(summary(fit)$fixed) %>% rownames_to_column("term")
+  fx_h <- fx %>% filter(grepl("^MainHap", term)) %>%
+    transmute(term,
+              OR    = exp(Estimate),
+              OR_lo = exp(`l-95% CI`),
+              OR_hi = exp(`u-95% CI`))
+
+  draws <- as_draws_df(fit)
+  hap_cols <- grep("^b_MainHap", names(draws), value = TRUE)
+  post <- lapply(hap_cols, function(nm) {
+    s <- as.numeric(draws[[nm]])                 # log-OR draws
+    tibble(term = sub("^b_", "", nm),
+           Pr_OR_gt_1 = mean(exp(s) > 1),
+           p_two      = 2 * pmin(mean(s > 0), mean(s < 0)))
+  }) %>% bind_rows()
+
+  left_join(fx_h, post, by = "term") %>%
+    mutate(prior_setting = label)
+}
+
+results <- bind_rows(
+  summarize_haps(fits$shrink_05, "Normal(0,0.5)"),
+  summarize_haps(fits$shrink_10, "Normal(0,1.0)"),
+  summarize_haps(fits$wide_25,   "Normal(0,2.5)"),
+  summarize_haps(fits$flat,      "flat")
+) %>%
+  mutate(label = sub("^MainHap\\[T\\.(.+)\\]$", "\\1", sub("^MainHap", "", term))) %>%
+  select(prior_setting, label, OR, OR_lo, OR_hi, Pr_OR_gt_1, p_two) %>%
+  arrange(prior_setting, label)
+
+# Optional: BH across hap terms within each prior setting
+results <- results %>%
+  group_by(prior_setting) %>%
+  mutate(padj = p.adjust(p_two, method = "BH")) %>%
+  ungroup()
+
+readr::write_csv(results, file.path(OUTDIR, "ptb_brm_prior_sensitivity_haps.csv"))
+
+hap_prior_mild <- make_hap_priors(hap_names, sd_hap = 1.0)
+
+ptb_FE <- brm(PTB ~ MainHap + BMI_s + AGE_s + site,
+              data=df, family=bernoulli(),
+              prior=hap_prior_mild,
+              chains=2, iter=3000, warmup=1000,
+              control=list(adapt_delta=0.995), init=0, seed=2025)
+ptb_FE
+ptb_RE <- brm(PTB ~ MainHap + BMI_s + AGE_s + (1|site),
+              data=df, family=bernoulli(),
+              prior=hap_prior_mild,
+              chains=2, iter=3000, warmup=1000,
+              control=list(adapt_delta=0.995), init=0, seed=2025)
+
+ptb_RE
+
