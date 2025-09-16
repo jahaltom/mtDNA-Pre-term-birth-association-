@@ -340,8 +340,8 @@ ptb_FE <- brm(PTB ~ MainHap + BMI_s + AGE_s + site,
               chains=2, iter=3000, warmup=1000,
               control=list(adapt_delta=0.995), init=0, seed=2025)
 
-
-write_csv(ptb_FE, file.path(OUTDIR, "ptb_brm_sensitivity_SiteFixed.csv"))
+fx_FE <- as.data.frame(summary(ptb_FE)$fixed)
+write_csv(fx_FE, file.path(OUTDIR, "ptb_brm_sensitivity_SiteFixed.csv"))
 
 ptb_RE <- brm(PTB ~ MainHap + BMI_s + AGE_s + (1|site),
               data=df, family=bernoulli(),
@@ -349,6 +349,6 @@ ptb_RE <- brm(PTB ~ MainHap + BMI_s + AGE_s + (1|site),
               chains=2, iter=3000, warmup=1000,
               control=list(adapt_delta=0.995), init=0, seed=2025)
 
-
-write_csv(ptb_RE, file.path(OUTDIR, "ptb_brm_sensitivity_SiteRandom.csv"))
+fx_RE <- as.data.frame(summary(ptb_RE)$fixed)
+write_csv(fx_RE, file.path(OUTDIR, "ptb_brm_sensitivity_SiteRandom.csv"))
 
