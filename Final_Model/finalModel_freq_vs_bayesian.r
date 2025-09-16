@@ -20,8 +20,12 @@ INFILE <- "Metadata.Final.tsv"
 OUTDIR <- file.path("model_outputs", "All")
 if (!dir.exists(OUTDIR)) dir.create(OUTDIR, recursive = TRUE)
 
+
+covariates <- "BMI_s + AGE_s + (1|site)"
+#covariates <- "BMI_s + AGE_s + PC1 + PC2 + PC3 + PC4 +PC5"
+
 # Choose a default reference for the Joint cohort
-DEFAULT_REF <- "L3"  # set to "M" if you prefer; script will fall back if absent
+DEFAULT_REF <- "R"  # set to "M" if you prefer; script will fall back if absent
 
 # ---- Load & preprocess ----
 df <- read_tsv(INFILE, show_col_types = FALSE) %>%
@@ -94,30 +98,7 @@ save_forest_ptb <- function(tbl, title, file, label_col = "term", or = "OR", lo 
   ggsave(file, gg, width = 7, height = 4.8, dpi = 300)
 }
 
-# Targeted hap priors: skeptical on MainHap only; mild on others; mildly informative RE SDs
-# make_priors_ptb <- function(dframe) {
-#   ref <- levels(dframe$MainHap)[1]
-#   hap_lvls <- setdiff(levels(dframe$MainHap), ref)
 
-#   # priors ONLY for hap terms (one per non-ref level)
-#   hap_prs <- lapply(hap_lvls, function(h)
-#     prior(normal(0, 0.5), class = "b", coef = paste0("MainHap", h))
-#   )
-
-#   # explicit priors for *named* covariates (so we don't collide with hap betas)
-#   cov_prs <- c(
-#     prior(normal(0, 1), class = "b", coef = "BMI_s"),
-#     prior(normal(0, 1), class = "b", coef = "AGE_s")
-#   )
-
-#   # random-effect SDs and intercept
-#   other <- c(
-#     prior(student_t(3, 0, 2.5), class = "sd"),
-#     prior(student_t(3, 0, 2.5), class = "Intercept")
-#   )
-
-#   do.call(c, c(hap_prs, list(cov_prs, other)))
-# }
 pri_ga <- c(
   prior(normal(0, 0.5), class = "b"),
   prior(student_t(3, 0, 2.5), class = "sd"),
@@ -132,10 +113,10 @@ ctrl_ptb <- list(adapt_delta = 0.99,  max_treedepth = 13)
 # ============================
 
 # GA (Gaussian), site random intercept
-ga_tmb <- glmmTMB(GAGEBRTH ~ MainHap + BMI_s + AGE_s + (1|site),
+ga_tmb <- glmmTMB(as.formula(paste("GAGEBRTH ~ MainHap +", covariates)),    
                   data = df, family = gaussian())
 tidy_ga <- broom.mixed::tidy(ga_tmb, effects = "fixed", conf.int = TRUE) %>% bh_on_hap()
-write_csv(tidy_ga, file.path(OUTDIR, "ga_glmmtmb_site_fixed.csv"))
+write_csv(tidy_ga, file.path(OUTDIR, "ga_glmmtmb.csv"))
 
 # Diagnostics: DHARMa (GA)
 png(file.path(OUTDIR, "ga_glmmtmb_DHARMa.png"), width=1200, height=900)
@@ -143,11 +124,11 @@ plot(simulateResiduals(ga_tmb))
 dev.off()
 
 # PTB (Binomial logit), site random intercept
-ptb_tmb <- glmmTMB(PTB ~ MainHap + BMI_s + AGE_s + (1|site),
+ptb_tmb <- glmmTMB(as.formula(paste("PTB ~ MainHap +", covariates)),
                    data = df, family = binomial())
 fx_ptb  <- broom.mixed::tidy(ptb_tmb, effects = "fixed", conf.int = TRUE) %>%
   bh_on_hap() %>% to_or()
-write_csv(fx_ptb, file.path(OUTDIR, "ptb_glmmtmb_site_fixed.csv"))
+write_csv(fx_ptb, file.path(OUTDIR, "ptb_glmmtmb.csv"))
 save_forest_ptb(fx_ptb, "PTB GLMM (glmmTMB, Joint/All)", file.path(OUTDIR, "ptb_glmmtmb_site_forest.png"))
 
 # Diagnostics: DHARMa (PTB)
@@ -173,7 +154,7 @@ if (!inherits(emm_ptb, "try-error")) {
 
 # GA (Student-t) on standardized outcome, with back-transform to days
 brm_ga <- brm(
-  GAGEBRTH_s ~ MainHap + BMI_s + AGE_s + (1|site),
+  as.formula(paste("GAGEBRTH_s ~ MainHap +", covariates)), 
   data = df, family = student(),
   prior = pri_ga,
   chains = 4, iter = 4000, cores = 4,
@@ -184,59 +165,90 @@ sink(file.path(OUTDIR, "ga_brm_summary.txt")); print(summary(brm_ga)); sink()
 sd_ga <- sd(df$GAGEBRTH, na.rm = TRUE)
 fx_brm_ga <- as.data.frame(summary(brm_ga)$fixed) %>%
   tibble::rownames_to_column("term") %>%
-  bh_on_hap_wald(term_col="term", mean_col="Estimate", se_col="Est.Error") %>%
+ # bh_on_hap_wald(term_col="term", mean_col="Estimate", se_col="Est.Error") %>%
   mutate(beta_days = Estimate * sd_ga,
          lo_days   = `l-95% CI` * sd_ga,
          hi_days   = `u-95% CI` * sd_ga)
-write_csv(fx_brm_ga, file.path(OUTDIR, "ga_brm_site_fixed.csv"))
+write_csv(fx_brm_ga, file.path(OUTDIR, "ga_brm.csv"))
 
 png(file.path(OUTDIR, "ga_brm_pp_check.png"), width=1200, height=900)
 pp_check(brm_ga, ndraws=200)
 dev.off()
 capture.output(bayes_R2(brm_ga), file = file.path(OUTDIR, "ga_brm_bayesR2.txt"))
 
-# # PTB (Bernoulli) with targeted hap priors
-# pri_ptb <- make_priors_ptb(df)
 
-# brm_ptb <- brm(
-#   PTB ~ MainHap + BMI_s + AGE_s + (1 | site),
-#   data = df, family = bernoulli(),
-#   prior = pri_ptb,
-#   chains = 4, iter = 4000, cores = 4,
-#   control = ctrl_ptb, init = 0, seed = 2025   # <-- init, not inits
-# )
-# sink(file.path(OUTDIR, "ptb_brm_summary.txt")); print(summary(brm_ptb)); sink()
 
-# fx_brm_ptb <- as.data.frame(summary(brm_ptb)$fixed) %>%
-#   tibble::rownames_to_column("term") %>%
-#   bh_on_hap_wald(term_col="term", mean_col="Estimate", se_col="Est.Error") %>%
-#   mutate(OR     = exp(Estimate),
-#          OR_low = exp(`l-95% CI`),
-#          OR_hi  = exp(`u-95% CI`),
-#          label  = robust_hap_label(term))
-# write_csv(fx_brm_ptb, file.path(OUTDIR, "ptb_brm_site_fixed.csv"))
-# save_forest_ptb(fx_brm_ptb, "PTB brms (Joint/All)", file.path(OUTDIR, "ptb_brm_site_forest.png"))
 
-# Posterior-based probabilities Pr(OR>1) per haplogroup
-draws <- as_draws_df(brm_ptb)
-keep_cols <- grep("^b_MainHap", names(draws), value = TRUE)
-if (length(keep_cols)) {
-  prob_tbl <- tibble(
-    term = keep_cols,
-    label = robust_hap_label(sub("^b_", "", keep_cols)),
-    Pr_OR_gt_1 = colMeans(exp(as.matrix(draws[, keep_cols, drop=FALSE])) > 1)
+
+# --- Posterior probabilities for GA (Student-t model) ---
+# Assumes: brm_ga already fit; df in memory; your robust_hap_label() & hap_mask() exist.
+
+library(posterior); library(dplyr); library(tibble)
+
+sd_ga <- sd(df$GAGEBRTH, na.rm = TRUE)
+
+# 1) Posterior draws for fixed effects (each column is a parameter draw on the standardized scale)
+dr <- posterior::as_draws_df(brm_ga)
+fix_cols <- grep("^b_", names(dr), value = TRUE)  # all fixed-effect betas, e.g., b_Intercept, b_MainHap[T.L2], etc.
+
+# 2) Compute posterior probabilities per coefficient
+post_tab <- lapply(fix_cols, function(nm) {
+  s <- as.numeric(dr[[nm]])                        # draws on standardized GA scale
+  data.frame(
+    param          = nm,
+    Pr_beta_gt0    = mean(s > 0),                  # Pr(β > 0)
+    p_two          = 2 * pmin(mean(s > 0), mean(s < 0)),  # two-sided posterior sign probability (Bayesian analog)
+    Pr_days_gt_1   = mean(sd_ga * s >  1),         # Pr(effect > +1 day)
+    Pr_days_lt_m1  = mean(sd_ga * s < -1)          # Pr(effect < -1 day)
   )
-  write_csv(prob_tbl, file.path(OUTDIR, "ptb_brm_PrORgt1.csv"))
-}
+}) %>% bind_rows()
 
-# Posterior predictive check & LOO for PTB
-png(file.path(OUTDIR, "ptb_brm_pp_check.png"), width=1200, height=900)
-pp_check(brm_ptb, ndraws = 200)
-dev.off()
-capture.output(loo(brm_ptb), file = file.path(OUTDIR, "ptb_brm_loo.txt"))
+# 3) Tidy names to match your summary table 'term' column
+post_tab <- post_tab %>%
+  mutate(term = sub("^b_", "", param),
+         label = robust_hap_label(term)) %>%
+  select(term, label, Pr_beta_gt0, p_two, Pr_days_gt_1, Pr_days_lt_m1)
 
-cat(sprintf("\n[Joint/All] ref haplogroup = %s; N = %d; sites = %d\nOutputs written under: %s\n",
-            ref_name, nrow(df), dplyr::n_distinct(df$site), normalizePath(OUTDIR)))
+# 4) Join to your existing GA summary, add back-transformed days, and (optionally) BH within hap terms
+fx_brm_ga <- as.data.frame(summary(brm_ga)$fixed) %>%
+  rownames_to_column("term") %>%
+  mutate(
+    beta_days = Estimate   * sd_ga,
+    lo_days   = `l-95% CI` * sd_ga,
+    hi_days   = `u-95% CI` * sd_ga,
+    label     = robust_hap_label(term)
+  ) %>%
+  left_join(post_tab, by = c("term","label"))
+
+# Optional: BH adjust the Bayesian two-sided sign probs across hap terms only
+m <- hap_mask(fx_brm_ga$term, var = "MainHap")
+fx_brm_ga$padj_signprob <- NA_real_
+fx_brm_ga$padj_signprob[m] <- p.adjust(fx_brm_ga$p_two[m], method = "BH")
+
+# 5) Write it out
+readr::write_csv(fx_brm_ga, file.path(OUTDIR, "ga_brm_posterior_probs.csv"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -246,8 +258,7 @@ cat(sprintf("\n[Joint/All] ref haplogroup = %s; N = %d; sites = %d\nOutputs writ
 library(dplyr); library(tibble); library(posterior)
 
 # 0) From your earlier step:
-# tmp_ptb <- brm(PTB ~ MainHap + BMI_s + AGE_s + (1|site), data=df, family=bernoulli(),
-#                prior=NULL, chains=1, iter=1000, warmup=500, control=ctrl_ptb, init=0, seed=2025)
+tmp_ptb <- brm(as.formula(paste("PTB ~ MainHap +", covariates)), data=df, family=bernoulli(),  prior=NULL, chains=1, iter=1000, warmup=500, control=ctrl_ptb, init=0, seed=2025)  
 coef_names <- rownames(as.data.frame(summary(tmp_ptb)$fixed))
 hap_names  <- coef_names[grepl("^MainHap", coef_names)]
 
@@ -270,7 +281,7 @@ prior_grid <- list(
 # 3) Fit under each prior (same model structure)
 fit_under_prior <- function(pr) {
   brm(
-    PTB ~ MainHap + BMI_s + AGE_s + (1|site),
+    as.formula(paste("PTB ~ MainHap +", covariates)),
     data = df, family = bernoulli(),
     prior = pr,
     chains = 2, iter = 3000, warmup = 1000, cores = 2,
@@ -328,12 +339,16 @@ ptb_FE <- brm(PTB ~ MainHap + BMI_s + AGE_s + site,
               prior=hap_prior_mild,
               chains=2, iter=3000, warmup=1000,
               control=list(adapt_delta=0.995), init=0, seed=2025)
-ptb_FE
+
+
+write_csv(ptb_FE, file.path(OUTDIR, "ptb_brm_sensitivity_SiteFixed.csv"))
+
 ptb_RE <- brm(PTB ~ MainHap + BMI_s + AGE_s + (1|site),
               data=df, family=bernoulli(),
               prior=hap_prior_mild,
               chains=2, iter=3000, warmup=1000,
               control=list(adapt_delta=0.995), init=0, seed=2025)
 
-ptb_RE
+
+write_csv(ptb_RE, file.path(OUTDIR, "ptb_brm_sensitivity_SiteRandom.csv"))
 
