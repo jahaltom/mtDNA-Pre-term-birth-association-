@@ -34,7 +34,7 @@ sbatch workflow.sh
 - PCA outlieres removed
 	- 	Calculates site-wise Euclidean distance (Using top N PCs needed to reach ~85% variance). Flags the top 1% as outliers per site
 	- 	Creates a before/after PCA plot
-- Fits a Weibull distribution to GAGEBRTH, defines 1st and 99th percentile cutoffs, and filters samples outside this range as well as haplogroups with fewer than 25 samples. It summarizes pre-term vs. normal birth counts per categorical class, removes low-count classes (<25 total), and drops categorical variables entirely if only one class would remain. It reports which categorical variables are retained (in CategoricalVariablesToKeepTable.tsv), flags binary variables for feature selection, and outputs Weibull parameters, cutoffs, and plots. Finally, it saves the filtered metadata (Metadata.Weibull.tsv), writes IDs.txt for downstream VCF selection, and plots both filtered/unfiltered distributions and all continuous feature relationships with PTB and GA.
+- Fits a Weibull distribution to GAGEBRTH, defines 1st and 99th percentile cutoffs, and filters samples outside this range as well as haplogroups with fewer than 25 samples. It summarizes pre-term vs. normal birth counts per categorical class, removes low-count classes (<25 total), and drops categorical variables entirely if only one class would remain. It reports which categorical variables are retained and PTB #s(in CategoricalVariablesToKeepTable.tsv), flags binary variables for feature selection, and outputs Weibull parameters, cutoffs, and plots. Finally, it saves the filtered metadata (Metadata.Weibull.tsv), writes IDs2.txt for downstream VCF selection, and plots both filtered/unfiltered distributions and all continuous feature relationships with PTB and GA (outputs to plotsAll). Makes a report (out.txt) which will indicate which variables to keep/exclude in future modeling. 
 
 
 
@@ -46,34 +46,17 @@ sbatch workflow.sh
 columnCat="('TYP_HOUSE','HH_ELECTRICITY','TOILET','WEALTH_INDEX','THYROID','CHRON_HTN','DIABETES','TB','FUEL_FOR_COOK','MainHap','DRINKING_SOURCE','BABY_SEX')"
 columnCont="('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI')"
 
-sed -i "s/CAT/$columnCat/g" workflow.sh
-sed -i "s/CONT/$columnCont/g" workflow.sh
+sed -i "s/CAT/$columnCat/g" workflow2.sh
+sed -i "s/CONT/$columnCont/g" workflow2.sh
 
-sbatch workflow.sh
+sbatch workflow2.sh
 ```
 
 
-#### Subset nDNA VCF: 
-- Selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (IDs.txt). 
-- Outputs (plink2.vcf) that will used for PCA. 
+- Subset nDNA VCF by selecting for samples from previous dataset (IDs2.txt). 
+- Runs plink PCA (Outputs results into PCA2)
+- Combine PCA results with metadata and plot PCA
 
-#### Dimensionality reduction via PCA.
-- Runs plink PCA using plink2.vcf
-- Outputs results into PCA
-
-#### outlierPCA.py
-- Loads PLINK .eigenvec and .eigenval
-- Computes how many PCs are needed to reach ~85% variance
-- Calculates site-wise Euclidean distance
-- Flags the top 1% as outliers per site
-- Saves a keep_samples.txt file
-- Creates a before/after PCA plot
-
-#### Combine PCA results with metadata and plot PCA (CombinePCA.py):    
-- Takes in eigenvec and adds this data to (Metadata.Weibull.tsv). 
-- Outputs (Metadata.Final.tsv). 
-- Takes in eigenval(for PCA), and makes PCA plots.
-- Lables Main/Sub haplogroup and site.
 
 
 
