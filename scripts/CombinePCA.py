@@ -7,7 +7,7 @@ import numpy as np
 
 
 header=["FID","IID"]+[f"PC{i}" for i in range(1, 21)]
-pca = pd.read_csv("PCA/cleaned.eigenvec",sep='\s+',header=None)
+pca = pd.read_csv("PCA2/cleaned.eigenvec",sep='\s+',header=None)
 pca.columns=header
 pca = pca.drop(columns=['IID'])
 pca = pca.rename(columns={"FID":"Sample_ID"})
@@ -22,7 +22,7 @@ dfFinal.to_csv("Metadata.Final.tsv", index=False,sep="\t")
 ######PCA/MDS plots
 
 # Read eigenvalues
-eigenvalues = pd.read_csv("PCA/cleaned.eigenval", header=None)
+eigenvalues = pd.read_csv("PCA2/cleaned.eigenval", header=None)
 total_variance = eigenvalues.sum().values[0]
 pc_percentage = (eigenvalues / total_variance) * 100
 
