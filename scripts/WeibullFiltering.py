@@ -120,7 +120,7 @@ print("Categorical variables for Feature selection:", str(columns_with_moreThant
 
 
 filtered_data.to_csv('Metadata.Weibull.tsv', index=False, sep="\t") 
-filtered_data[["Sample_ID"]].to_csv("IDs.txt", index=False,header=False) 
+filtered_data[["Sample_ID"]].to_csv("IDs2.txt", index=False,header=False) 
 
 
 
