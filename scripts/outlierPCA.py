@@ -8,7 +8,6 @@ import seaborn as sns
 eigenvec_path = "PCA/out.eigenvec"
 eigenval_path = "PCA/out.eigenval"
 metadata_path = "Metadata.MissRem.tsv"
-keep_output = "keep_samples.txt"
 plot_output = "pca_outlier_removal_comparison.png"
 variance_cutoff = 0.85  # % cumulative variance to use
 outlier_quantile = 0.95  # top 1% distance outliers per site
