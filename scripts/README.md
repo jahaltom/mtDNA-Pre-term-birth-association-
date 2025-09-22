@@ -1,3 +1,8 @@
+
+#### removeMissingData.py
+- Removes samples where gestational age "GAGEBRTH" or  PTB (0 or 1) is na. Also removes samples with missing data in any of the input columns.
+
+
 #### outlierPCA.py
 - Loads PLINK .eigenvec and .eigenval
 - Computes how many PCs are needed to reach ~85% variance
