@@ -1,3 +1,6 @@
+## plink2VCF.sh: 
+Takes in plink files for nDNA and makes vcf.
+
 
 ### MetadataMerge.py: 
 - Takes in Haplogrep3 output and metadata files (MOMI_derived_data.csv and samples.tab) and performs merge. 
