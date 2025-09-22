@@ -11,20 +11,12 @@ Takes in plink files for nDNA and makes vcf.
 ```
 
 ## Metadata curration, filtering, and conversion. 
-### MetadataMerge.py: 
-- Takes in Haplogrep3 output and metadata files (MOMI_derived_data.csv and samples.tab) and performs merge. 
-- Filters for only high quality haplogroup calls "Quality">=0.9 and only live births "PREG_OUTCOME"==2. 
-- Identifies main and sub haplogroups. 
-- This script also sets (ALCOHOL_FREQ, SMOK_FREQ, and SNIFF_FREQ) to 0 if (ALCOHOL,SMOKE_HIST, and SNIFF_TOBA) = never.
-- Calculates BMI. (df["BMI"] = df["MAT_WEIGHT"]/(df["MAT_HEIGHT"]/100)**2)
-- Categorizes population based on site. 
-- Seperates mother and child in dataset and writes two tsvs (Metadata.C.tsv and Metadata.M.tsv). 
+
 ```
 python  scripts/MetadataMerge.py
 ```
  
-## MissingDataHeatmap.py
-Takes in Metadata.C.tsv or Metadata.M.tsv and analyzes the dataset for missing data using features of interest. Outputs heatmap (MissingDataHeatmap.png). Missing data is in yellow. 
+
 ```
 python scripts/MissingDataHeatmap.py Metadata.M.tsv
 ```
