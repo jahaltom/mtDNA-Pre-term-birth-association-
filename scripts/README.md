@@ -42,3 +42,10 @@ Takes in Metadata.C.tsv or Metadata.M.tsv and analyzes the dataset for missing d
 - Outputs filtered metadata as (Metadata.Weibull.tsv). Also outputs (IDs.txt) which are only SampleIDs  from (Metadata.Weibull.tsv) which will be used for sample selection form the nDNA vcf. 
 - Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
 - All continuous features are ploted against PTB and GAGEBRTH (in plotsAll). 
+
+
+#### CombinePCA.py:    
+- Takes in eigenvec and adds this data to (Metadata.Weibull.tsv). 
+- Outputs (Metadata.Final.tsv). 
+- Takes in eigenval(for PCA), and makes PCA plots.
+- Lables Main/Sub haplogroup and site.
