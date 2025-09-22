@@ -56,14 +56,11 @@ sbatch workflow2.sh
 - Subset nDNA VCF by selecting for samples from previous dataset (IDs2.txt). 
 - Runs plink PCA (Outputs results into PCA2)
 - Combine PCA results with metadata and plot PCA
+##### Launches Exploratory Data Analysis (EDA)!
 
 
-
-
-#### Exploratory Data Analysis (EDA)
-- see EDA folder.
-
-#### featureSelection.sh
+#### Feature Selection 
+##### featureSelection.sh
 - Remove weight and heigth if using BMI (columnCont).
 - Look at PCA plots and make sure they look good.
 - See out.txt for;
