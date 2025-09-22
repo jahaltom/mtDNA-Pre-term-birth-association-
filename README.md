@@ -1,8 +1,8 @@
 # mtDNA Pre-term birth association
 
 
-## plink2VCF.sh: 
-Takes in plink files for nDNA and makes vcf.
+## Make plink input VCF
+sbatch scripts/plink2VCF.sh
 
 ## Run Haplogrep3 to assign haplogroups to samples.
 
@@ -10,13 +10,12 @@ Takes in plink files for nDNA and makes vcf.
 ./haplogrep3 classify  --extend-report --tree phylotree-rcrs@17.2 --in merged_chrM_22175.vcf --out haplogrep3OUT_22175
 ```
 
-## Metadata curration, filtering, and conversion. 
-
+## Metadata curration and filtering. 
+This script merges Haplogrep3 output with metadata files (MOMI_derived_data.csv and samples.tab), filters for high-quality haplogroup calls (Quality ≥ 0.9) and live births (PREG_OUTCOME = 2), and assigns main/sub-haplogroups. It sets ALCOHOL_FREQ, SMOK_FREQ, and SNIFF_FREQ to 0 when ALCOHOL, SMOKE_HIST, and SNIFF_TOBA are "never," calculates BMI, and categorizes population by site. Finally, it splits the dataset into mother and child subsets and writes them to Metadata.M.tsv and Metadata.C.tsv.
 ```
 python  scripts/MetadataMerge.py
 ```
- 
-
+Takes in Metadata.C.tsv or Metadata.M.tsv and analyzes the dataset for missing data using features of interest. Outputs heatmap (MissingDataHeatmap.png). Missing data is in yellow.
 ```
 python scripts/MissingDataHeatmap.py Metadata.M.tsv
 ```
