@@ -34,8 +34,7 @@ sbatch workflow.sh
 - PCA outlieres removed
 	- 	Calculates site-wise Euclidean distance (Using top N PCs needed to reach ~85% variance). Flags the top 1% as outliers per site
 	- 	Creates a before/after PCA plot
-
-
+- Fits a Weibull distribution to GAGEBRTH, defines 1st and 99th percentile cutoffs, and filters samples outside this range as well as haplogroups with fewer than 25 samples. It summarizes pre-term vs. normal birth counts per categorical class, removes low-count classes (<25 total), and drops categorical variables entirely if only one class would remain. It reports which categorical variables are retained (in CategoricalVariablesToKeepTable.tsv), flags binary variables for feature selection, and outputs Weibull parameters, cutoffs, and plots. Finally, it saves the filtered metadata (Metadata.Weibull.tsv), writes IDs.txt for downstream VCF selection, and plots both filtered/unfiltered distributions and all continuous feature relationships with PTB and GA.
 
 
 
