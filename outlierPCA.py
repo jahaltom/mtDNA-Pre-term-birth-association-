@@ -7,7 +7,7 @@ import seaborn as sns
 # --- CONFIG ---
 eigenvec_path = "PCA/out.eigenvec"
 eigenval_path = "PCA/out.eigenval"
-metadata_path = "Metadata.Weibull.tsv"
+metadata_path = "Metadata.MissRem.tsv"
 keep_output = "keep_samples.txt"
 plot_output = "pca_outlier_removal_comparison.png"
 variance_cutoff = 0.85  # % cumulative variance to use
