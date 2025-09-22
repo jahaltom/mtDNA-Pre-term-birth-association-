@@ -1,8 +1,8 @@
-## plink2VCF.sh: 
-Takes in plink files for nDNA and makes vcf.
+#### plink2VCF.sh: 
+- Takes in plink files for nDNA and makes vcf.
 
 
-### MetadataMerge.py: 
+#### MetadataMerge.py: 
 - Takes in Haplogrep3 output and metadata files (MOMI_derived_data.csv and samples.tab) and performs merge. 
 - Filters for only high quality haplogroup calls "Quality">=0.9 and only live births "PREG_OUTCOME"==2. 
 - Identifies main and sub haplogroups. 
@@ -12,7 +12,7 @@ Takes in plink files for nDNA and makes vcf.
 - Seperates mother and child in dataset and writes two tsvs (Metadata.C.tsv and Metadata.M.tsv).
 
 
-## MissingDataHeatmap.py
+#### MissingDataHeatmap.py
 Takes in Metadata.C.tsv or Metadata.M.tsv and analyzes the dataset for missing data using features of interest. Outputs heatmap (MissingDataHeatmap.png). Missing data is in yellow. 
 
 #### removeMissingData.py
