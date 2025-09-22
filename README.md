@@ -20,13 +20,13 @@ Takes in plink files for nDNA and makes vcf.
 - Categorizes population based on site. 
 - Seperates mother and child in dataset and writes two tsvs (Metadata.C.tsv and Metadata.M.tsv). 
 ```
-python  MetadataMerge.py
+python  scripts/MetadataMerge.py
 ```
  
 ## MissingDataHeatmap.py
 Takes in Metadata.C.tsv or Metadata.M.tsv and analyzes the dataset for missing data using features of interest. Outputs heatmap (MissingDataHeatmap.png). Missing data is in yellow. 
 ```
-python MissingDataHeatmap.py Metadata.M.tsv
+python scripts/MissingDataHeatmap.py Metadata.M.tsv
 ```
 ![alt text](https://github.com/jahaltom/mtDNA-Pre-term-birth-association-/blob/main/plots/MissingDataHeatmap.M.png?raw=true)
 
