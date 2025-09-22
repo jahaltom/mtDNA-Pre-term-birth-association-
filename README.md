@@ -32,9 +32,8 @@ sbatch workflow.sh
 - Using nDNA VCF, selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (IDs.txt). 
 - Runs plink PCA
 - PCA outlieres removed
-- 	Calculates site-wise Euclidean distance (Using top N PCs needed to reach ~85% variance). Flags the top 1% as outliers per site
-- 	Saves a MetadataOutlierRemoved.tsv file
-- 	Creates a before/after PCA plot
+	- 	Calculates site-wise Euclidean distance (Using top N PCs needed to reach ~85% variance). Flags the top 1% as outliers per site
+	- 	Creates a before/after PCA plot
 
 
 
