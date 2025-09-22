@@ -34,15 +34,12 @@ python MissingDataHeatmap.py Metadata.M.tsv
 
 #### Use the missing data plot to exclude Categorical/Continuous features from those below (columnsCat and columnsCont).
 
-```
 
 
 
 
 
 
-
-```
 #### Outlier removal with Weibull (WeibullFiltering.py):
 - Takes in ( Categorical/Continuous features)  
 - Fits the Weibull distribution to the data for "GAGEBRTH".
