@@ -8,10 +8,7 @@
 
 
 
-
-
-
-#### Outlier removal with Weibull (WeibullFiltering.py):
+####WeibullFiltering.py:
 - Takes in ( Categorical/Continuous features)  
 - Fits the Weibull distribution to the data for "GAGEBRTH".
    - Defines lower/upper cutoff thresholds, in days, for outlier detection (1st percentile and 99th percentile).
