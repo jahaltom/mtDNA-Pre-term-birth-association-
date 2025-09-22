@@ -53,16 +53,10 @@ plt.tight_layout()
 plt.savefig(plot_output, dpi=300)
 plt.close()
 
-# --- Save keep list ---
-keep_df = df[~df["is_outlier"]][["Sample_ID"]]
-keep_df["IID"] = keep_df["Sample_ID"]
-keep_df.to_csv(keep_output, sep="\t", index=False, header=False)
-
+# --- Save filtered metadata ---
 keep_df = df[~df["is_outlier"]]
 keep_df.to_csv("MetadataOutlierRemoved.tsv", sep="\t", index=True, header=True)
 
-print(f"Saved keep list to {keep_output}")
-print(f"Saved PCA comparison plot to {plot_output}")
 
 
 
