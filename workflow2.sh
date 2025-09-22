@@ -23,20 +23,15 @@ columnCont_string=$( echo "${columnsCont[*]}")
 
 
 
-bcftools view --types snps -t ^26,24,23 -S IDs.txt --force-samples /scr1/users/haltomj/PTB/plink2.vcf   >  plink2.vcf
+bcftools view -S IDs2.txt --force-samples plink2.vcf   >  plink2.2.vcf
 
 conda activate plink
 
-mkdir PCA
+mkdir PCA2
 #Run plink PCA
-plink --vcf plink2.vcf --pca --double-id --out PCA/out
+plink --vcf plink2.2.vcf --pca --double-id --out PCA2/out
 
-conda activate ML
-python outlierPCA.py
 
-conda activate plink
-# Recompute PCA using filtered samples
-plink --vcf plink2.vcf --keep keep_samples.txt --pca --double-id --out PCA/cleaned
 
 
 
