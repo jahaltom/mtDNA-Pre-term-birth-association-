@@ -34,30 +34,19 @@ python MissingDataHeatmap.py Metadata.M.tsv
 
 
 
-#### Use the missing data plot to exclude Categorical/Continuous features from those below (columnsCat and columnsCont). Then run WeibullFiltering.py.
+#### Use the missing data plot to exclude Categorical/Continuous features from those below (columnsCat and columnsCont).
 
 ```
-#Input file
-file="Metadata.M.tsv"
 
-# Define Categorical features
-#Excluded: 'SNIFF_TOBA','PASSIVE_SMOK','ALCOHOL','SMOK_TYP'
-columnsCat=('TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX','MainHap','SMOKE_HIST','SMOK_FREQ') 
 
-# Define Continuous  features
-#Excluded:  'SNIFF_FREQ','ALCOHOL_FREQ','SMOK_YR'
-columnsCont=('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI')
 
-# Convert the array to a comma-separated string
-columnCat_string=$( echo "${columnsCat[*]}")
-columnCont_string=$( echo "${columnsCont[*]}")
 
-# Call the Python script with the column string as an argument
-python WeibullFiltering.py $file "$columnCat_string" "$columnCont_string" > out.txt
+
+
+
 ```
 #### Outlier removal with Weibull (WeibullFiltering.py):
-- Takes in (input file and Categorical/Continuous features)  
-- Removes samples where gestational age "GAGEBRTH" or  PTB (0 or 1) is na. Also removes samples with missing data in any of the input columns. 
+- Takes in ( Categorical/Continuous features)  
 - Fits the Weibull distribution to the data for "GAGEBRTH".
    - Defines lower/upper cutoff thresholds, in days, for outlier detection (1st percentile and 99th percentile).
    - Filters the data on these threshholds (>= lower_cutoff) & <= upper_cutoff). 
