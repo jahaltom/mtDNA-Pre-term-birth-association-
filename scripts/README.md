@@ -3,7 +3,7 @@
 - Computes how many PCs are needed to reach ~85% variance
 - Calculates site-wise Euclidean distance
 - Flags the top 1% as outliers per site
-- Saves a keep_samples.txt file
+- Saves a MetadataOutlierRemoved.tsv file
 - Creates a before/after PCA plot
 
 
