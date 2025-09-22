@@ -6,8 +6,6 @@ Takes in plink files for nDNA and makes vcf.
 
 ## Run Haplogrep3 to assign haplogroups to samples.
 
-Use tree "rCRS PhyloTree 17.2" and  Kulczynski Distance function. Run this on merged_chrM_22175.vcf. Outputs haplogroups to haplogrep3OUT_22175. 
-
 ```
 ./haplogrep3 classify  --extend-report --tree phylotree-rcrs@17.2 --in merged_chrM_22175.vcf --out haplogrep3OUT_22175
 ```
