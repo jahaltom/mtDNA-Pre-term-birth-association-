@@ -23,14 +23,19 @@ python scripts/MissingDataHeatmap.py Metadata.M.tsv
 
 
 
-#### Use the missing data plot to exclude Categorical/Continuous features from those below (columnsCat and columnsCont).
-#### Subset nDNA VCF: 
-- Selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (IDs.txt). 
-- Outputs (plink2.vcf) that will used for PCA. 
+#### workflow.sh
+- Use the missing data plot to exclude Categorical/Continuous features from those in workflow.sh (columnsCat and columnsCont). (Edit with vim)
+```
+sbatch workflow.sh
+```
+- Removes samples where gestational age "GAGEBRTH" or  PTB (0 or 1) is na. Also removes samples with missing data in any of the input columns. Makes (IDs.txt) to be used for PCA. 
+- Using nDNA VCF, selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (IDs.txt). 
+- Runs plink PCA
+- PCA outlieres removed
+- 	Calculates site-wise Euclidean distance (Using top N PCs needed to reach ~85% variance). Flags the top 1% as outliers per site
+- 	Saves a MetadataOutlierRemoved.tsv file
+- 	Creates a before/after PCA plot
 
-#### Dimensionality reduction via PCA.
-- Runs plink PCA using plink2.vcf
-- Outputs results into PCA
 
 
 
