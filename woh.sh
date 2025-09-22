@@ -53,7 +53,7 @@ mkdir PCA
 plink --vcf plink2.vcf --pca --double-id --out PCA/out
 
 conda activate ML
-python outlierPCA.py
+python scripts/outlierPCA.py
 
 
 
@@ -66,4 +66,4 @@ python outlierPCA.py
 
 
 # Call the Python script with the column string as an argument
-python WeibullFiltering.py "$columnCat_string" "$columnCont_string" > out.txt
+python scripts/WeibullFiltering.py "$columnCat_string" "$columnCont_string" > out.txt
