@@ -32,7 +32,7 @@ sbatch workflow.sh
 - Using nDNA VCF, selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (IDs.txt). 
 - Runs plink PCA
 - PCA outlieres removed
-	- 	Calculates site-wise Euclidean distance (Using top N PCs needed to reach ~85% variance). Flags the top 1% as outliers per site
+	- 	Calculates site-wise Euclidean distance (Using top N PCs needed to reach ~85% variance). Flags the top 5% as outliers per site
 	- 	Creates a before/after PCA plot
 - Fits a Weibull distribution to GAGEBRTH, defines 1st and 99th percentile cutoffs, and filters samples outside this range as well as haplogroups with fewer than 25 samples. It summarizes pre-term vs. normal birth counts per categorical class, removes low-count classes (<25 total), and drops categorical variables entirely if only one class would remain. It reports which categorical variables are retained and PTB #s(in CategoricalVariablesToKeepTable.tsv), flags binary variables for feature selection, and outputs Weibull parameters, cutoffs, and plots. Finally, it saves the filtered metadata (Metadata.Weibull.tsv), writes IDs2.txt for downstream VCF selection, and plots both filtered/unfiltered distributions and all continuous feature relationships with PTB and GA (outputs to plotsAll). Makes a report (out.txt) which will indicate which variables to keep/exclude in future modeling. 
 
