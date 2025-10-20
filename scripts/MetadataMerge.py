@@ -6,7 +6,7 @@ import numpy as np
 ###########The subject ID in samples.tab  is BABY, PArticipant and ORIG_ID in momi_combined.data.tsv!!!!!!!!!!!!!!!!!!!!!!!!
 
 #Read in metadata
-md=pd.read_csv('samples.tab',sep='\t')  
+md=pd.read_csv('/scr1/users/haltomj/PTB/samples.tab',sep='\t')  
 md = md.rename(columns={'id': 'SampleID'})
 
 haplo=pd.read_csv('/scr1/users/haltomj/PTB/haplogrep3OUT_22175',sep='\t')  
