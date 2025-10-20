@@ -33,7 +33,7 @@ df = pd.merge(meta, pca, on="Sample_ID")
 pc_cols = [f"PC{i}" for i in range(1, N + 1)]
 df["PC_dist"] = np.linalg.norm(df[pc_cols].values, axis=1)
 
-# --- Flag top 1% outliers per site ---
+# --- Flag top 5% outliers per site ---
 def flag_outliers(site_df):
     cutoff = site_df["PC_dist"].quantile(outlier_quantile)
     site_df["is_outlier"] = site_df["PC_dist"] > cutoff
