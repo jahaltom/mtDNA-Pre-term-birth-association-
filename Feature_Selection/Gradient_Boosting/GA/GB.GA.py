@@ -29,10 +29,9 @@ def evaluate_model_regression(model, X_test, y_test, model_name):
 
 # Load the dataset
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
-
 df = df[sys.argv[1].split(',') + sys.argv[2].split(',') + sys.argv[3].split(',') + ["GAGEBRTH"]]
-df = df[~df.isin([-88, -77]).any(axis=1)]  # Remove rows with invalid entries (-88, -77)
-df = df[df['MainHap'].map(df['MainHap'].value_counts()) >= 25]
+
+
 
 # Define features
 categorical_columns = sys.argv[1].split(',')
