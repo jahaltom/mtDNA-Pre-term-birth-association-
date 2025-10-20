@@ -10,7 +10,7 @@ eigenval_path = "PCA/out.eigenval"
 metadata_path = "Metadata.MissRem.tsv"
 plot_output = "pca_outlier_removal_comparison.png"
 variance_cutoff = 0.85  # % cumulative variance to use
-outlier_quantile = 0.95  # top 1% distance outliers per site
+outlier_quantile = 0.95  # top 5% distance outliers per site
 
 # --- Load PCA ---
 header = ["FID", "IID"] + [f"PC{i}" for i in range(1, 21)]
