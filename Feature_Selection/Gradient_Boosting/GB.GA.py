@@ -246,7 +246,16 @@ for name in selected_features:
     
     
     
-    
+# Residual diagnostics (test set):
+
+y_pred = gb_cv.best_estimator_.predict(X_test_preprocessed)
+resid = y_test - y_pred
+plt.scatter(y_pred, resid, s=8); plt.axhline(0); plt.xlabel("Predicted"); plt.ylabel("Residuals")
+plt.savefig("residuals_vs_fitted.png", bbox_inches="tight"); plt.clf()
+
+import scipy.stats as st
+st.probplot(resid, dist="norm", plot=plt)
+plt.savefig("qqplot_residuals.png", bbox_inches="tight"); plt.clf()
     
     
     
