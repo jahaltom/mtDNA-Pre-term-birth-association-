@@ -1,8 +1,7 @@
 # mtDNA Pre-term birth association
 
 
-## Make plink input VCF
-sbatch scripts/plink2VCF.sh
+
 
 ## Run Haplogrep3 to assign haplogroups to samples.
 
