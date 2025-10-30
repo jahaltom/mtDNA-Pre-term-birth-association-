@@ -7,10 +7,10 @@ import numpy as np
 
 #Read in metadata
 md=pd.read_csv('/scr1/users/haltomj/PTB/samples.tab',sep='\t')  
-md = md.rename(columns={'id': 'SampleID'})
+md = md.rename(columns={'id': 'Sample_ID'})
 
 haplo=pd.read_csv('/scr1/users/haltomj/PTB/haplogrep3OUT_22175',sep='\t')  
-haplo=pd.merge(md,haplo,on=["SampleID"])
+haplo=pd.merge(md,haplo,on=["Sample_ID"])
 
 haplo=haplo.drop_duplicates(subset=['Subject_ID'])
 
@@ -90,10 +90,8 @@ df['population'] = df['site'].apply(categorize_population)
 #Sep M and C 
 
 dfM=df[df["M/C"]=="M"]
-dfM["Sample_ID"]=(dfM["SampleID"])
 dfM.to_csv("Metadata.M.tsv", index=False, sep='\t')  
 
 
 dfC=df[df["M/C"]=="C"]
-dfC["Sample_ID"]=(dfC["SampleID"])
 dfC.to_csv("Metadata.C.tsv", index=False, sep='\t')  
