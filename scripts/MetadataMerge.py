@@ -90,10 +90,10 @@ df['population'] = df['site'].apply(categorize_population)
 #Sep M and C 
 
 dfM=df[df["M/C"]=="M"]
-dfM["Sample_ID"]=("0_"+dfM["SampleID"])
+dfM["Sample_ID"]=(dfM["SampleID"])
 dfM.to_csv("Metadata.M.tsv", index=False, sep='\t')  
 
 
 dfC=df[df["M/C"]=="C"]
-dfC["Sample_ID"]=("0_"+dfC["SampleID"])
+dfC["Sample_ID"]=(dfC["SampleID"])
 dfC.to_csv("Metadata.C.tsv", index=False, sep='\t')  
