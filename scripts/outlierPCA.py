@@ -16,7 +16,7 @@ outlier_quantile = 0.95  # top 5% distance outliers per site
 header = ["FID", "IID"] + [f"PC{i}" for i in range(1, 11)]
 pca = pd.read_csv(eigenvec_path, delim_whitespace=True, header=None)
 pca.columns = header
-pca = pca.drop(columns=["IID"]).rename(columns={"FID": "Sample_ID"})
+pca = pca.drop(columns=["FID"]).rename(columns={"IID": "Sample_ID"})
 
 # --- Load Eigenvalues and compute variance explained ---
 eigenvals = np.loadtxt(eigenval_path)
@@ -55,21 +55,3 @@ plt.close()
 # --- Save filtered metadata ---
 keep_df = df[~df["is_outlier"]]
 keep_df.to_csv("MetadataOutlierRemoved.tsv", sep="\t", index=True, header=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
