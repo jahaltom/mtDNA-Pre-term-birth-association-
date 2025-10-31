@@ -44,13 +44,30 @@ python scripts/removeMissingData.py $file "$columnCat_string" "$columnCont_strin
 
 
 
-bcftools view --types snps -t ^26,24,23 -S IDs.txt --force-samples /scr1/users/haltomj/PTB/plink2.vcf   >  plink2.vcf
+plink \
+  --bfile /scr1/users/haltomj/PTB/plink2 \
+  --keep IDs.txt \
+  --chr 1-22 \
+  --snps-only just-acgt \
+  --biallelic-only strict \
+  --geno 0.05 \
+  --mind 0.05 \
+  --maf 0.01 \
+  --hwe 1e-6 midp \
+  --threads 8 \
+  --make-bed --out nDNA_final > qc.log 2>&1
 
-conda activate plink
+
 
 mkdir PCA
-#Run plink PCA
-plink --vcf plink2.vcf --pca --double-id --out PCA/out
+# PCA for ancestry covariates
+plink --bfile nDNA_final --pca 10 --out PCA/out
+
+# QC summary stats
+plink --bfile nDNA_final --missing --freq --out nDNA_stats
+
+
+
 
 conda activate ML
 python scripts/outlierPCA.py
