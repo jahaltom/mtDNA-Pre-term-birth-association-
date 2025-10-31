@@ -1,13 +1,5 @@
-#!/bin/bash
-#SBATCH -N 1
-#SBATCH --ntasks-per-node 24
-#SBATCH -t 8:00:00
-#SBATCH --mail-user=haltomj@chop.edu
-#SBATCH --mail-type=ALL
 
 
-
-conda activate plink
 
 #| Step                      | Filter              | Meaning                            |
 #| ------------------------- | ------------------- | ---------------------------------- |
@@ -23,26 +15,4 @@ conda activate plink
 #| `--out nDNA_final`        | prefix              | output name for filtered data      |
 
 
-
-plink \
-  --bfile plink2 \
-  --keep IDs.txt \
-  --chr 1-22 \
-  --snps-only just-acgt \
-  --biallelic-only strict \
-  --geno 0.05 \
-  --mind 0.05 \
-  --maf 0.01 \
-  --hwe 1e-6 midp \
-  --threads 8 \
-  --make-bed --out nDNA_final > qc.log 2>&1
-
-
-
-
-# PCA for ancestry covariates
-plink --bfile nDNA_final --pca 10 --out nDNA_pca
-
-# QC summary stats
-plink --bfile nDNA_final --missing --freq --out nDNA_stats
 
