@@ -40,7 +40,7 @@ python scripts/removeMissingData.py $file "$columnCat_string" "$columnCont_strin
 
 
 
-
+conda activate plink
 
 
 
