@@ -22,15 +22,14 @@ columnCont_string=$( echo "${columnsCont[*]}")
 
 
 
-
-bcftools view -S IDs2.txt --force-samples plink2.vcf   >  plink2.2.vcf
-
 conda activate plink
+
+
+plink --bfile nDNA_final -keep IDs2.txt --out nDNA_final2
 
 mkdir PCA2
 #Run plink PCA
-plink --vcf plink2.2.vcf --pca --double-id --out PCA2/out
-
+plink --bfile nDNA_final2 --pca 10 --out PCA2/cleaned
 
 
 
