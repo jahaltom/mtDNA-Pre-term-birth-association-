@@ -10,6 +10,7 @@ md=pd.read_csv('/scr1/users/haltomj/PTB/samples.tab',sep='\t')
 md = md.rename(columns={'id': 'Sample_ID'})
 
 haplo=pd.read_csv('/scr1/users/haltomj/PTB/haplogrep3OUT_22175',sep='\t')  
+haplo = haplo.rename(columns={'SampleID': 'Sample_ID'})
 haplo=pd.merge(md,haplo,on=["Sample_ID"])
 
 haplo=haplo.drop_duplicates(subset=['Subject_ID'])
