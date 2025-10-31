@@ -45,6 +45,7 @@ sbatch workflow.sh
 | `--out nDNA_final`        | prefix              | output name for filtered data      |
 
 - Runs plink PCA
+- Makes qc.log and QC summery stats file nDNA_stats
 - PCA outlieres removed
 	- 	Calculates site-wise Euclidean distance (Using top N PCs needed to reach ~85% variance). Flags the top 5% as outliers per site
 	- 	Creates a before/after PCA plot
