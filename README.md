@@ -28,7 +28,22 @@ python scripts/MissingDataHeatmap.py Metadata.M.tsv
 sbatch workflow.sh
 ```
 - Removes samples where gestational age "GAGEBRTH" or  PTB (0 or 1) is na. Also removes samples with missing data in any of the input columns. Makes (IDs.txt) to be used for PCA. 
-- Using nDNA VCF, selects for only snps, excludes chrs (x,y,and M), selects for samples from previous dataset (IDs.txt). 
+- Using nDNA plink files:  
+
+| Step                      | Filter              | Meaning                            |
+| ------------------------- | ------------------- | ---------------------------------- |
+| `--bfile nDNA_raw`        | input               | your starting `.bed/.bim/.fam`     |
+| `--keep IDs.txt  `        | input               | subset samples by IDs.txt          |
+| `--chr 1-22`              | autosomes only      | drops chr M, X, Y                  |
+| `--snps-only just-acgt`   | variant type        | drop indels and non-ACGT calls     |
+| `--biallelic-only strict` | allele structure    | keeps only clean biallelic SNPs    |
+| `--geno 0.05`             | variant missingness | removes SNPs with > 5 % missing    |
+| `--mind 0.05`             | sample missingness  | removes samples with > 5 % missing |
+| `--maf 0.01`              | allele frequency    | keeps MAF ≥ 1 %                    |
+| `--hwe 1e-6 midp`         | Hardy–Weinberg      | removes SNPs failing HWE ≤ 1e-6    |
+| `--make-bed`              | output              | writes new binary dataset          |
+| `--out nDNA_final`        | prefix              | output name for filtered data      |
+
 - Runs plink PCA
 - PCA outlieres removed
 	- 	Calculates site-wise Euclidean distance (Using top N PCs needed to reach ~85% variance). Flags the top 5% as outliers per site
