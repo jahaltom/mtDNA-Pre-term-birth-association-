@@ -38,7 +38,7 @@ Takes in Metadata.C.tsv or Metadata.M.tsv and analyzes the dataset for missing d
 - Also reports categorical variables with exactly two classes (binary). These will be used as binary variables for Feature selection. Outputs Categorical variables for Feature selection.
 
 - Reports Weibull parameters (Shape, Scale, and Location) and upper/lower cutoffs in days. 
-- Outputs filtered metadata as (Metadata.Weibull.tsv). Also outputs (IDs.txt) which are only SampleIDs  from (Metadata.Weibull.tsv) which will be used for sample selection form the nDNA vcf. 
+- Outputs filtered metadata as (Metadata.Weibull.tsv). Also outputs (IDs2.txt) which are only SampleIDs  from (Metadata.Weibull.tsv) which will be used for sample selection form the nDNA vcf. 
 - Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
 - All continuous features are ploted against PTB and GAGEBRTH (in plotsAll). 
 
