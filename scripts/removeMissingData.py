@@ -24,4 +24,4 @@ md = md[~md[wantedCol].isin([-88, -77,-99]).any(axis=1)]
 md.to_csv('Metadata.MissRem.tsv', index=False, sep="\t") 
 #Need dummy column for plink PCA
 md["Dummy"]=0
-md[["Dummy","Sample_ID"]].to_csv("IDs.txt", index=False,header=False) 
+md[["Dummy","Sample_ID"]].to_csv("IDs.txt", index=False,header=False,sep='\t') 
