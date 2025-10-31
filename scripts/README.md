@@ -1,5 +1,4 @@
-#### plink2VCF.sh: 
-- Takes in plink files for nDNA and makes vcf.
+
 
 
 #### MetadataMerge.py: 
