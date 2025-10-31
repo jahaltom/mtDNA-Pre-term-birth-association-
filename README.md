@@ -56,7 +56,7 @@ sbatch workflow.sh
 #### workflow2.sh
 - Looking at out.txt from above, place "Categorical variables to keep for future model" in columnCat below.
 - Look for outliers in continuous features in plotsAll. Adjust if necessary.
-- Update workflow.sh and run.
+- Update workflow2.sh and run.
 ```
 columnCat="('TYP_HOUSE','HH_ELECTRICITY','TOILET','WEALTH_INDEX','THYROID','CHRON_HTN','DIABETES','TB','FUEL_FOR_COOK','MainHap','DRINKING_SOURCE','BABY_SEX')"
 columnCont="('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI')"
@@ -68,7 +68,7 @@ sbatch workflow2.sh
 ```
 
 
-- Subset nDNA VCF by selecting for samples from previous dataset (IDs2.txt). 
+- Subset nDNA plink files by selecting for samples from previous dataset (IDs2.txt). 
 - Runs plink PCA (Outputs results into PCA2)
 - Combine PCA results with metadata and plot PCA
 ##### Launches Exploratory Data Analysis (EDA)!
