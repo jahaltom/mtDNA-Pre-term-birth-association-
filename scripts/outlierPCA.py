@@ -13,7 +13,7 @@ variance_cutoff = 0.85  # % cumulative variance to use
 outlier_quantile = 0.95  # top 5% distance outliers per site
 
 # --- Load PCA ---
-header = ["FID", "IID"] + [f"PC{i}" for i in range(1, 21)]
+header = ["FID", "IID"] + [f"PC{i}" for i in range(1, 11)]
 pca = pd.read_csv(eigenvec_path, delim_whitespace=True, header=None)
 pca.columns = header
 pca = pca.drop(columns=["IID"]).rename(columns={"FID": "Sample_ID"})
