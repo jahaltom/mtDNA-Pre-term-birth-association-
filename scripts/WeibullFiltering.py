@@ -120,7 +120,9 @@ print("Categorical variables for Feature selection:", str(columns_with_moreThant
 
 
 filtered_data.to_csv('Metadata.Weibull.tsv', index=False, sep="\t") 
-filtered_data[["Sample_ID","Sample_ID"]].to_csv("IDs2.txt", index=False,header=False) 
+#Need dummy column for plink PCA
+filtered_data[Dummy"]=0
+filtered_data[["Dummy","Sample_ID"]].to_csv("IDs2.txt", index=False,header=False) 
 
 
 
