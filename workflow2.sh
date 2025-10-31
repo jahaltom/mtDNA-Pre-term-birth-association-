@@ -25,7 +25,7 @@ columnCont_string=$( echo "${columnsCont[*]}")
 conda activate plink
 
 
-plink --bfile nDNA_final -keep IDs2.txt --out nDNA_final2
+plink --bfile nDNA_final --keep IDs2.txt --out nDNA_final2
 
 mkdir PCA2
 #Run plink PCA
