@@ -36,7 +36,7 @@ plink --bfile nDNA_final2 --pca 10 --out PCA2/cleaned
 
 
 conda activate ML
-python  CombinePCA.py
+python  scripts/CombinePCA.py
 
 
 
