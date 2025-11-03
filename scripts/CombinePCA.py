@@ -6,7 +6,7 @@ import numpy as np
 
 
 
-header=["FID","IID"]+[f"PC{i}" for i in range(1, 21)]
+header=["FID","IID"]+[f"PC{i}" for i in range(1, 11)]
 pca = pd.read_csv("PCA2/cleaned.eigenvec",sep='\s+',header=None)
 pca.columns=header
 pca = pca.drop(columns=['IID'])
