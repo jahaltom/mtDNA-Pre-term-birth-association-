@@ -58,7 +58,7 @@ sbatch workflow.sh
 - Look for outliers in continuous features in plotsAll. Adjust if necessary.
 - Update workflow2.sh and run.
 ```
-columnCat="('TYP_HOUSE','HH_ELECTRICITY','TOILET','WEALTH_INDEX','THYROID','CHRON_HTN','DIABETES','TB','FUEL_FOR_COOK','MainHap','DRINKING_SOURCE','BABY_SEX')"
+columnCat="('TYP_HOUSE','HH_ELECTRICITY','TOILET','WEALTH_INDEX','THYROID','CHRON_HTN','DIABETES','TB','FUEL_FOR_COOK','MainHap','DRINKING_SOURCE','BABY_SEX','population','site')"
 columnCont="('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI')"
 
 sed -i "s/CAT/$columnCat/g" workflow2.sh
@@ -84,9 +84,9 @@ sbatch workflow2.sh
 
 
 ```
-columnCat="('DRINKING_SOURCE','FUEL_FOR_COOK','MainHap','TOILET','WEALTH_INDEX')"
+columnCat="('DRINKING_SOURCE','FUEL_FOR_COOK','MainHap','TOILET','WEALTH_INDEX','site')"
 columnCont="('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI','PC1','PC2','PC3','PC4','PC5')"
-columnBin="('BABY_SEX','CHRON_HTN','DIABETES','HH_ELECTRICITY','TB','THYROID','TYP_HOUSE')"
+columnBin="('BABY_SEX','CHRON_HTN','DIABETES','HH_ELECTRICITY','TB','THYROID','TYP_HOUSE','population')"
 
 sed -i "s/CAT/$columnCat/g" featureSelection.sh
 sed -i "s/CONT/$columnCont/g" featureSelection.sh
