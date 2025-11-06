@@ -37,7 +37,7 @@ Takes in Metadata.C.tsv or Metadata.M.tsv and analyzes the dataset for missing d
 - Also reports categorical variables with exactly two classes (binary). These will be used as binary variables for Feature selection. Outputs Categorical variables for Feature selection.
 - Reports Weibull parameters (Shape, Scale, and Location) and upper/lower cutoffs in days.
 - It finds haplogroups that appear in at least 2 sites, have ≥ 20 total samples and ≥ 4 PTB cases, keeps those unchanged, and relabels all other haplogroups as Other_<population>.
-- Outputs filtered metadata as (Metadata.Weibull.tsv). Also outputs (IDs2.txt) which are only Sample_IDs  from (Metadata.Weibull.tsv) which will be used for sample selection form the nDNA SNPs. 
+- Outputs filtered metadata as (Metadata.Weibull.tsv). Also outputs (IDs2.txt) which are only Sample_IDs  from (Metadata.Weibull.tsv) which will be used for sample selection form the nDNA plink data. 
 - Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
 - All continuous features are ploted against PTB and GAGEBRTH (in plotsAll). 
 
