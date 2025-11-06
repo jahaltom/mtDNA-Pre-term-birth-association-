@@ -34,7 +34,7 @@ print(f"Lower Cutoff: {lower_cutoff}, Upper Cutoff: {upper_cutoff}")
 # Step 3: Filter the data
 filtered_data = md[(md["GAGEBRTH"] >= lower_cutoff) & (md["GAGEBRTH"] <= upper_cutoff)]
 
-filtered_data = filtered_data[filtered_data['MainHap'].map(filtered_data['MainHap'].value_counts()) >= 25]
+
 
 
 #############################      More filtering
@@ -114,6 +114,61 @@ columns_with_two_classes = class_counts[class_counts == 2].index.tolist()
 print("Categorical variables with exactly two classes.  Will be used as binary variables for Feature selection:", str(columns_with_two_classes).replace(" ", ""))
 columns_with_moreThantwo_classes = class_counts[class_counts > 2].index.tolist()
 print("Categorical variables for Feature selection:", str(columns_with_moreThantwo_classes).replace(" ", ""))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Finds haplogroups that appear in at least 2 sites, have ≥ 20 total samples and ≥ 4 PTB cases, keeps those unchanged, and relabels all other haplogroups as Other_<population>.
+
+# --- RULES ---
+min_sites   = 2
+min_n       = 20
+min_events  = 4
+
+# hap × site counts within the CURRENT dataset (works for joint or any subset)
+counts = (
+    filtered_data.groupby(["MainHap", "site"])["PTB"]
+      .agg(n="size", ptb=lambda x: (x == 1).sum())
+      .reset_index()
+)
+
+# present in ≥2 sites
+site_support = counts[counts["n"] > 0].groupby("MainHap")["site"].nunique()
+haps_multi_site = set(site_support[site_support >= min_sites].index)
+
+# total N ≥ 20 and PTB ≥ 5
+totals = filtered_data.groupby("MainHap")["PTB"].agg(n="size", ptb=lambda s: (s == 1).sum())
+haps_good_size = set(totals[(totals["n"] >= min_n) & (totals["ptb"] >= min_events)].index)
+
+keep_haps = sorted(haps_multi_site & haps_good_size)
+print("Keeping haplogroups:", keep_haps)
+
+# rebrand unsupported haplogroups to Other_<population>
+filtered_data["MainHap"] = filtered_data.apply(
+    lambda r: r["MainHap"] if r["MainHap"] in keep_haps else f"Other_{r['population']}",
+    axis=1
+)
+
+# (optional) quick peek at new label counts
+print("\nCounts after recode:")
+print(filtered_data["MainHap"].value_counts().head(20))
+
+
+
+
+
+
+
 
 
 
