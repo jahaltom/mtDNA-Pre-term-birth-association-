@@ -1,0 +1,282 @@
+import pandas as pd, numpy as np, re, matplotlib.pyplot as plt
+from sklearn.model_selection import StratifiedKFold, GridSearchCV, train_test_split
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import classification_report, roc_auc_score, average_precision_score, RocCurveDisplay, PrecisionRecallDisplay
+from sklearn.ensemble import RandomForestClassifier  # <-- RF instead of GB
+from sklearn.inspection import PartialDependenceDisplay
+import shap, os, sys
+import seaborn as sns
+
+
+# --- IO ---
+df = pd.read_csv("Metadata.Final.tsv", sep="\t")
+
+#categorical_columns = sys.argv[1].split(',')
+#continuous_columns  = sys.argv[2].split(',')
+#binary_columns      = sys.argv[3].split(',')
+# Columns
+categorical_columns = [
+    'DRINKING_SOURCE','FUEL_FOR_COOK','TOILET',
+    'WEALTH_INDEX'
+]
+continuous_columns  = [
+    'PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI'
+]
+binary_columns      = [
+    'BABY_SEX','CHRON_HTN','DIABETES','HH_ELECTRICITY','TB','THYROID','TYP_HOUSE'
+]
+
+ban = {"MainHap","haplogroup","Haplogroup","site","Site"}
+assert not (ban & set(categorical_columns+continuous_columns+binary_columns)), "Haplogroup/site must not be in covariate set."
+
+X = df[categorical_columns + continuous_columns + binary_columns].copy()
+y = df["PTB"].astype(int)
+
+# --- Preprocess ---
+pre = ColumnTransformer([
+    ("num", StandardScaler(), continuous_columns),
+    ("bin", "passthrough", binary_columns),
+    ("cat", OneHotEncoder(handle_unknown="ignore", sparse_output=True), categorical_columns)
+
+], remainder="drop", sparse_threshold=1.0)
+
+# --- MODEL: RandomForest (drop GB) ---
+rf = RandomForestClassifier(
+    n_estimators=600,
+    max_depth=None,
+    min_samples_leaf=1,
+    max_features="sqrt",
+    random_state=42,
+    n_jobs=-1,
+    class_weight="balanced"   # handle imbalance natively
+)
+
+pipe = Pipeline([
+    ("pre", pre),
+    ("clf", rf)
+])
+
+# --- RF grid (mirrors your style, but with RF params) ---
+param_grid = {
+    "clf__n_estimators": [300, 600, 900],
+    "clf__max_depth": [None, 10, 20],
+    "clf__min_samples_leaf": [1, 2, 5],
+    "clf__max_features": ["sqrt", 0.5],
+}
+
+skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.3, stratify=y, random_state=42)
+
+# Class-weighting instead of SMOTE:
+# (RF supports class_weight; keeping the code block intact but not needed to pass sample_weight.)
+pos_wt = (len(y_tr) - y_tr.sum()) / y_tr.sum()
+sample_weight = np.where(y_tr==1, pos_wt, 1.0)
+
+gs = GridSearchCV(pipe, param_grid, scoring="average_precision", cv=skf, n_jobs=-1)
+
+# With RF + class_weight="balanced", we don't need sample_weight; leaving line structure intact:
+# gs.fit(X_tr, y_tr, clf__sample_weight=sample_weight)
+gs.fit(X_tr, y_tr)
+
+best = gs.best_estimator_
+print("Best params:", gs.best_params_)
+
+# --- Eval ---
+proba = best.predict_proba(X_te)[:,1]
+print(classification_report(y_te, (proba>=0.5).astype(int)))
+print("ROC AUC:", roc_auc_score(y_te, proba))
+print("PR AUC :", average_precision_score(y_te, proba))
+RocCurveDisplay.from_predictions(y_te, proba)
+plt.savefig("roc_auc.png", dpi=200); plt.clf()
+PrecisionRecallDisplay.from_predictions(y_te, proba)
+plt.savefig("pr_auc.png", dpi=200); plt.clf()
+
+# --- SHAP on a manageable subset ---
+X_te_trans = best.named_steps["pre"].transform(X_te)    # sparse ok for TreeExplainer input if we densify
+X_te_dense = X_te_trans.toarray() if hasattr(X_te_trans, "toarray") else X_te_trans
+feat_names = np.asarray(best.named_steps["pre"].get_feature_names_out()).ravel()
+
+explainer = shap.TreeExplainer(best.named_steps["clf"])
+sub_ix = np.random.RandomState(42).choice(X_te_dense.shape[0], size=min(2000, X_te_dense.shape[0]), replace=False)
+
+sv_raw = explainer.shap_values(X_te_dense[sub_ix])
+
+# sv_raw already computed; feat_names already defined
+classes_ = getattr(best.named_steps["clf"], "classes_", None)
+pos_idx = 1 if (classes_ is None or 1 not in classes_) else int(np.where(classes_ == 1)[0][0])
+
+sv_arr = np.asarray(sv_raw)
+
+if isinstance(sv_raw, list):
+    sv = sv_raw[pos_idx]                        # list-of-classes -> pick positive
+elif sv_arr.ndim == 3:
+    # Handle (N, F, C) vs (N, C, F)
+    if sv_arr.shape[2] >= 2 and sv_arr.shape[1] == len(feat_names):
+        sv = sv_arr[:, :, pos_idx]              # (N, F, C) -> (N, F)
+    elif sv_arr.shape[1] >= 2 and sv_arr.shape[2] == len(feat_names):
+        sv = sv_arr[:, pos_idx, :]              # (N, C, F) -> (N, F)
+    else:
+        raise ValueError(f"Unexpected SHAP shape {sv_arr.shape}")
+else:
+    sv = sv_arr                                  # already (N, F)
+
+sv = np.asarray(sv)
+assert sv.ndim == 2 and sv.shape[1] == len(feat_names), f"Expected (N,F) with F={len(feat_names)}, got {sv.shape}"
+
+
+# Mean |SHAP| importances
+mean_abs = np.abs(sv).mean(axis=0).reshape(-1)
+order = np.argsort(mean_abs)[::-1]
+topk = order[:min(30, sv.shape[1])]
+top_names = feat_names[topk]
+
+shap.summary_plot(sv[:, topk], X_te_dense[sub_ix][:, topk], feature_names=top_names, show=False)
+plt.savefig("shap_summary_top30.png", bbox_inches="tight", dpi=200); plt.clf()
+
+# Interactions on top-k only
+sv_int = explainer.shap_interaction_values(X_te_dense[sub_ix][:, topk])
+if isinstance(sv_int, list):  # SHAP may return per-class list
+    sv_int = sv_int[1]        # positive class
+
+names = top_names  # keep names synced to topk
+
+# 1) SHAP interaction SUMMARY plot (top-k)
+shap.summary_plot(
+    sv_int,
+    X_te_dense[sub_ix][:, topk],
+    feature_names=names,
+    max_display=min(20, len(names)),
+    show=False
+)
+plt.tight_layout()
+plt.savefig("shap_interaction_summary_topk.png", dpi=300, bbox_inches="tight")
+#plt.clf()
+plt.close('all')
+
+# 2) Mean |interaction| matrix + top pairs
+int_mat = np.abs(sv_int).mean(axis=0)                # (k x k)
+interaction_df = pd.DataFrame(int_mat, index=names, columns=names)
+np.fill_diagonal(interaction_df.values, 0.0)         # ignore self-interactions
+
+M = 10  # how many pairs to print
+top_pairs = (
+    interaction_df.where(np.triu(np.ones_like(interaction_df), 1).astype(bool))
+                  .stack()
+                  .sort_values(ascending=False)
+                  .head(M)
+)
+print("\nTop interaction pairs (mean |SHAP interaction|):")
+print(top_pairs)
+
+# 3) Upper-triangle heatmap
+mask = np.tril(np.ones_like(interaction_df, dtype=bool))
+plt.figure(figsize=(max(8, 0.6*len(names)), max(6, 0.6*len(names))))
+sns.heatmap(
+    interaction_df,
+    mask=mask,
+    cmap="coolwarm",
+    square=True,
+    cbar_kws={"label": "Mean |SHAP interaction|"},
+    xticklabels=True, yticklabels=True
+)
+plt.title("SHAP Interaction Heatmap (Top-k)")
+plt.tight_layout()
+plt.savefig("shap_interactions_heatmap_topk.png", dpi=300)
+#plt.clf()
+plt.close('all')
+
+##########################Non -linear stuff
+
+#SHAP dependence plots (curvature = nonlinearity). Interpretation: a curved (non-monotone) relationship between SHAP value (log-odds contribution) and the raw feature indicates non-linearity. A straight line suggests linear or near-linear.
+top_names = feat_names[topk]
+for name in top_names:
+    shap.dependence_plot(name, sv, X_te_dense[sub_ix], feature_names=feat_names, show=False)
+    plt.savefig(f"dep_{name}.png", bbox_inches="tight")
+    plt.close('all')
+
+# --- PDP / ICE / Nonlinearity: use NAMES, not indices ---
+import matplotlib
+matplotlib.use("Agg")
+import gc
+from sklearn.inspection import PartialDependenceDisplay, partial_dependence
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import SplineTransformer
+from sklearn.pipeline import make_pipeline
+
+# Always fetch the FULL transformed feature list
+feat_names_full = best.named_steps["pre"].get_feature_names_out()
+
+raw = []
+seen = set()
+
+for t in feat_names_full:
+    # remove num__, bin__, cat__
+    name = re.sub(r'^(num__|bin__|cat__)', '', t)
+    # remove final _digit suffix (but keep underscores in middle)
+    name = re.sub(r'_\d+$', '', name)
+    if name not in seen:
+        raw.append(name)
+        seen.add(name)
+feat_names_full=raw
+
+for t in top_names:
+    # remove num__, bin__, cat__
+    name = re.sub(r'^(num__|bin__|cat__)', '', t)
+    # remove final _digit suffix (but keep underscores in middle)
+    name = re.sub(r'_\d+$', '', name)
+    if name not in seen:
+        raw.append(name)
+        seen.add(name)
+top_names=raw
+
+# 1) PDP for first 12 top features (pass NAMES)
+disp = PartialDependenceDisplay.from_estimator(
+    best,
+    X,                                    # raw X; pipeline handles transforms
+    features=top_names[:12],              # names, not indices
+    feature_names=feat_names_full,
+    grid_resolution=101,
+    response_method="predict_proba",
+    n_cols=6,                             # 6 columns => 2 rows for 12 features
+)
+
+# --- Make the plot taller ---
+# default is small (~8x6 inches); this doubles the height for readability
+disp.figure_.set_size_inches(14, 8)       # width=14, height=8 (adjust to taste)
+
+plt.tight_layout()
+plt.savefig("pdp_top12.png", dpi=200, bbox_inches="tight")
+plt.close('all')
+
+# 2) Simple nonlinearity score using PDP curves (use NAMES here too)
+def nonlinearity_score(est, X_sample, feat_name, K=6):
+    pd_res = partial_dependence(
+        est, X_sample, features=[feat_name], grid_resolution=50, kind="average"
+    )
+    xs = pd_res["grid_values"][0].reshape(-1, 1)
+    ys = pd_res["average"][0].ravel()
+    lin_r2 = LinearRegression().fit(xs, ys).score(xs, ys)
+    spline = make_pipeline(SplineTransformer(degree=3, n_knots=K, include_bias=False),
+                           LinearRegression())
+    spl_r2 = spline.fit(xs, ys).score(xs, ys)
+    return {"feature": feat_name, "R2_linear": lin_r2,
+            "R2_spline": spl_r2, "NL_score": max(0.0, spl_r2 - lin_r2)}
+
+scores = [nonlinearity_score(best, X, n, K=6) for n in top_names[:30]]
+scores_df = pd.DataFrame(scores).sort_values("NL_score", ascending=False)
+scores_df.to_csv("nonlinearity_scores.csv", index=False)
+print(scores_df.head(10))
+
+# 3) ICE + PDP for BMI (pass NAME)
+PartialDependenceDisplay.from_estimator(
+    best, X,
+    features=["BMI"],                # <-- name, not index
+    feature_names=feat_names_full,
+    kind="both"                           # PDP + ICE
+)
+plt.tight_layout()
+plt.savefig("ice_bmi.png", dpi=200, bbox_inches="tight")
+plt.close('all'); gc.collect()
