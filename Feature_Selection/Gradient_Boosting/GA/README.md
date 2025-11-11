@@ -16,10 +16,8 @@ This repository/script builds a **Gradient Boosting** model on maternal, socioec
 - [Requirements](#requirements)
 - [Data Expectations](#data-expectations)
 - [How It Works (Step by Step)](#how-it-works-step-by-step)
-- [Usage](#usage)
 - [Outputs](#outputs)
 - [Customization](#customization)
-- [Performance Tips](#performance-tips)
 - [Interpretation Notes](#interpretation-notes)
 - [Troubleshooting](#troubleshooting)
 
@@ -45,13 +43,6 @@ pip install numpy pandas scikit-learn matplotlib seaborn shap
 ## Data Expectations
 
 - Input file: `Metadata.Final.tsv` (tab-separated)
-- Must contain at least these columns:
-  - **Categorical:** `DRINKING_SOURCE`, `FUEL_FOR_COOK`, `TOILET`, `WEALTH_INDEX`
-  - **Continuous:** `PW_AGE`, `PW_EDUCATION`, `MAT_HEIGHT`, `MAT_WEIGHT`, `BMI`
-  - **Binary:** `BABY_SEX`, `CHRON_HTN`, `DIABETES`, `HH_ELECTRICITY`, `TB`, `THYROID`, `TYP_HOUSE`
-  - **Target:** `GAGEBRTH`
-
-> If you want to use CLI-driven column sets instead of the hardcoded lists, enable those lines and pass comma-separated names.
 
 ---
 
@@ -87,7 +78,6 @@ pip install numpy pandas scikit-learn matplotlib seaborn shap
    - Saves the **SHAP summary plot** of main effects.
 
 9. **SHAP (Interactions)**  
-   - Subsamples rows (≤2000) to keep runtime/memory manageable.
    - Computes `shap_interaction_values` and aggregates mean |interaction| across samples, yielding an **interaction matrix**.
    - Prints top-10 interacting pairs.
    - Produces a **heatmap** of interactions for the **top-K** features by main |SHAP|.
@@ -102,16 +92,7 @@ pip install numpy pandas scikit-learn matplotlib seaborn shap
 
 ---
 
-## Usage
 
-```bash
-python your_script_name.py
-```
-
-- The script uses **hardcoded column lists** by default.  
-  If you prefer **CLI-driven columns**, uncomment the CLI lines and pass comma-separated names for categorical / continuous / binary in `sys.argv[1:3]`.
-
----
 
 ## Outputs
 
@@ -138,20 +119,12 @@ Generated files include (names may vary slightly):
 ## Customization
 
 - **Top-K for interaction heatmap:** `K = min(30, len(feature_names))`
-- **Row subsample for interactions:** `row_sample = min(2000, n_rows)`
 - **RFE feature count:** `n_feats = min(20, Xtr.shape[1])`
 - **Non-linear plot count:** change `nl_df.head(8)`
 - **Grid search space:** edit `param_grid_gb`
 
 ---
 
-## Performance Tips
-
-- SHAP **interactions** are `O(F^2 × N)`; keep `K` moderate and sample rows.
-- Large OHE can explode feature count; confirm `n_feats` ≤ #columns for RFE.
-- Set `n_jobs=-1` for parallel CV; keep memory in mind on large datasets.
-
----
 
 ## Interpretation Notes
 
