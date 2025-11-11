@@ -1,93 +1,173 @@
-# 🧠 Gradient Boosting Regression + SHAP Interaction Pipeline
 
-A reproducible pipeline for modeling **Gestational Age at Birth (GAGEBRTH)** from mixed feature types (categorical, continuous, binary) using **Gradient Boosting**, **SHAP explainability** (main + interaction effects), **PDPs**, and **residual diagnostics**.
+# GA/PTB Covariate Feature Selection & Explainability Pipeline
 
-> This README documents the exact script you provided and adds best‑practice guidance, caveats, and optional extensions so you (or a collaborator) can run, audit, and extend the workflow with confidence.
+This repository/script builds a **Gradient Boosting** model on maternal, socioeconomic, and clinical covariates to explain **Gestational Age (GA)**, then performs **model explainability** and **diagnostics** to:
+- Rank covariates by importance
+- Quantify **pairwise interactions** via SHAP
+- Detect **non-linear** features
+- Export plots for reporting and to inform a downstream **mixed-effects** association model (with `site` as a random effect and **mtDNA haplogroup** as the fixed effect of interest)
 
----
-
-## 🔎 What this pipeline does
-
-1. **Loads** `Metadata.Final.tsv` (tab‑separated).  
-2. **Selects** user‑specified feature columns (categorical, continuous, binary) and the target `GAGEBRTH`.  
-3. **Splits** into train/test (70/30).  
-4. **Preprocesses**: scales continuous, one‑hot encodes categorical, passes binary through.  
-5. **Trains** a **GradientBoostingRegressor** with **GridSearchCV**.  
-6. **Evaluates** on the hold‑out test set (MSE, R²).  
-7. **Explains** model with SHAP (summary plot, interaction summary, heatmap).  
-8. **Finds interactions**: prints top pairs and flags “significant” ones (> mean + 1 SD).  
-9. **Visualizes**: PDP for top 5 interactions and for RFE‑selected features; SHAP dependence plots.  
-10. **Diagnostics**: residuals vs. fitted and Q–Q plot on test residuals.
+> **Design choice:** This step intentionally **excludes** `site`, population labels, and **nDNA PCs** from feature selection, because those are structural/ancestry controls to be modeled later (e.g., `(1 | site)` in your GLMM). It also **excludes mtDNA haplogroup** since that is the predictor of interest to be tested in the final association model, not a nuisance covariate.
 
 ---
 
-## 📦 Requirements
+## Contents
+
+- [Requirements](#requirements)
+- [Data Expectations](#data-expectations)
+- [How It Works (Step by Step)](#how-it-works-step-by-step)
+- [Usage](#usage)
+- [Outputs](#outputs)
+- [Customization](#customization)
+- [Performance Tips](#performance-tips)
+- [Interpretation Notes](#interpretation-notes)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## Requirements
+
+- Python 3.9+
+- Packages:
+  - `numpy`, `pandas`
+  - `scikit-learn` ≥ 1.2 (for `OneHotEncoder(sparse_output=False)`); if older, use `sparse=False`
+  - `matplotlib`
+  - `seaborn`
+  - `shap`
+
+Install (example):
+```bash
+pip install numpy pandas scikit-learn matplotlib seaborn shap
+```
+
+---
+
+## Data Expectations
+
+- Input file: `Metadata.Final.tsv` (tab-separated)
+- Must contain at least these columns:
+  - **Categorical:** `DRINKING_SOURCE`, `FUEL_FOR_COOK`, `TOILET`, `WEALTH_INDEX`
+  - **Continuous:** `PW_AGE`, `PW_EDUCATION`, `MAT_HEIGHT`, `MAT_WEIGHT`, `BMI`
+  - **Binary:** `BABY_SEX`, `CHRON_HTN`, `DIABETES`, `HH_ELECTRICITY`, `TB`, `THYROID`, `TYP_HOUSE`
+  - **Target:** `GAGEBRTH`
+
+> If you want to use CLI-driven column sets instead of the hardcoded lists, enable those lines and pass comma-separated names.
+
+---
+
+## How It Works (Step by Step)
+
+1. **Load & Validate Data**  
+   Reads `Metadata.Final.tsv`, asserts all required columns exist, and selects the covariate matrix `X` and target `y=GAGEBRTH`.
+
+2. **Train/Test Split**  
+   70/30 split with `random_state=42` for reproducibility.
+
+3. **Preprocessing (ColumnTransformer)**  
+   - `StandardScaler` on continuous features
+   - `'passthrough'` for binary features
+   - `OneHotEncoder(handle_unknown='ignore', sparse_output=False)` for categorical → **dense** matrix to support GradientBoosting + SHAP
+
+4. **Model & Pipeline**  
+   - `GradientBoostingRegressor` wrapped in a `Pipeline` with the preprocessor to **avoid leakage**.
+   - `GridSearchCV` over `n_estimators`, `learning_rate`, and `max_depth` with 5-fold `KFold(shuffle=True)`.
+
+5. **Evaluation**  
+   Prints best hyperparameters and evaluates on held-out test data (MSE, R²).
+
+6. **Feature Importances**  
+   Extracts `feature_importances_` from the fitted GB and prints top 10 (using the **expanded** feature names from the fitted preprocessor).
+
+7. **RFE (Recursive Feature Elimination)**  
+   Runs RFE on the **transformed** design (post-OHE) to select the top 20 features by model-based importance; prints their names.
+
+8. **SHAP (Main Effects)**  
+   - Builds a `TreeExplainer` on the trained GB.
+   - Computes SHAP values on the transformed training design.
+   - Saves the **SHAP summary plot** of main effects.
+
+9. **SHAP (Interactions)**  
+   - Subsamples rows (≤2000) to keep runtime/memory manageable.
+   - Computes `shap_interaction_values` and aggregates mean |interaction| across samples, yielding an **interaction matrix**.
+   - Prints top-10 interacting pairs.
+   - Produces a **heatmap** of interactions for the **top-K** features by main |SHAP|.
+   - Draws **2D Partial Dependence** plots for the top 5 pairs.
+   - Generates a **SHAP interaction summary** plot for the same **top-K** subset.
+
+10. **Non-Linearity Scoring + Plots**  
+    - For each feature, fits **linear** vs **cubic** regression to model *SHAP contribution* from the feature value; the ΔR² is a **nonlinearity score**.
+    - Prints the top-10 suspected non-linear features.
+    - Saves SHAP **dependence plots** (colored by strongest partner) for the top non-linear features.
+    - Saves 1D **PDP** panels for the same set.
+
+---
+
+## Usage
 
 ```bash
-# Recommended: Python 3.10+
-pip install pandas numpy scikit-learn shap matplotlib seaborn scipy
+python your_script_name.py
 ```
 
-> **Note**: SHAP interaction computations can be memory‑intensive for high‑dim OHE matrices. 16 GB RAM recommended; see **Troubleshooting** below.
+- The script uses **hardcoded column lists** by default.  
+  If you prefer **CLI-driven columns**, uncomment the CLI lines and pass comma-separated names for categorical / continuous / binary in `sys.argv[1:3]`.
 
 ---
 
-## 🗂️ Input data schema
+## Outputs
 
-- File: `Metadata.Final.tsv` (TSV)
-- **Target**: `GAGEBRTH` (continuous; e.g., days)
-- **Predictors**: three lists passed on the command line
-  - *Categorical* (e.g., `MainHap,Site`)
-  - *Continuous* (e.g., `Age,BMI`)
-  - *Binary* (e.g., `Sex,PTB`)
-- **Missing/invalid**: This script **does not** impute `NaN` and **does not** strip sentinel codes by default. Ensure your TSV has cleaned values or add imputers (see **Extensions**).
+Generated files include (names may vary slightly):
 
-Example minimal header:
-```
-Sample_ID	GAGEBRTH	MainHap	Site	Age	BMI	Sex	PTB
-```
+- `shap.summary_plot.GB.GA.png` — SHAP main-effects summary (beeswarm)
+- `shap_interactions_heatmap_top.png` — Heatmap of SHAP interactions among top-K important features
+- `pdp_top_interactions.png` — PDP grid for the top 5 interaction pairs
+- `shap_interaction_summary_topk.png` — SHAP **interaction** summary (beeswarm) for top-K features
+- `shap_dependence_<FEATURE>.png` — SHAP dependence plots for top non-linear features
+- `pdp_top_nonlinear.png` — PDP grid of the top non-linear candidates
+- Console prints:
+  - Best GB params
+  - Test MSE & R²
+  - Top 10 GB importances
+  - RFE-selected features
+  - Top 10 SHAP interaction pairs
+  - Top 10 non-linear features (ΔR² cubic vs linear)
 
----
-
-## 🚀 How to run
-
-```bash
-python regression_SHAP_pipeline.py "MainHap,Site" "Age,BMI" "Sex,PTB"
-```
-
-Arguments (in order):
-1) **Categorical columns** – comma‑separated (no spaces)  
-2) **Continuous columns** – comma‑separated  
-3) **Binary columns** – comma‑separated
-
-**What the script does with your args**  
-- Subsets the DataFrame to exactly those feature columns **plus** `GAGEBRTH`.  
-- Builds a preprocessing pipeline:
-  - `StandardScaler` for continuous  
-  - `OneHotEncoder(handle_unknown="ignore")` for categorical  
-  - passthrough for binary  
-- Trains `GradientBoostingRegressor` via `GridSearchCV` with:
-  ```python
-  {"n_estimators":[100,200], "learning_rate":[0.01,0.1], "max_depth":[3,5]}
-  ```
-- Evaluates test MSE & R².  
-- Computes SHAP values & interactions on the **training matrix**.  
-- Produces PDPs for **top interactions** and **RFE‑selected** features.  
-- Saves residual diagnostics on the **test set**.
+> **Note:** In the code, the print statement says `Saved SHAP summary plot to 'shap_summary_GB_GA.png'` but the actual filename is `shap.summary_plot.GB.GA.png`. You can update either to match.
 
 ---
 
-## 📈 Outputs (written to the working directory)
+## Customization
 
-| Filename | What it shows |
-|---|---|
-| `shap.summary_plot.GB.GA.png` | Global SHAP summary (importance & direction) |
-| `shap.summary_plot.Interaction.GB.GA.png` | SHAP interaction summary plot |
-| `FeatureInteractionHeatmap.GB.GA.png` | Mean |SHAP interaction| heatmap across features |
-| `PDP_Top5.GB.GA.png` | Partial dependence for the top 5 SHAP‑interaction pairs |
-| `PDP_RFE.GB.GA.png` | PDPs for the RFE‑selected features |
-| `shap.dependence_plot.<feature>.GB.GA.png` | Per‑feature SHAP dependence (non‑linearity & pairwise effects) |
-| `residuals_vs_fitted.png` | Residuals vs. fitted (heteroscedasticity / misspecification check) |
-| `qqplot_residuals.png` | Q–Q plot of residuals (normality check) |
-| **Console** | Best GB params, test MSE/R², top interactions, significant interactions |
+- **Top-K for interaction heatmap:** `K = min(30, len(feature_names))`
+- **Row subsample for interactions:** `row_sample = min(2000, n_rows)`
+- **RFE feature count:** `n_feats = min(20, Xtr.shape[1])`
+- **Non-linear plot count:** change `nl_df.head(8)`
+- **Grid search space:** edit `param_grid_gb`
 
+---
+
+## Performance Tips
+
+- SHAP **interactions** are `O(F^2 × N)`; keep `K` moderate and sample rows.
+- Large OHE can explode feature count; confirm `n_feats` ≤ #columns for RFE.
+- Set `n_jobs=-1` for parallel CV; keep memory in mind on large datasets.
+
+---
+
+## Interpretation Notes
+
+- **Positive SHAP** → pushes GA **higher** (longer gestation); **negative** → pushes GA **lower**.
+- For **one-hot dummies** (e.g., `cat__FUEL_FOR_COOK_3`), **red** points indicate “category present (1)”. Red on the **right** = category increases predicted GA.
+- Interaction patterns often reflect **site/ancestry confounding** when those variables are excluded by design. In the **final mixed model** (with `(1 | site)`), such effects may attenuate or flip direction.
+- Use this pipeline to **choose covariates**, then test **mtDNA haplogroup** in a separate GLMM/BRMS model.
+
+---
+
+## Troubleshooting
+
+- `ValueError: Missing columns in input` — Your TSV lacks one or more required fields; adjust the column lists or the data.
+- `TypeError: A sparse matrix was passed, but dense data is required` — Ensure `OneHotEncoder(..., sparse_output=False)` (or `sparse=False` on older sklearn).
+- `MemoryError` or very slow **interaction** plots — Reduce `row_sample` and `K`.
+
+---
+
+Happy modeling! Use these outputs to lock in your adjustment set, then proceed to your GA/PTB mixed-effects models with **mtDNA haplogroup** as the fixed effect of interest.
