@@ -100,16 +100,7 @@ pip install -U pandas numpy scikit-learn matplotlib seaborn shap
 
 ### 2) Prepare your data
 - Place `Metadata.Final.tsv` in the working directory.
-- Ensure the following columns exist (or edit the lists in the script):
-  - **Categorical:** `DRINKING_SOURCE, FUEL_FOR_COOK, TOILET, WEALTH_INDEX`
-  - **Continuous:** `PW_AGE, PW_EDUCATION, MAT_HEIGHT, MAT_WEIGHT, BMI`
-  - **Binary:** `BABY_SEX, CHRON_HTN, DIABETES, HH_ELECTRICITY, TB, THYROID, TYP_HOUSE`
-  - **Target:** `PTB` (0/1)
 
-### 3) Run
-```bash
-python your_script.py
-```
 
 Outputs will appear in the current directory (see below).
 
@@ -159,20 +150,4 @@ Outputs will appear in the current directory (see below).
 - **Calibration:** If well‑calibrated probabilities are required, consider `CalibratedClassifierCV` post‑fit or swap to a calibrated model.
 
 ---
-
-## Extending the script
-
-- Add more models (e.g., `XGBoost`, `LightGBM`, `CatBoost`) with the same preprocessing.
-- Try `class_weight="balanced"` with models that support it (e.g., Logistic Regression, Random Forest).
-- Add **threshold tuning** on the validation folds for a target recall/precision.
-- Log results to a CSV and persist the trained pipeline with `joblib.dump`.
-
----
-
-## Reproducibility checklist
-
-- Fix your package versions in `requirements.txt`.
-- Set `random_state` wherever possible.
-- Keep preprocessing and modeling in one `Pipeline`.
-- Don’t use the test set until you’ve finalized the model.
 
