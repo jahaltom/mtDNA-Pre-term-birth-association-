@@ -12,6 +12,13 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, r2_score
 import sys
 
+
+import random
+random.seed(42)
+np.random.seed(42)
+tf.random.set_seed(42)
+
+
 # Set to display all columns
 pd.set_option('display.max_columns', None)
 # Set to display all rows
