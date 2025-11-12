@@ -124,9 +124,39 @@ shap.summary_plot(sv[:, topk], X_te_dense[sub_ix][:, topk], feature_names=top_na
 plt.savefig("shap_summary_top30.png", bbox_inches="tight", dpi=200); plt.clf()
 
 # Interactions on top-k only
-sv_int = explainer.shap_interaction_values(X_te_dense[sub_ix][:, topk])
-if isinstance(sv_int, list):  # SHAP may return per-class list
-    sv_int = sv_int[1]        # positive class
+# Interactions on top-k only
+sv_int_raw = explainer.shap_interaction_values(X_te_dense[sub_ix][:, topk])
+sv_int_arr = np.asarray(sv_int_raw)
+
+classes_ = best.named_steps["clf"].classes_
+pos_idx = int(np.where(classes_ == 1)[0][0])  # index of PTB=1
+
+# Reduce to (N, F, F) for the positive class
+if isinstance(sv_int_raw, list):
+    # list-of-classes -> pick positive class directly
+    sv_int = np.asarray(sv_int_raw[pos_idx])
+elif sv_int_arr.ndim == 5:
+    # (N, F, C, F, C) -> (N, F, F) for pos class
+    sv_int = sv_int_arr[:, :, pos_idx, :, pos_idx]
+elif sv_int_arr.ndim == 4:
+    # handle (N, F, F, C) or (N, C, F, F) if that ever happens
+    if sv_int_arr.shape[2] == len(top_names):
+        # (N, F, F, C) -> pick pos_idx on last axis
+        sv_int = sv_int_arr[:, :, :, pos_idx]
+    elif sv_int_arr.shape[1] == len(top_names):
+        # (N, F, C, F) -> pick pos_idx on middle axis
+        sv_int = sv_int_arr[:, :, pos_idx, :]
+    else:
+        raise ValueError(f"Unexpected interaction shape {sv_int_arr.shape}")
+elif sv_int_arr.ndim == 3:
+    sv_int = sv_int_arr
+else:
+    raise ValueError(f"Unexpected interaction shape {sv_int_arr.shape}")
+
+# sanity check
+sv_int = np.asarray(sv_int)
+assert sv_int.ndim == 3 and sv_int.shape[1] == sv_int.shape[2] == len(top_names), \
+    f"Expected (N, F, F) with F={len(top_names)}, got {sv_int.shape}"
 
 names = top_names  # keep names synced to topk
 
@@ -138,6 +168,10 @@ shap.summary_plot(
     max_display=min(20, len(names)),
     show=False
 )
+plt.tight_layout()
+plt.savefig("shap_interaction_summary_topk.png", dpi=300, bbox_inches="tight")
+plt.close('all')
+
 plt.tight_layout()
 plt.savefig("shap_interaction_summary_topk.png", dpi=300, bbox_inches="tight")
 #plt.clf()
