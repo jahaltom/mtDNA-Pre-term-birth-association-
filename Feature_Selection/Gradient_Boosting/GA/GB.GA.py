@@ -8,6 +8,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.feature_selection import RFE
+import seaborn as sns
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
