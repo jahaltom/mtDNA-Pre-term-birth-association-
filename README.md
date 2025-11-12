@@ -84,7 +84,7 @@ sbatch workflow2.sh
 
 
 ```
-columnCat="('FUEL_FOR_COOK','MainHap','site')"
+columnCat="('FUEL_FOR_COOK','site')"
 columnCont="('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI','TOILET','WEALTH_INDEX','DRINKING_SOURCE')"
 columnBin="('BABY_SEX','CHRON_HTN','DIABETES','HH_ELECTRICITY','TB','THYROID','TYP_HOUSE')"
 
