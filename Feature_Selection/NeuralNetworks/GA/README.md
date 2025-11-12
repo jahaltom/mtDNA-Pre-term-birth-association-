@@ -12,7 +12,7 @@ This script builds and evaluates a **feedforward neural network (regression)** t
 It includes:
 - Full preprocessing with **StandardScaler** (continuous), **OneHotEncoder** (categorical), and passthrough for binary features.
 - A **tunable deep neural network** built via `keras_tuner.RandomSearch`.
-- Evaluation using **MSE** and **R²**.
+- Evaluation using **MSE** , **MAE** and **R²**.
 - **SHAP explainability** (DeepExplainer) for feature importance and dependence plots.
 - Automatic plotting of results and saving to file.
 
