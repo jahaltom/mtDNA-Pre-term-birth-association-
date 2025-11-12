@@ -20,8 +20,6 @@ binary_columns      = sys.argv[3].split(',')
 
 
 
-ban = {"MainHap","haplogroup","Haplogroup","site","Site"}
-assert not (ban & set(categorical_columns+continuous_columns+binary_columns)), "Haplogroup/site must not be in covariate set."
 
 X = df[categorical_columns + continuous_columns + binary_columns].copy()
 y = df["PTB"].astype(int)
