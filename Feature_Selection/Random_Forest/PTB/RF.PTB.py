@@ -13,23 +13,10 @@ import seaborn as sns
 # --- IO ---
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
 
-#categorical_columns = sys.argv[1].split(',')
-#continuous_columns  = sys.argv[2].split(',')
-#binary_columns      = sys.argv[3].split(',')
-# Columns
-categorical_columns = [
-    'DRINKING_SOURCE','FUEL_FOR_COOK','TOILET',
-    'WEALTH_INDEX'
-]
-continuous_columns  = [
-    'PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI'
-]
-binary_columns      = [
-    'BABY_SEX','CHRON_HTN','DIABETES','HH_ELECTRICITY','TB','THYROID','TYP_HOUSE'
-]
+categorical_columns = sys.argv[1].split(',')
+continuous_columns  = sys.argv[2].split(',')
+binary_columns      = sys.argv[3].split(',')
 
-ban = {"MainHap","haplogroup","Haplogroup","site","Site"}
-assert not (ban & set(categorical_columns+continuous_columns+binary_columns)), "Haplogroup/site must not be in covariate set."
 
 X = df[categorical_columns + continuous_columns + binary_columns].copy()
 y = df["PTB"].astype(int)
