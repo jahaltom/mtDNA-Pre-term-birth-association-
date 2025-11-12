@@ -203,6 +203,12 @@ tuner.search(
 
 best_model = tuner.get_best_models(1)[0]
 
+best_hps = tuner.get_best_hyperparameters(1)[0]
+print("Best hyperparameters:")
+for k, v in best_hps.values.items():
+    print(f"  {k}: {v}")
+
+
 # -----------------------------
 # Final evaluation on untouched test set
 # -----------------------------
