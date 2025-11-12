@@ -46,6 +46,8 @@ It includes:
    The `HyperModel` defines a flexible multi-layer ReLU network with optional dropout layers.  
    - Tunable parameters: number of units per layer, number of layers (1–3), dropout rate, learning rate.  
    - Compiled with `Adam` optimizer, loss = MSE.
+   - Random seeds for reproducibility ```import random; random.seed(42); np.random.seed(42); tf.random.set_seed(42)```
+
 
 5. **Hyperparameter tuning**
    - Conducted using `keras_tuner.RandomSearch`
