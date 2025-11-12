@@ -325,3 +325,26 @@ for feat in num_feats:
 best_model.save(os.path.join(OUTDIR, "NN.PTB_best_model.keras"))
 print(f"\nSaved model to {os.path.join(OUTDIR, 'NN.PTB_best_model.keras')}")
 print(f"Outputs in: {OUTDIR}")
+
+
+
+
+
+
+
+
+
+
+results_df = pd.DataFrame({
+    "y_test": y_test,
+    "y_prob": y_prob,
+    "y_pred": y_pred,
+})
+results_df.to_csv(os.path.join(OUTDIR, "NN.PTB_test_predictions.tsv"), sep="\t", index=False)
+
+with open(os.path.join(OUTDIR, "NN.PTB_metrics.txt"), "w") as f:
+    f.write(f"ROC AUC: {roc_auc_score(y_test, y_prob):.4f}\n")
+    f.write(f"PR  AUC: {average_precision_score(y_test, y_prob):.4f}\n")
+    f.write("\nClassification report @0.5:\n")
+    f.write(classification_report(y_test, y_pred, digits=3))
+
