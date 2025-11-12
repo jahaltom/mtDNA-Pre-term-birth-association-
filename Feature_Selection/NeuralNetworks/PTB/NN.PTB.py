@@ -39,14 +39,9 @@ os.environ["PYTHONHASHSEED"] = str(SEED)
 
 
 
-categorical_columns = ['FUEL_FOR_COOK','site']
-continuous_columns  = [
-    'PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI','DRINKING_SOURCE','TOILET',
-    'WEALTH_INDEX'
-]
-binary_columns      = [
-    'BABY_SEX','CHRON_HTN','DIABETES','HH_ELECTRICITY','TB','THYROID','TYP_HOUSE'
-]
+categorical_columns = sys.argv[1].split(',')
+continuous_columns = sys.argv[2].split(',')
+binary_columns = sys.argv[3].split(',')
 
 
 
