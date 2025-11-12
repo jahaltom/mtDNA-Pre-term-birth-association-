@@ -20,14 +20,15 @@ pd.set_option('display.max_rows', None)
 # Load the dataset
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
-
-df = df[sys.argv[1].split(',') + sys.argv[2].split(',') + sys.argv[3].split(',') + ["GAGEBRTH"]]
-
-
 # Define features
 categorical_columns = sys.argv[1].split(',')
 continuous_columns = sys.argv[2].split(',')
 binary_columns = sys.argv[3].split(',')
+
+df = df[categorical_columns + continuous_columns + binary_columns + ["GAGEBRTH"]]
+
+
+
 
 X = df[categorical_columns + continuous_columns+ binary_columns]
 y = df['GAGEBRTH']  
