@@ -2,7 +2,6 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.models import Sequential
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from keras_tuner import RandomSearch, HyperModel
@@ -40,10 +39,45 @@ df = df[categorical_columns + continuous_columns + binary_columns + ["GAGEBRTH"]
 X = df[categorical_columns + continuous_columns+ binary_columns]
 y = df['GAGEBRTH']  
 
+
+
+
+
 # Train-test split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+from sklearn.model_selection import GroupShuffleSplit
+
+# After loading df and defining X, y:
+groups = df["site"].values  # even if site is not in X
+
+# --- 1) Site-aware train vs test split ---
+gss1 = GroupShuffleSplit(n_splits=1, test_size=0.30, random_state=42)
+train_idx, test_idx = next(gss1.split(X, y, groups=groups))
+
+X_train = X.iloc[train_idx]
+y_train = y.iloc[train_idx]
+X_test  = X.iloc[test_idx]
+y_test  = y.iloc[test_idx]
+
+groups_train = groups[train_idx]
+
+# --- 2) Site-aware train vs val split within the train set ---
+gss2 = GroupShuffleSplit(n_splits=1, test_size=0.20, random_state=43)
+train_idx2, val_idx = next(
+    gss2.split(X_train, y_train, groups=groups_train)
+)
+
+X_tr = X_train.iloc[train_idx2]
+y_tr = y_train.iloc[train_idx2]
+X_val = X_train.iloc[val_idx]
+y_val = y_train.iloc[val_idx]
+
+
+
+
+
 
 # Preprocessing pipeline
+
 preprocessor = ColumnTransformer(
     transformers=[
         ('num', StandardScaler(), continuous_columns),
@@ -52,9 +86,11 @@ preprocessor = ColumnTransformer(
     ]
 )
 
-# Preprocess the training data
-X_train_preprocessed = preprocessor.fit_transform(X_train)
+# Fit preprocessor only on training part (X_tr)
+X_tr_preprocessed   = preprocessor.fit_transform(X_tr)
+X_val_preprocessed  = preprocessor.transform(X_val)
 X_test_preprocessed = preprocessor.transform(X_test)
+
 
 
 
@@ -86,7 +122,8 @@ class PTBHyperModel(HyperModel):
         return model
 
 # Initialize and run the tuner
-hypermodel = PTBHyperModel(input_shape=X_train_preprocessed.shape[1])
+hypermodel = PTBHyperModel(input_shape=X_tr_preprocessed.shape[1])
+
 tuner = RandomSearch(
     hypermodel,
     objective='val_mean_squared_error',
@@ -95,7 +132,15 @@ tuner = RandomSearch(
     directory='model_tuning',
     project_name='gestational_age_prediction'
 )
-tuner.search(X_train_preprocessed, y_train, epochs=50, validation_split=0.2)
+
+tuner.search(
+    X_tr_preprocessed,
+    y_tr,
+    epochs=50,
+    validation_data=(X_val_preprocessed, y_val),  # <-- key change
+    verbose=1
+)
+
 
 # Get the best model
 best_model = tuner.get_best_models(num_models=1)[0]
@@ -131,7 +176,7 @@ plt.clf()
 
 
 # SHAP values and summary plot
-explainer = shap.DeepExplainer(best_model, X_train_preprocessed) 
+explainer = shap.DeepExplainer(best_model, X_tr_preprocessed) 
 shap_values = explainer.shap_values(X_test_preprocessed)
 
 
@@ -169,13 +214,3 @@ for feature in top_feature_names:
 
 # Save the best model
 best_model.save("NN.GA_best_model.h5")
-
-
-
-
-
-
-
-
-
-
