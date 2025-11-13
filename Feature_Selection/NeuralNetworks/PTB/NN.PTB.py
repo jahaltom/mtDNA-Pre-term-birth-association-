@@ -39,7 +39,7 @@ os.environ["PYTHONHASHSEED"] = str(SEED)
 
 
 
-categorical_columns = sys.argv[1].split(',')
+categorical_columns = [c for c in sys.argv[1].split(',') if c != "site"]
 continuous_columns = sys.argv[2].split(',')
 binary_columns = sys.argv[3].split(',')
 
@@ -48,21 +48,13 @@ binary_columns = sys.argv[3].split(',')
 # -----------------------------
 # IO
 # -----------------------------
-DATA_PATH = "Metadata.Final.tsv"
+
 OUTDIR = "ptb_nn_outputs"
 os.makedirs(OUTDIR, exist_ok=True)
 
-df = pd.read_csv(DATA_PATH, sep="\t")
+df = pd.read_csv("Metadata.Final.tsv", sep="\t")
 
-# Keep only needed columns
-needed_cols = categorical_columns + continuous_columns + binary_columns + ["PTB"]
-missing = [c for c in needed_cols if c not in df.columns]
-if missing:
-    raise ValueError(f"Missing columns in the dataset: {missing}")
 
-df = df[needed_cols].dropna()
-# Ensure PTB is int {0,1}
-df["PTB"] = df["PTB"].astype(int)
 
 X = df[categorical_columns + continuous_columns + binary_columns]
 y = df["PTB"]
@@ -70,17 +62,40 @@ y = df["PTB"]
 # -----------------------------
 # Split: train / val / test
 # -----------------------------
-X_train, X_temp, y_train, y_temp = train_test_split(
-    X, y, test_size=0.30, random_state=SEED, stratify=y
-)
-X_val, X_test, y_val, y_test = train_test_split(
-    X_temp, y_temp, test_size=0.50, random_state=SEED, stratify=y_temp
-)
+groups = df["site"].values
 
-# Force numpy arrays for y to avoid pandas indexing quirks with class_weight
-y_train = y_train.to_numpy().astype(int)
-y_val   = y_val.to_numpy().astype(int)
-y_test  = y_test.to_numpy().astype(int)
+
+from sklearn.model_selection import GroupShuffleSplit, train_test_split
+
+if df["site"].nunique() >= 2:
+    # --- site-aware splits ---
+    gss1 = GroupShuffleSplit(n_splits=1, test_size=0.30, random_state=SEED)
+    train_idx, test_idx = next(gss1.split(X, y, groups=groups))
+
+    X_train_full = X.iloc[train_idx]
+    y_train_full = y.iloc[train_idx]
+    X_test       = X.iloc[test_idx]
+    y_test       = y.iloc[test_idx]
+    groups_train = groups[train_idx]
+
+    gss2 = GroupShuffleSplit(n_splits=1, test_size=0.50, random_state=SEED + 1)
+    tr_idx, val_idx = next(gss2.split(X_train_full, y_train_full, groups=groups_train))
+
+    X_train = X_train_full.iloc[tr_idx]
+    y_train = y_train_full.iloc[tr_idx]
+    X_val   = X_train_full.iloc[val_idx]
+    y_val   = y_train_full.iloc[val_idx]
+
+else:
+    # --- single-site: fall back to stratified random splits ---
+    X_train, X_temp, y_train, y_temp = train_test_split(
+        X, y, test_size=0.30, random_state=SEED, stratify=y
+    )
+    X_val, X_test, y_val, y_test = train_test_split(
+        X_temp, y_temp, test_size=0.50, random_state=SEED, stratify=y_temp
+    )
+
+
 
 # -----------------------------
 # Preprocessing (dense OHE)
@@ -347,4 +362,3 @@ with open(os.path.join(OUTDIR, "NN.PTB_metrics.txt"), "w") as f:
     f.write(f"PR  AUC: {average_precision_score(y_test, y_prob):.4f}\n")
     f.write("\nClassification report @0.5:\n")
     f.write(classification_report(y_test, y_pred, digits=3))
-
