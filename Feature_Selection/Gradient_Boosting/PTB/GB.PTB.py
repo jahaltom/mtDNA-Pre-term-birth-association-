@@ -65,6 +65,16 @@ sample_weight = np.where(y_tr==1, pos_wt, 1.0)
 
 
 
+
+
+
+
+
+
+
+
+
+
 if df["site"].nunique() >= 2: 
     groups = df.loc[X_tr.index, "site"]
     skf = GroupKFold(n_splits=df["site"].nunique())
@@ -80,6 +90,14 @@ else:
     skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     gb_cv = GridSearchCV(pipe, param_grid, scoring="average_precision", cv=skf, n_jobs=-1)
     gb_cv.fit(X_tr, y_tr, clf__sample_weight=sample_weight)
+
+
+
+
+
+
+
+
 
 
 
@@ -109,6 +127,9 @@ feat_names = best.named_steps["pre"].get_feature_names_out()
 explainer = shap.TreeExplainer(best.named_steps["clf"])
 sub_ix = np.random.RandomState(42).choice(X_te_dense.shape[0], size=min(2000, X_te_dense.shape[0]), replace=False)
 sv = explainer.shap_values(X_te_dense[sub_ix])
+if isinstance(sv, list):
+    sv = sv[1] if len(sv) > 1 else sv[0]  # typically class 1 for PTB
+
 
 # Mean |SHAP| importances
 mean_abs = np.abs(sv).mean(axis=0)
@@ -235,6 +256,9 @@ for t in feat_names_full:
         raw.append(name)
         seen.add(name)
 feat_names_full=raw
+
+raw = []
+seen = set()
 
 for t in top_names:
     # remove num__, bin__, cat__
