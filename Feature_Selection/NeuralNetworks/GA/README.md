@@ -1,123 +1,189 @@
 
-# Neural Network for Gestational Age (GA) Prediction — Working Version
+# Neural Network for Gestational Age Prediction (Site-Aware, SHAP-Interpretable)
 
-This document summarizes the **current TensorFlow/Keras neural network pipeline** for predicting gestational age (GAGEBRTH). It describes what the code does, how to run it, what files it generates, and how to interpret its output — **exactly as it currently works**, without suggesting modifications.
-
----
-
-## 🧩 Overview
-
-This script builds and evaluates a **feedforward neural network (regression)** to predict gestational age using a mix of maternal and environmental covariates.
-
+This repository contains a **site-aware neural network pipeline** for predicting **gestational age (GAGEBRTH)** from multivariate metadata.  
 It includes:
-- Full preprocessing with **StandardScaler** (continuous), **OneHotEncoder** (categorical), and passthrough for binary features.
-- A **tunable deep neural network** built via `keras_tuner.RandomSearch`.
-- Evaluation using **MSE** , **MAE** and **R²**.
-- **SHAP explainability** (DeepExplainer) for feature importance and dependence plots.
-- Automatic plotting of results and saving to file.
+
+- **Group-aware train/validation/test splitting** (prevents site leakage)
+- **Keras Tuner hyperparameter optimization**
+- **Neural network regression model**
+- **Full preprocessing pipeline (StandardScaler + OneHotEncoder)**
+- **SHAP-based feature interpretation**
+- **Model evaluation and visualization**
+
+This pipeline is specifically designed for **multi-site biological datasets**, where avoiding site leakage is essential for honest generalization.
 
 ---
 
-## ⚙️ Pipeline summary
+## 📌 Why Site-Aware Splitting?
 
-1. **Input**  
-   Reads `Metadata.Final.tsv` and filters for valid entries (removes `-88`, `-77` values).  
-   Keeps only selected columns passed through command line:
-   ```bash
-   python script.py cat_cols cont_cols bin_cols
-   ```
-   Example:
-   ```bash
-   python NN_GA.py DRINKING_SOURCE,FUEL_FOR_COOK,TOILET,WEALTH_INDEX PW_AGE,PW_EDUCATION,MAT_HEIGHT,MAT_WEIGHT,BMI BABY_SEX,CHRON_HTN,DIABETES,HH_ELECTRICITY,TB,THYROID,TYP_HOUSE
-   ```
+Traditional `train_test_split()` mixes samples across sites, which causes:
 
-2. **Feature groups**
-   - `categorical_columns`: e.g., water source, toilet type, fuel type, wealth index  
-   - `continuous_columns`: maternal age, education, height, weight, BMI  
-   - `binary_columns`: baby sex, chronic hypertension, diabetes, etc.  
+- Inflated model performance  
+- SHAP falsely identifying site-correlated features  
+- Poor generalization to unseen cohorts  
+- Hidden batch/population structure influencing predictions  
 
-3. **Preprocessing**
-   Uses a `ColumnTransformer` with:
-   - `StandardScaler` for continuous variables  
-   - passthrough for binaries  
-   - `OneHotEncoder(handle_unknown='ignore')` for categoricals  
+To avoid this, the workflow uses:
 
-4. **Model architecture**
-   The `HyperModel` defines a flexible multi-layer ReLU network with optional dropout layers.  
-   - Tunable parameters: number of units per layer, number of layers (1–3), dropout rate, learning rate.  
-   - Compiled with `Adam` optimizer, loss = MSE.
-   - Random seeds for reproducibility ```import random; random.seed(42); np.random.seed(42); tf.random.set_seed(42)```
+### **GroupShuffleSplit**
+- Ensures **entire sites** are held out during:  
+  ✔ Train → Test split  
+  ✔ Train → Validation split  
 
-
-5. **Hyperparameter tuning**
-   - Conducted using `keras_tuner.RandomSearch`
-   - Up to `max_trials=10`, each executed twice (`executions_per_trial=2`)
-   - Objective: minimize validation MSE
-
-6. **Evaluation**
-   - Computes **MSE** and **R²** on the test set  
-   - Generates scatter plot of **Actual vs Predicted Gestational Age** (`ActualvsPredicted_GestationalAge.NN.GA.png`)
-
-7. **Explainability**
-   - SHAP DeepExplainer computes feature attributions.  
-   - Creates SHAP **summary plot** (`shap_summary_plot.NN.GA.png`) and **dependence plots** for top features.  
-   - Prints top 10 features with highest mean |SHAP| values.
-
-8. **Output**
-   - `NN.GA_best_model.h5` — best model (Keras HDF5 format)  
-   - `shap_summary_plot.NN.GA.png` — global importance plot  
-   - `shap.dependence_plot.NN.GA.<feature>.png` — feature-level SHAP plots  
-   - `ActualvsPredicted_GestationalAge.NN.GA.png` — performance visualization  
+This makes both training and evaluation *site-independent*, producing a model that reflects true biological signal rather than site artifacts.
 
 ---
 
-## 📊 Interpretation guide
+## 🧬 Pipeline Overview
 
-| Output | Meaning |
-|--------|----------|
-| **MSE** | Mean Squared Error — smaller is better (average squared prediction deviation). |
-| **R²** | Coefficient of determination — how much variance in GA the model explains. |
-| **SHAP summary plot** | Each point = one sample × feature. Color = feature value, x-position = contribution to GA. |
-| **Dependence plots** | Show how a feature’s value influences predicted GA (nonlinearity or saturation indicates complex effects). |
-| **Top SHAP features** | Features with highest average influence across the test set. |
+### 1. **Load and filter dataset**
+The script loads the metadata table and selects the required features plus `GAGEBRTH`.
 
----
+### 2. **Define feature groups**
+You pass three comma-separated lists to the script:
+- `categorical_columns`
+- `continuous_columns`
+- `binary_columns`
 
-## 📁 Files generated
+### 3. **Site-aware splitting**
+Two levels of group-aware splitting:
 
-| File | Description |
-|------|-------------|
-| `NN.GA_best_model.h5` | Saved Keras model for reuse. |
-| `ActualvsPredicted_GestationalAge.NN.GA.png` | Scatter plot of actual vs predicted GA. |
-| `shap_summary_plot.NN.GA.png` | SHAP summary (global importance). |
-| `shap.dependence_plot.NN.GA.<feature>.png` | Individual dependence plots for each top SHAP feature. |
+1. **Train/Test**  
+2. **Train/Validation**
 
----
+This guarantees no overlap in site labels across splits.
 
-## 🧠 Notes on DeepSHAP
+### 4. **Preprocessing**
+A `ColumnTransformer` handles:
+- Standardization of continuous features  
+- Passthrough of binary features  
+- OneHotEncoding of categorical features  
 
-- Uses `shap.DeepExplainer(best_model, X_train_preprocessed)` directly.  
-- SHAP values are squeezed for plotting (`np.squeeze(..., axis=2)`).  
-- Works fine as-is; no manual shape handling needed since results are stable.  
-- Dependence plots loop over the top 20 SHAP-ranked features.
+Preprocessor is **fit only on training data**, then applied to validation and test sets.
 
----
+### 5. **Neural Network Model**
+Hyperparameterized using **Keras Tuner**:
 
-## 💾 Model usage
+- Dense layers (32–512 units)
+- Optional extra layers
+- Dropout (0–0.5)
+- L2 regularization
+- Learning rate search (`1e-4` → `1e-2`)
+- Linear output layer for regression
 
-Reload the model later:
-```python
-from tensorflow.keras.models import load_model
-model = load_model("NN.GA_best_model.h5")
-preds = model.predict(X_new_preprocessed)
+### 6. **SHAP Interpretation**
+Using `shap.DeepExplainer`:
+
+- SHAP summary plot  
+- Top 20 features ranked by mean |SHAP|  
+- SHAP dependence plots  
+
+SHAP is much more reliable with site-aware splitting because the network can no longer cheat using site-level patterns.
+
+### 7. **Model evaluation**
+Metrics:
+
+- **MSE**
+- **MAE**
+- **R²**
+- Predicted vs Actual scatterplot
+
+All plots are saved as PNG files.
+
+### 8. **Model saving**
+Best model written as:
+```
+NN.GA_best_model.h5
 ```
 
 ---
 
-## ✅ Summary
+## 📂 File Outputs
 
-This script is **fully functional and stable**.  
-It performs end-to-end neural network regression with preprocessing, hyperparameter tuning, explainability via SHAP, and automated visualization.  
+| Output File | Description |
+|------------|-------------|
+| `ActualvsPredicted_GestationalAge.NN.GA.png` | Predicted vs actual scatter |
+| `shap_summary_plot.NN.GA.png` | Global SHAP feature importance |
+| `shap.dependence_plot.NN.GA.<feature>.png` | Dependence plots for top features |
+| `NN.GA_best_model.h5` | Trained neural network |
+| `model_tuning/` | Keras Tuner trials |
 
-It’s well-suited for exploratory nonlinear modeling of gestational age and complements your existing RF/GB pipelines.
+---
 
+## 🚀 Running the Script
+
+Example usage:
+
+```bash
+python nn_ga.py \
+  "MotherAge,MotherHeight,Education" \
+  "BMI,GAGE_PRE,PrenatalVisits" \
+  "is_smoker,is_married"
+```
+
+This corresponds to:
+
+- Categorical features = `"MotherAge,MotherHeight,Education"`
+- Continuous features = `"BMI,GAGE_PRE,PrenatalVisits"`
+- Binary features = `"is_smoker,is_married"`
+
+All features must exist in `Metadata.Final.tsv`.
+
+---
+
+## 🧠 Best Practices & Notes
+
+### ✔ Always use `GroupShuffleSplit` for multi-site data  
+This prevents the model from memorizing site effects.
+
+### ✔ Fit preprocessing ONLY on the training set  
+Avoids future information leaking into training.
+
+### ✔ SHAP improves dramatically  
+Without site leakage, SHAP reveals **true biological signal** instead of site artifacts.
+
+### ✔ Keras Tuner uses proper validation  
+Since validation is site-aware, hyperparameter tuning reflects generalization ability.
+
+---
+
+## 📌 Requirements
+
+```
+pandas
+numpy
+tensorflow
+keras-tuner
+scikit-learn
+matplotlib
+shap
+```
+
+---
+
+## 🧩 Future Extensions
+
+- Incorporate **GroupKFold** analog for repeated CV in deep learning  
+- Add **per-site SHAP decomposition**  
+- Implement **bootstrap SHAP stability analysis**  
+- Compare against RandomForest, GradientBoosting, XGBoost  
+- Add logging and reproducibility utilities  
+
+---
+
+## ✨ Citation / Acknowledgment
+
+If you use this workflow in a publication, cite:
+
+**"Site-aware neural network modeling with SHAP interpretation for gestational age prediction."**
+
+---
+
+## 📞 Contact
+For questions or improvements, feel free to contact the author.
+
+---
+
+Enjoy the analysis! 🚀  
+This README fully documents the site-aware neural network pipeline, preprocessing, SHAP interpretation, and rationale.
