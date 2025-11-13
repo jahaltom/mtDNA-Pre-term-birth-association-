@@ -1,343 +1,303 @@
-# Neural Network for Preterm Birth (PTB) Prediction
+# PTB Neural Network Classifier Pipeline
 
-## Overview
-
-This repository contains a full deep-learning pipeline for predicting **Preterm Birth (PTB)** as a binary outcome using:
-
-- TensorFlow/Keras fully-connected neural networks  
-- KerasTuner hyperparameter optimization  
-- Class-weighted training for imbalanced data  
-- Dense one-hot encoding + feature scaling via scikit-learn  
-- SHAP-based model explainability (global + local feature importance)  
-- ROC and Precision–Recall curve evaluation  
-- Automated saving of predictions, metrics, plots, and the final model
-
-The main script is designed to be run from the command line, taking lists of **categorical**, **continuous**, and **binary** predictor variables as arguments.
+This repository implements a **deep-learning pipeline** using **TensorFlow/Keras**, **Keras Tuner**, and **SHAP** to model **Preterm Birth (PTB)** from clinical, demographic, and genetic features.  
+It includes **site-aware splitting**, **feature preprocessing**, **hyperparameter search**, **model evaluation**, and **interpretability outputs**.
 
 ---
 
-## Input Data
+# 📌 Overview
 
-The script expects a tab-delimited file:
+This script:
 
-```text
-Metadata.Final.tsv
+1. Loads `Metadata.Final.tsv`
+2. Performs **site-aware train/validation/test splitting** using `GroupShuffleSplit`
+3. Applies preprocessing:
+   - Standardization for continuous variables  
+   - Passthrough for binary variables  
+   - One-hot encoding for categorical variables  
+4. Computes heuristic **class weights** to address imbalance  
+5. Builds & tunes a fully connected neural network via **Keras Tuner RandomSearch**
+6. Evaluates the best model on an untouched test set
+7. Generates:
+   - ROC curve  
+   - Precision–Recall curve  
+   - SHAP summary plot  
+   - SHAP dependence plots for top features  
+8. Saves predictions, metrics, and the final model
+
+All outputs are stored in:
+
 ```
-
-### Required Columns
-
-The file **must** contain:
-
-- All variables listed as:
-  - `categorical_columns`
-  - `continuous_columns`
-  - `binary_columns`
-- A binary target column:
-  - `PTB`  (0 = term, 1 = preterm)
-
-Any rows with missing values in these columns are dropped before modeling.
-
----
-
-## Script: `NN_PTB_final.py`
-
-This script implements the full PTB modeling pipeline you see in the code.
-
-### Command-Line Usage
-
-```bash
-python NN_PTB_final.py \
-  "CAT1,CAT2,CAT3" \
-  "CONT1,CONT2,CONT3" \
-  "BIN1,BIN2"
-```
-
-#### Example
-
-```bash
-python NN_PTB_final.py   "MainHap,SubHap,Site"   "Age,BMI,PC1,PC2,PC3"   "Diabetes,CHRON_HTN"
-```
-
-Arguments:
-
-1. `sys.argv[1]`: comma-separated categorical feature names  
-2. `sys.argv[2]`: comma-separated continuous feature names  
-3. `sys.argv[3]`: comma-separated binary feature names  
-
-These names **must** match column names in `Metadata.Final.tsv`.
-
----
-
-## Data Processing Workflow
-
-1. **Load data**
-
-   ```python
-   DATA_PATH = "Metadata.Final.tsv"
-   df = pd.read_csv(DATA_PATH, sep="\t")
-   ```
-
-2. **Column validation**
-
-   The script verifies that all requested feature columns and the `PTB` column exist in the dataframe. If not, it raises a `ValueError`.
-
-3. **Filtering and cleaning**
-
-   - Subset to:
-     ```python
-     needed_cols = categorical_columns + continuous_columns + binary_columns + ["PTB"]
-     df = df[needed_cols].dropna()
-     ```
-   - Coerce `PTB` to integer 0/1.
-
-4. **Train/Validation/Test split**
-
-   - First split: 70% train / 30% temp (stratified by PTB)
-   - Second split: temp → 50% validation / 50% test (stratified)
-
-   Final proportions:
-   - Train: 70%
-   - Validation: 15%
-   - Test: 15%
-
-5. **Preprocessing**
-
-   Uses `ColumnTransformer`:
-
-   - `StandardScaler` on continuous features  
-   - `passthrough` for binary features  
-   - `OneHotEncoder(handle_unknown="ignore", sparse_output=False)` for categoricals  
-
-   Returns a **dense** NumPy array suitable for Keras and SHAP.
-
-6. **Class weighting**
-
-   To handle class imbalance, class weights are computed as:
-
-   ```python
-   class_weight[c] = total_samples / (n_classes * count_c)
-   ```
-
-   This gives approximately equal total weight to each class and is passed into `model.fit()`.
-
----
-
-## Model & Hyperparameter Tuning
-
-### Architecture (HyperModel)
-
-The network is built with a tunable number of layers and units:
-
-- Input layer with dimension = number of preprocessed features
-- First hidden layer:
-  - Dense
-  - Units: 64–512 (step 64), ReLU
-  - L2 regularization: {0, 1e-6, 1e-5, 1e-4}
-  - Dropout: 0.0 – 0.5 (step 0.1)
-- Additional hidden layers:
-  - 0 to 2 extra hidden layers
-  - Each with tunable units, L2 regularization, and dropout
-- Output layer:
-  - Dense(1, activation = "sigmoid")  → binary PTB prediction
-
-### Loss, Optimizer, Metrics
-
-- Loss: `binary_crossentropy`
-- Optimizer: `Adam` with tunable learning rate (1e-4 to 3e-3, log scale)
-- Metrics:
-  - `AUC` (ROC)
-  - `AUC` (PR) as `AUPRC`
-
-### Tuning Objective
-
-The KerasTuner `RandomSearch` is configured to **maximize**:
-
-```python
-objective = "val_AUPRC"
-```
-
-This focuses on performance for the minority PTB class.
-
-### Callbacks
-
-During tuning and training, the script uses:
-
-- `EarlyStopping` on `val_AUPRC` (patience = 10, restore best weights)
-- `ReduceLROnPlateau` on `val_AUPRC` (patience = 5, factor = 0.5)
-- `ModelCheckpoint`:
-  - Saves the best model by `val_AUPRC` as `checkpoint.best.keras` inside the output directory.
-
----
-
-## Reproducibility
-
-To make results as stable as possible:
-
-```python
-SEED = 42
-np.random.seed(SEED)
-random.seed(SEED)
-tf.random.set_seed(SEED)
-os.environ["PYTHONHASHSEED"] = str(SEED)
-```
-
-This stabilizes random splits, network initialization, and sampling.
-
----
-
-## Evaluation
-
-After tuning, the best model is evaluated on the **held-out test set**:
-
-- Classification report (@ threshold 0.5):
-  - Precision, recall, F1 for each class
-- ROC AUC
-- PR AUC (Average Precision)
-
-### Curves
-
-The script generates:
-
-1. **ROC curve**
-
-   Saved as:
-   ```text
-   ptb_nn_outputs/ROC_AUC_plot.NN.PTB.png
-   ```
-
-2. **Precision–Recall curve**
-
-   Saved as:
-   ```text
-   ptb_nn_outputs/PR_AUC_plot.NN.PTB.png
-   ```
-
----
-
-## SHAP Explainability
-
-The script uses **SHAP DeepExplainer** to interpret the trained neural network.
-
-### Steps:
-
-1. **Background sample**  
-   A subset of up to 200 training examples is used as the background:
-
-   ```python
-   bg_n = min(200, X_train_p.shape[0])
-   ```
-
-2. **Test sample for explanation**  
-   A subset of up to 500 test examples is used for SHAP plotting.
-
-3. **Explainer & SHAP values**
-
-   ```python
-   explainer = shap.DeepExplainer(best_model, background)
-   shap_values = explainer(X_test_sample)
-   ```
-
-   The script then robustly handles different SHAP return types and shapes, ensuring a 2D array `(n_samples, n_features)`.
-
-4. **Summary plot**
-
-   Global feature importance (top 20 features) is saved as:
-
-   ```text
-   ptb_nn_outputs/shap_summary_plot.NN.PTB.png
-   ```
-
-5. **Top 20 features by mean |SHAP|**
-
-   The script prints the top 20 most important features (by mean absolute SHAP value) to stdout.
-
-6. **Dependence plots**
-
-   For selected features (numeric or binary, e.g., `num__Age`, `bin__Diabetes`), dependence plots are generated and saved as:
-
-   ```text
-   ptb_nn_outputs/shap.dependence_plot.NN.PTB.<feature>.png
-   ```
-
----
-
-## Saved Outputs
-
-All outputs are written under:
-
-```text
 ptb_nn_outputs/
 ```
 
-### Files Produced
-
-- **Model:**
-  - `NN.PTB_best_model.keras` — Saved best Keras model.
-- **Curves:**
-  - `ROC_AUC_plot.NN.PTB.png`
-  - `PR_AUC_plot.NN.PTB.png`
-- **SHAP:**
-  - `shap_summary_plot.NN.PTB.png`
-  - `shap.dependence_plot.NN.PTB.<feature>.png` (multiple files)
-- **Predictions & Metrics:**
-  - `NN.PTB_test_predictions.tsv`  
-    - Columns: `y_test`, `y_prob`, `y_pred`
-  - `NN.PTB_metrics.txt`  
-    - ROC AUC  
-    - PR AUC  
-    - Full text classification report at 0.5 threshold
-
 ---
 
-## Dependencies
+# ⚙️ Requirements
 
-Install required packages (example):
+Install required packages:
 
 ```bash
-pip install   pandas   numpy   scikit-learn   matplotlib   tensorflow   keras-tuner   shap
+pip install numpy pandas matplotlib scikit-learn tensorflow keras-tuner shap
 ```
 
-> Note:  
-> - If you use scikit-learn < 1.2, change `sparse_output=False` to `sparse=False` in `OneHotEncoder`.  
-> - Some SHAP + TensorFlow versions may require compatible versions (e.g., SHAP ≥ 0.41+).
+Recommended Python version: **3.9+**
 
 ---
 
-## Recommended Folder Structure
+# 📁 Input File Requirements
 
-```text
-├── Metadata.Final.tsv
-├── NN_PTB_final.py
-├── ptb_nn_outputs/
-│   ├── NN.PTB_best_model.keras
-│   ├── ROC_AUC_plot.NN.PTB.png
-│   ├── PR_AUC_plot.NN.PTB.png
-│   ├── shap_summary_plot.NN.PTB.png
-│   ├── shap.dependence_plot.NN.PTB.<feature>.png
-│   ├── NN.PTB_test_predictions.tsv
-│   └── NN.PTB_metrics.txt
-└── README.md
+The script expects:
+
+### **Input TSV file:**  
+`Metadata.Final.tsv` (tab-delimited)
+
+### Required columns:
+
+| Column | Description |
+|--------|-------------|
+| `PTB` | Binary outcome (0/1) |
+| `site` | Site identifier (used for grouped splitting) |
+| Feature columns | Provided by user on command line |
+
+### Command line arguments define the feature sets:
+
+1. Categorical columns (comma-separated)
+2. Continuous columns (comma-separated)
+3. Binary columns (comma-separated)
+
+Example:
+
+```bash
+python ptb_nn.py "HAPLOGROUP,SUBHAP,SMOKING" "AGE,BMI,PC1,PC2,PC3" "CHRON_HTN,GEST_DIAB"
+```
+
+`site` is automatically excluded from categorical inputs.
+
+---
+
+# 🔀 Train / Validation / Test Splitting
+
+### If ≥2 sites:
+- 70% train+val  
+- 30% test  
+- Train split into 50% train / 50% validation  
+- **No site appears in more than one split**
+
+### If only 1 site:
+Stratified splitting is used instead.
+
+This ensures **no data leakage** between sites.
+
+---
+
+# 🧪 Preprocessing
+
+### OneHotEncoder
+Used for categorical variables:
+
+```python
+ohe = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
+```
+
+### ColumnTransformer
+
+```python
+preprocessor = ColumnTransformer(
+    transformers=[
+        ("num", StandardScaler(), continuous_columns),
+        ("bin", "passthrough", binary_columns),
+        ("cat", ohe, categorical_columns),
+    ]
+)
+```
+
+This produces a fully numerical, dense feature matrix ready for NN training.
+
+---
+
+# 🧮 Handling Class Imbalance
+
+The script computes balanced heuristic class weights:
+
+```python
+class_weight = {
+    0: (total/(2*n0)),
+    1: (total/(2*n1))
+}
+```
+
+These are passed into model training to compensate for imbalanced PTB labels.
+
+---
+
+# 🧱 Neural Network Architecture (Tuned)
+
+The model is defined using a **HyperModel**:
+
+- Tunable hidden layers (0–2)
+- Units per layer: 64 → 512
+- L2 regularization (0 → 1e-4)
+- Dropout (0 → 0.5)
+- Tunable learning rate
+
+Final output layer:
+
+```python
+Dense(1, activation="sigmoid")
+```
+
+Trained with:
+
+- Loss: `binary_crossentropy`
+- Metrics: ROC AUC, PR AUC
+
+---
+
+# 🔍 Hyperparameter Search
+
+The script uses:
+
+```python
+Keras Tuner → RandomSearch
+```
+
+### Objective:
+Maximize **validation AUPRC**
+
+### Search settings:
+
+- `max_trials = 12`
+- Up to 100 epochs per trial
+- Early stopping and learning rate reduction
+
+Results saved under:
+
+```
+ptb_nn_outputs/my_dir/ptb_hyperopt/
 ```
 
 ---
 
-## Notes and Future Extensions
+# 🧪 Final Evaluation (Untouched Test Set)
 
-- You can adapt this pipeline to other binary phenotypes by changing the target column name and feature lists.
-- To support multi-class outcomes, you would:
-  - Change output layer & activation (e.g., softmax)
-  - Use `categorical_crossentropy` or `sparse_categorical_crossentropy`
-  - Adjust SHAP interpretation accordingly.
-- If the dataset is extremely imbalanced, you could experiment with:
-  - SMOTE on the preprocessed input (commented in code)
-  - Focal loss instead of binary cross-entropy
-  - Alternative thresholding strategies beyond 0.5.
+The best model is evaluated on the true test set:
+
+- ROC AUC
+- PR AUC
+- Classification report
+- Predictions saved to:
+  ```
+  ptb_nn_outputs/NN.PTB_test_predictions.tsv
+  ```
 
 ---
 
-## Citation (Example)
+# 📈 Plots Generated
 
-If you use this pipeline in a manuscript, you can describe it along the lines of:
+Saved as PNG:
 
-> "We trained a class-weighted feed-forward neural network to predict preterm birth using clinical and demographic features. Hyperparameters were optimized via KerasTuner RandomSearch with validation AUPRC as the objective. Feature importance and effect directions were assessed using SHAP DeepExplainer on the final model."
+| Plot | File |
+|------|------|
+| ROC Curve | `ROC_AUC_plot.NN.PTB.png` |
+| Precision–Recall Curve | `PR_AUC_plot.NN.PTB.png` |
+| SHAP Summary | `shap_summary_plot.NN.PTB.png` |
+| SHAP Dependence Plots | One per top feature |
 
+---
+
+# 🧠 SHAP Interpretability
+
+The script uses **DeepExplainer** with:
+
+- 200-sample background
+- 500-sample test subset
+
+Outputs:
+
+- **Top 20 SHAP features**
+- Dependence plots for numerical & binary features
+
+---
+
+# 💾 Model Saving
+
+The final tuned model is written to:
+
+```
+ptb_nn_outputs/NN.PTB_best_model.keras
+```
+
+Load later using:
+
+```python
+import tensorflow as tf
+model = tf.keras.models.load_model("ptb_nn_outputs/NN.PTB_best_model.keras")
+```
+
+---
+
+# 📂 Output Directory Summary
+
+After running the script, expect:
+
+```
+ptb_nn_outputs/
+  ├── NN.PTB_best_model.keras
+  ├── checkpoint.best.keras
+  ├── NN.PTB_test_predictions.tsv
+  ├── NN.PTB_metrics.txt
+  ├── ROC_AUC_plot.NN.PTB.png
+  ├── PR_AUC_plot.NN.PTB.png
+  ├── shap_summary_plot.NN.PTB.png
+  ├── shap.dependence_plot.NN.PTB.<feature>.png
+  └── my_dir/
+       └── ptb_hyperopt/...
+```
+
+---
+
+# 🧩 Troubleshooting
+
+### → **ValueError: could not convert string to float**
+Check that continuous and binary columns contain strictly numeric values.
+
+### → **KeyError for feature columns**
+Make sure column names match exactly what is passed from the command line.
+
+### → **SHAP too slow**
+Reduce:
+```python
+bg_n, ts_n
+```
+inside SHAP section.
+
+### → **Inconsistent results on GPU**
+GPU introduces nondeterminism.  
+Use CPU for strict reproducibility.
+
+---
+
+# ✔️ Citation (Optional)
+
+If publishing, cite:
+
+- TensorFlow/Keras  
+- scikit-learn  
+- Keras Tuner  
+- SHAP  
+
+---
+
+# 🎉 You're Ready to Run!
+
+1. Prepare `Metadata.Final.tsv`  
+2. Choose feature lists  
+3. Run the script  
+4. Inspect:
+   - Metrics  
+   - Plots  
+   - SHAP  
+5. Use the saved model for downstream inference  
+
+Enjoy your fully documented PTB neural network pipeline!
