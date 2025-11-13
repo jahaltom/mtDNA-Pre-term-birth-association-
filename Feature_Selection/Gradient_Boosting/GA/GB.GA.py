@@ -89,7 +89,7 @@ if df["site"].nunique() >= 2:
         scoring="neg_mean_squared_error"
     )
     gb_cv.fit(X_train, y_train, groups=groups[X_train.index])
-else
+else:
     cv = KFold(n_splits=5, shuffle=True, random_state=42)
     gb_cv = GridSearchCV(pipe, param_grid_gb, cv=cv, n_jobs=-1)
     gb_cv.fit(X_train, y_train)
