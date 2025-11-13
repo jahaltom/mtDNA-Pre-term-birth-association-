@@ -61,7 +61,7 @@ pip install numpy pandas scikit-learn matplotlib seaborn shap
 
 4. **Model & Pipeline**  
    - `GradientBoostingRegressor` wrapped in a `Pipeline` with the preprocessor to **avoid leakage**.
-   - `GridSearchCV` over `n_estimators`, `learning_rate`, and `max_depth` with 5-fold `KFold(shuffle=True)`.
+   - `GridSearchCV` over `n_estimators`, `learning_rate`, and `max_depth` using an adaptive cross-validation strategy: when the dataset contains two or more sites, we used GroupKFold with one fold per site (site-out CV, passing site as the grouping variable), and when only a single site was present, we used standard 5-fold KFold(shuffle=True).
 
 5. **Evaluation**  
    Prints best hyperparameters and evaluates on held-out test data (MSE, R²).
