@@ -48,7 +48,7 @@ param_grid = {
     "clf__max_depth": [2, 3],
 }
 
-skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
 
 X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.3, stratify=y, random_state=42)
 
@@ -57,11 +57,39 @@ X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.3, stratify=y, rando
 pos_wt = (len(y_tr) - y_tr.sum()) / y_tr.sum()
 sample_weight = np.where(y_tr==1, pos_wt, 1.0)
 
-gs = GridSearchCV(pipe, param_grid, scoring="average_precision", cv=skf, n_jobs=-1)
-gs.fit(X_tr, y_tr, clf__sample_weight=sample_weight)
 
-best = gs.best_estimator_
-print("Best params:", gs.best_params_)
+
+
+
+
+
+
+
+if df["site"].nunique() >= 2: 
+    groups = df.loc[X_tr.index, "site"]
+    skf = GroupKFold(n_splits=df["site"].nunique())
+    gb_cv = GridSearchCV(
+        pipe,
+        param_grid,
+        cv=skf,
+        n_jobs=-1,
+        scoring="average_precision"
+    )
+    gb_cv.fit(X_tr, y_tr, groups=groups,clf__sample_weight=sample_weight)
+else:
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    gb_cv = GridSearchCV(pipe, param_grid, scoring="average_precision", cv=skf, n_jobs=-1)
+    gb_cv.fit(X_tr, y_tr, clf__sample_weight=sample_weight)
+
+
+
+
+
+
+
+
+best = gb_cv.best_estimator_
+print("Best params:", gb_cv.best_params_)
 
 # --- Eval ---
 proba = best.predict_proba(X_te)[:,1]
@@ -278,5 +306,3 @@ PartialDependenceDisplay.from_estimator(
 plt.tight_layout()
 plt.savefig("ice_bmi.png", dpi=200, bbox_inches="tight")
 plt.close('all'); gc.collect()
-
-
