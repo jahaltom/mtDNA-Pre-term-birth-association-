@@ -41,7 +41,8 @@ This repository/script trains a **GradientBoostingClassifier** to predict **PTB*
 
 8. **Hyperparameter grid + CV**
    - `param_grid = {"clf__n_estimators": [200, 400], "clf__learning_rate": [0.05, 0.1], "clf__max_depth": [2, 3]}`.
-   - `StratifiedKFold(n_splits=5, shuffle=True, random_state=42)` preserves class ratios per fold.
+
+   - If multiple sites are present, use  `GroupKFold ` to hold out entire sites per fold (prevents site leakage). If only one site is present, fall back to `StratifiedKFold(n_splits=5, shuffle=True, random_state=42)` to preserve PTB class balance across folds.
    - Split once into **train/test** (`test_size=0.3`, stratified, reproducible). Grid search runs **only on the training set** to avoid peeking at the test set.
       - The argument stratify=y in train_test_split ensures that both training and test sets preserve the same positive/negative ratio of PTB cases. This prevents sampling bias and stabilizes performance metrics across splits—especially important for imbalanced datasets.
 
