@@ -9,7 +9,7 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.feature_selection import RFE
 import seaborn as sns
-
+from sklearn.model_selection import GroupKFold
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
@@ -22,9 +22,14 @@ def evaluate_model_regression(model, X_test, y_test, model_name):
 
 
 # Define features
-categorical_columns = sys.argv[1].split(',')
-continuous_columns = sys.argv[2].split(',')
-binary_columns = sys.argv[3].split(',')
+# categorical_columns = sys.argv[1].split(',')
+# continuous_columns = sys.argv[2].split(',')
+# binary_columns = sys.argv[3].split(',')
+
+categorical_columns = ['FUEL_FOR_COOK','site']
+continuous_columns = ['PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI','TOILET','WEALTH_INDEX','DRINKING_SOURCE']
+binary_columns = ['BABY_SEX','CHRON_HTN','DIABETES','HH_ELECTRICITY','TB','THYROID','TYP_HOUSE']
+
 
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
 required = categorical_columns + continuous_columns + binary_columns + ["GAGEBRTH"]
@@ -62,9 +67,48 @@ param_grid_gb = {
     "gb__max_depth": [3, 5],
 }
 
-cv = KFold(n_splits=5, shuffle=True, random_state=42)
-gb_cv = GridSearchCV(pipe, param_grid_gb, cv=cv, n_jobs=-1)
-gb_cv.fit(X_train, y_train)
+
+
+
+
+
+
+
+
+
+
+
+if df["site"].nunique() >= 2: 
+    groups = df["site"]
+    cv = GroupKFold(n_splits=df["site"].nunique())
+    gb_cv = GridSearchCV(
+        pipe,
+        param_grid_gb,
+        cv=cv,
+        n_jobs=-1,
+        scoring="neg_mean_squared_error"
+    )
+    gb_cv.fit(X_train, y_train, groups=groups[X_train.index])
+else
+    cv = KFold(n_splits=5, shuffle=True, random_state=42)
+    gb_cv = GridSearchCV(pipe, param_grid_gb, cv=cv, n_jobs=-1)
+    gb_cv.fit(X_train, y_train)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 print("\nBest Parameters for Gradient Boosting:", gb_cv.best_params_)
 evaluate_model_regression(gb_cv.best_estimator_, X_test, y_test, "Gradient Boosting")
@@ -162,12 +206,11 @@ print("\nSaved SHAP summary plot to 'shap_summary_GB_GA.png'")
 # -----------------------------
 # SHAP INTERACTIONS (tree-only)
 # -----------------------------
-# WARNING: O(F^2 * N). Use a row subsample and cap features for speed.
 
-X_sub = X_train_preprocessed
+
 
 # Compute interaction values
-interaction_values = shap.TreeExplainer(gb_model).shap_interaction_values(X_sub)
+interaction_values = explainer.shap_interaction_values(X_train_preprocessed)
 # interaction_values shape: (n_samples, F, F)
 # Aggregate to mean absolute strength per pair
 interaction_matrix = np.abs(interaction_values).mean(axis=0)  # (F, F)
@@ -193,7 +236,7 @@ sub_names = feature_names[top_idx]
 
 plt.figure(figsize=(12, 10))
 sns.heatmap(pd.DataFrame(sub_mat, index=sub_names, columns=sub_names),
-            cmap="coolwarm", center=0, square=True, cbar=True)
+            cmap="coolwarm", square=True, cbar=True)
 plt.title("SHAP Interaction Heatmap (Top features)")
 plt.tight_layout()
 plt.savefig("shap_interactions_heatmap_top.png", dpi=300)
@@ -223,13 +266,14 @@ plt.savefig("pdp_top_interactions.png", dpi=300, bbox_inches="tight")
 plt.close()
 
 # --- SHAP interaction SUMMARY (top-K features you already picked) ---
-sv_int = shap.TreeExplainer(gb_model).shap_interaction_values(X_sub[:, top_idx])
+sv_int = explainer.shap_interaction_values(X_train_preprocessed[:, top_idx])
+
 if isinstance(sv_int, list):  # for classifiers
     sv_int = sv_int[0]
 
 shap.summary_plot(
     sv_int,
-    X_sub[:, top_idx],
+    X_train_preprocessed[:, top_idx],
     feature_names=sub_names,
     max_display=min(20, len(sub_names)),
     show=False
@@ -315,7 +359,3 @@ plt.suptitle("PDP — Non-linear Feature Candidates", y=1.02)
 plt.tight_layout()
 plt.savefig("pdp_top_nonlinear.png", dpi=300, bbox_inches="tight")
 plt.close()
-
-
-
-
