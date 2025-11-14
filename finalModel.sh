@@ -14,7 +14,7 @@ conda activate ML
 #Input file
 file="Metadata.M.tsv"
 # Define Categorical features
-columnsCat=('MainHap','DIABETES')
+columnsCat=('MainHap')
 # Define Continuous  features
 columnsCont=('BMI','PW_AGE')
 
@@ -31,9 +31,9 @@ columnCont_string=$( echo "${columnsCont[*]}")
 
 
 cp "$file" Final_Model/
-cp WeibullFiltering.py Final_Model/
-cp CombinePCA.py Final_Model/
-cp outlierPCA.py Final_Model/
+cp scripts/WeibullFiltering.py Final_Model/
+cp scripts/CombinePCA.py Final_Model/
+cp scripts/outlierPCA.py Final_Model/
 cd Final_Model/
 
 # Call the Python script with the column string as an argument
