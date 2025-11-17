@@ -1,115 +1,123 @@
 
-# Random Forest Regression for Gestational Age with SHAP Analysis
+# Random Forest + SHAP Pipeline for Gestational Age Prediction  
+### **Full Site-Aware Generalization + Interpretability Workflow**
 
-This script trains a **Random Forest regression model** to predict gestational age at birth (`GAGEBRTH`) from a mix of categorical, continuous, and binary predictors. It performs:
+This repository contains a complete machine‑learning workflow for predicting **gestational age at birth (GAGEBRTH)** using a **Random Forest Regressor** with:
 
-- Preprocessing (scaling, one‑hot encoding)
-- Hyperparameter tuning with cross‑validation (optionally **grouped by site**)
-- Model evaluation on a held‑out test set
-- Feature importance ranking
-- **SHAP-based** global and interaction analyses
+- Full preprocessing pipeline (scaling, OHE, passthrough)
+- **Group-aware outer test split by site**
+- **GroupKFold inner CV** for unbiased hyperparameter tuning
+- Automatic feature importance ranking
+- **SHAP summary, interaction, and nonlinearity analysis**
 - Partial Dependence Plots (PDPs)
-- A heuristic search for **non‑linear feature effects**
-
-The goal is to understand which features (and feature interactions) are most associated with gestational age and whether their effects appear linear or non‑linear in the fitted Random Forest.
+- RFE-based feature subset selection  
+- Full interpretability-oriented figures output to `.png`
 
 ---
 
-## 1. Input Data
+# 🧪 1. Overview
 
-The script expects a TSV file named:
+This script predicts gestational age while handling:
 
-```text
+- Mixed feature types (categorical, continuous, binary)
+- Multi-site population structure  
+- Site-level confounding  
+- Non-linear feature effects  
+- Feature–feature interaction effects  
+- Large one-hot encoded feature spaces  
+
+The design answers the scientifically important question:
+
+> **Does the model generalize to new sites, not just within existing sites?**
+
+It does this by performing:
+
+### **Outer split:**  
+- **GroupShuffleSplit** using `site` as the grouping variable
+
+### **Inner cross‑validation:**  
+- **GroupKFold** on training-only sites for hyperparameter tuning
+
+If `site` is missing or has <2 unique levels, the script automatically falls back to a standard `train_test_split` + `KFold` pipeline.
+
+---
+
+# 📁 2. Required Input File
+
+Your working directory must contain:
+
+```
 Metadata.Final.tsv
 ```
 
-in the working directory, with at least the following columns:
+Required columns:
 
-- **Outcome**
-  - `GAGEBRTH`: gestational age at birth (numeric, in days)
+- All categorical, continuous, and binary features you specify via command line
+- `GAGEBRTH` (regression target)
+- (Optional but recommended) `site` for group-aware splitting
 
-- **Predictors**
-  - Categorical features (you pass these in via `sys.argv[1]`)
-  - Continuous features (you pass these in via `sys.argv[2]`)
-  - Binary features (you pass these in via `sys.argv[3]`)
-
-Optionally (for group-wise CV):
-
-- `site`: site identifier used as a **grouping variable** for cross‑validation.  
-  - If present and `n_unique(site) ≥ 2`, the script uses **GroupKFold** over sites inside the training set.
-  - If `site` is missing or has `< 2` unique values in the training set, the script falls back to ordinary K‑fold CV.
-
-On startup, the script checks that all requested columns plus `GAGEBRTH` are present and will raise a `ValueError` if any are missing.
+The script will validate column presence and throw a descriptive error if anything is missing.
 
 ---
 
-## 2. Command‑Line Arguments
+# ▶️ 3. Running the Script
 
-The script is intended to be run from the command line and takes **three positional arguments**, each a comma‑separated list of column names:
+Run from command line as:
 
 ```bash
-python rf_ga_shap.py   "cat1,cat2,cat3"   "age,bmi,PC1,PC2,PC3"   "sex,smoker,diabetes"
+python script.py "cat1,cat2,cat3" "age,bmi,PC1,PC2" "PTB,is_female"
 ```
 
 Arguments:
 
-1. `sys.argv[1]`: **categorical_columns**  
-   - e.g. `"MainHap,SubHap,site"` (or you may choose to drop `site` here and keep it purely as a grouping variable)
-2. `sys.argv[2]`: **continuous_columns**  
-   - e.g. `"GAGEBRTH_mom,PC1,PC2,PC3,PC4,PC5"`
-3. `sys.argv[3]`: **binary_columns**  
-   - e.g. `"PTB,is_female,is_smoker"`
+1. `categorical_columns` → comma-separated list  
+2. `continuous_columns` → comma-separated list  
+3. `binary_columns` → comma-separated list  
 
-Internally, the script constructs:
+Example:
 
-```python
-categorical_columns = sys.argv[1].split(',')
-continuous_columns  = sys.argv[2].split(',')
-binary_columns      = sys.argv[3].split(',')
+```bash
+python rf_ga.py   "MainHap,SubHap,site"   "Age,MaternalBMI,PC1,PC2,PC3"   "PTB,is_female"
 ```
-
-and then uses these lists to build the model matrix.
 
 ---
 
-## 3. Preprocessing Pipeline
+# 🔧 4. Preprocessing Pipeline
 
-A `ColumnTransformer` is used to preprocess features:
+The script builds a `ColumnTransformer`:
 
-- **Continuous columns**
-  - Processed with `StandardScaler()`
-- **Binary columns**
-  - Passed through unchanged (`"passthrough"`)
-- **Categorical columns**
-  - One‑hot encoded using `OneHotEncoder(handle_unknown="ignore", sparse_output=False)`
+| Feature Type | Transformer |
+|--------------|-------------|
+| Continuous   | `StandardScaler()` |
+| Binary       | passthrough |
+| Categorical  | `OneHotEncoder(handle_unknown="ignore", sparse_output=False)` |
 
-The preprocessor is combined with the Random Forest model in a single `Pipeline`:
+This ensures:
 
-```python
-pipe = Pipeline([
-    ("prep", preprocessor),
-    ("rf", rf),
-])
-```
-
-This ensures that all transformations learned on the training data (scaling and one‑hot encoding) are applied consistently to the test set and throughout cross‑validation and SHAP analyses.
+- No sparse matrices (better SHAP compatibility)
+- Consistent preprocessing across CV, training, and test inference
 
 ---
 
-## 4. Model: Random Forest Regressor
+# 🌲 5. Random Forest Model
 
-The core model is a `RandomForestRegressor`, configured for regression on `GAGEBRTH`:
-
-- `n_estimators`: tuned over `[300, 600, 900]`
-- `max_depth`: tuned over `[None, 10, 20]`
-- `min_samples_leaf`: tuned over `[1, 2, 5]`
-- `max_features`: tuned over `["sqrt", 0.5]`
-- `random_state = 42`, `n_jobs = -1`
-
-These are arranged into a hyperparameter grid:
+Default estimator:
 
 ```python
-param_grid_rf = {
+RandomForestRegressor(
+    n_estimators=600,
+    max_depth=None,
+    min_samples_leaf=1,
+    max_features="sqrt",
+    n_jobs=-1,
+    random_state=42
+)
+```
+
+Hyperparameter grid:
+
+```python
+{
     "rf__n_estimators": [300, 600, 900],
     "rf__max_depth": [None, 10, 20],
     "rf__min_samples_leaf": [1, 2, 5],
@@ -119,262 +127,163 @@ param_grid_rf = {
 
 ---
 
-## 5. Train / Test Split and Cross‑Validation
+# 🧭 6. Site‑Aware Train/Test Split
 
-1. **Train/Test Split**
+If `site` exists and has ≥ 2 unique levels:
 
-   The script first does a standard random split:
+### **Outer split:**  
+- **GroupShuffleSplit(test_size=0.3)**  
+- Ensures test set contains **sites unseen during training**
 
-   ```python
-   X_train, X_test, y_train, y_test = train_test_split(
-       X, y, test_size=0.3, random_state=42
-   )
-   ```
+### **Inner split:**  
+- **GroupKFold** on training-only sites  
+- n_splits = min(5, number of unique training sites)
 
-   - `X` contains all predictors from the three user‑supplied feature lists.
-   - `y` is the gestational age (`GAGEBRTH`).
+Else:
 
-2. **Cross‑Validation Strategy**
-
-   - If a `site` column exists and there are at least 2 unique sites **within the training set**, the script uses **GroupKFold** with sites as groups to tune hyperparameters.
-   - Otherwise, it falls back to a standard `KFold` with 5 splits and shuffling.
-
-   In both cases, `GridSearchCV` is run with:
-
-   - `scoring="neg_mean_squared_error"`
-   - `n_jobs=-1` (parallelized)
-   - The `pipe` (preprocessor + RF) as the estimator
-   - The hyperparameter grid `param_grid_rf`
-
-The **best hyperparameters** are printed at the end of the grid search.
+- Falls back to `train_test_split` + `KFold(n_splits=5)`
 
 ---
 
-## 6. Model Evaluation
+# 📊 7. Evaluation Metrics
 
-After hyperparameter tuning, the script evaluates the best model on the held‑out test set using:
+After training and selecting best hyperparameters:
 
-- Mean Squared Error (MSE)
-- R‑squared (R²)
+- **Mean Squared Error (MSE)**
+- **R² score**
+
+Printed to console using:
 
 ```python
-Mean Squared Error (MSE): <value>
-R-squared: <value>
+evaluate_model_regression(...)
 ```
 
-This gives a quick quantitative sense of model fit.
+---
+
+# ⭐ 8. Feature Importance
+
+Two methods:
+
+### **Random Forest importance**
+- Extracted from `.feature_importances_`
+- Printed top 10 features
+- Useful for quick ranking
+
+### **Recursive Feature Elimination (RFE)**
+- Uses the fitted RF model cloned
+- Applied to preprocessed design matrix
+- Selects top ~20 most informative features
 
 ---
 
-## 7. Feature Importances and RFE
+# 🔍 9. SHAP Analysis
 
-### 7.1. Random Forest Feature Importances
+The script runs full SHAP interpretability:
 
-Using the best fitted pipeline:
+### **9.1 SHAP Summary Plot**
+Generates:
 
-- Extract the fitted preprocessor and RF model:
-
-  ```python
-  best_pipe   = rf_cv.best_estimator_
-  rf_model    = best_pipe.named_steps["rf"]
-  fitted_prep = best_pipe.named_steps["prep"]
-  ```
-
-- Get the feature names from the preprocessor:
-
-  ```python
-  feature_names = fitted_prep.get_feature_names_out()
-  ```
-
-- Retrieve and tabulate `rf_model.feature_importances_` aligned with `feature_names`.
-
-The script prints the **top 10 most important features** for quick inspection.
-
-### 7.2. Recursive Feature Elimination (RFE)
-
-The script then:
-
-1. Transforms `X_train` through the fitted preprocessor to get a dense design matrix.
-2. Clones the best RF model (`rf_for_rfe`).
-3. Runs `RFE` to select up to 20 features (or fewer if fewer features exist).
-
-The list of **RFE‑selected features** is printed, which gives a second, somewhat more conservative view of which features might be most important.
-
----
-
-## 8. SHAP Analyses
-
-The script uses the **SHAP TreeExplainer** for Random Forest to provide global and interaction‑level explanations.
-
-### 8.1. SHAP Summary Plot
-
-- Fits a `shap.TreeExplainer(rf_model)` on the dense, preprocessed training data.
-- Computes SHAP values for all samples and features.
-- Generates a **summary plot** (beeswarm) and saves it as:
-
-```text
+```
 shap.summary_plot.RF.GA.png
 ```
 
-This figure ranks features by overall importance and shows the direction and spread of their effects.
+Shows:
 
-### 8.2. SHAP Interaction Values and Heatmap
+- Global feature ranking
+- Directional effects
+- Density of contributions per feature
 
-- Computes SHAP **interaction values**, which quantify pairwise feature interactions.
-- Averages their absolute values across samples to form a feature‑by‑feature **interaction matrix**.
-- Extracts the top interaction pairs and prints the top 10.
-- Restricts to the **top K features** (by main SHAP effect, default `K = 30`) and plots a heatmap:
+### **9.2 SHAP Interaction Values**
+Produces:
 
-```text
+- Top pairwise interactions  
+- Interaction heatmap for top 30 features  
+- Interaction summary plots  
+- PDPs for top 5 interaction pairs  
+
+Outputs:
+
+```
 shap_interactions_heatmap_top.png
-```
-
-This gives a high‑level view of the strongest interactions among top features.
-
-### 8.3. SHAP Interaction Summary Plot (Top‑K)
-
-For the same top‑K features, the script:
-
-- Recomputes interaction values only on the top‑K subset.
-- Produces a SHAP **interaction summary** plot:
-
-```text
 shap_interaction_summary_topk.png
+pdp_top_interactions.png
 ```
 
-This visualizes how interactions distribute across features, focusing on the most important ones.
+### **9.3 Nonlinear Feature Analysis**
+Uses ΔR² (cubic – linear) on SHAP to find features whose effects are strongly non-linear.
 
----
+Outputs:
 
-## 9. Partial Dependence Plots (PDPs)
-
-Two kinds of PDPs are generated using `sklearn.inspection.PartialDependenceDisplay`:
-
-1. **2D PDPs for top interaction pairs**
-
-   - Based on the strongest SHAP interaction pairs, the script:
-     - Maps feature names to their column indices in the transformed space.
-     - Generates 2D PDPs for the top 5 pairs.
-   - Output file:
-
-   ```text
-   pdp_top_interactions.png
-   ```
-
-2. **1D PDPs for top non‑linear features**
-
-   - After scoring non‑linearity (see below), the script generates 1D PDPs for the top non‑linear features.
-   - Output file:
-
-   ```text
-   pdp_top_nonlinear.png
-   ```
-
-These plots complement SHAP by showing the isolated marginal effect of each feature (or feature pair).
-
----
-
-## 10. Non‑Linearity Scoring and Dependence Plots
-
-To identify which features exhibit **non‑linear relationships** with the prediction:
-
-1. For each feature, the script computes a **nonlinearity score**:
-
-   - Fit a **linear** model of SHAP values vs feature.
-   - Fit a **cubic polynomial** model of SHAP values vs feature.
-   - The score is `max(0, R²_cubic − R²_linear)`.
-
-2. It ranks features by this non‑linearity gain and prints the **top 10**.
-
-3. For the top non‑linear features (default: top 8), the script produces SHAP **dependence plots**, which:
-
-   - Show the scatter of SHAP values vs the feature’s values.
-   - Optionally color points by the strongest interacting partner.
-
-Each dependence plot is saved as:
-
-```text
-shap_dependence_<feature_name_sanitized>.png
+```
+pdp_top_nonlinear.png
+shap_dependence_<feature>.png
 ```
 
 ---
 
-## 11. Outputs Summary
+# 📤 10. Output Files Summary
 
-After a successful run, you can expect the following files:
+You will get:
 
-- `shap.summary_plot.RF.GA.png`  
-  **Global SHAP summary** for all features.
+```
+shap.summary_plot.RF.GA.png
+shap_interactions_heatmap_top.png
+shap_interaction_summary_topk.png
+pdp_top_interactions.png
+pdp_top_nonlinear.png
+shap_dependence_*.png
+```
 
-- `shap_interactions_heatmap_top.png`  
-  Heatmap of SHAP interaction strengths among top‑K features.
+Plus console output:
 
-- `shap_interaction_summary_topk.png`  
-  SHAP interaction summary for the top‑K features.
-
-- `pdp_top_interactions.png`  
-  2D PDPs for the strongest feature interaction pairs.
-
-- `pdp_top_nonlinear.png`  
-  1D PDPs for the strongest non‑linear features.
-
-- `shap_dependence_<feature>.png`  
-  Individual SHAP dependence plots for top non‑linear features.
-
-You may also see console output including:
-
-- MSE and R² on the test set
-- Best hyperparameters from `GridSearchCV`
-- Top features by RF importance
-- RFE‑selected features
-- Top interaction pairs
-- Top non‑linear features and their scores
+- Best hyperparameters
+- Train/test performance
+- Feature importance table
+- RFE-selected features
+- Top interactions
+- Top non-linear features
 
 ---
 
-## 12. Suggested Usage Patterns
+# 🧠 11. Performance Notes
 
-- Use this script when you want both **predictive performance** and deep **interpretability** of how features (and their interactions) relate to gestational age.
-- Start with a modest set of features to keep SHAP and interaction computations manageable.
-- If your dataset is very large, consider:
-  - Subsampling rows before computing SHAP **interaction** values.
-  - Reducing the number of categorical levels (or grouping rare levels) to keep the feature space more compact.
+- SHAP interaction values are **O(N × F²)** — the script includes optional subsampling for speed.
+- Dense OHE is intentional (SHAP requirement for tree explainer).
+- RF is parallelized using `n_jobs=-1`.
 
 ---
 
-## 13. Dependencies
+# 🔬 12. Scientific Use Case
 
-You will need at least:
+This workflow is ideal for:
 
-- Python 3.8+
-- `numpy`
-- `pandas`
-- `scikit-learn`
-- `matplotlib`
-- `seaborn`
-- `shap`
+- mtDNA heteroplasmy associations  
+- Gestational age and PTB modeling  
+- Multi-site population studies  
+- Controlling site-level artifacts  
+- Ensuring generalization to unseen cohorts  
+- Deep interpretability of model behavior  
 
-You can install the main stack via:
+---
+
+# 🛠 13. Dependencies
+
+Install via:
 
 ```bash
-pip install numpy pandas scikit-learn matplotlib seaborn shap
+pip install numpy pandas scikit-learn shap matplotlib seaborn
 ```
 
 ---
 
-## 14. Reproducibility Notes
+# 📚 14. License
 
-- The Random Forest is initialized with a fixed `random_state = 42`.
-- `train_test_split` also uses `random_state = 42`.
-- This should give you reproducible splits and model fits, assuming the same scikit‑learn and SHAP versions.
+MIT License (or adapt to your preferred license).
 
 ---
 
-## 15. Extending the Script
+# ✉️ 15. Contact
 
-Some natural extensions:
+For support or extensions:  
+**Jeff Haltom — Bioinformatics Scientist, CHOP**
 
-- Swap in **Gradient Boosting**, **XGBoost**, or **LightGBM** models for comparison.
-- Add **GroupShuffleSplit** for a fully group‑aware train/test split (e.g., if you want to strictly evaluate generalization to unseen sites).
-- Log metrics and plots to a tracking tool (MLflow, W&B, etc.).
-- Wrap the logic in functions so you can import and call it from Jupyter/Colab notebooks.
