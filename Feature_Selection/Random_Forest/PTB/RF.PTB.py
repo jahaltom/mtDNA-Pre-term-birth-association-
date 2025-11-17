@@ -37,7 +37,7 @@ rf = RandomForestClassifier(
     max_features="sqrt",
     random_state=42,
     n_jobs=-1,
-    class_weight="None"   # handle imbalance natively
+    class_weight=None   # handle imbalance natively
 )
 
 pipe = Pipeline([
