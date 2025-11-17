@@ -8,7 +8,7 @@ from sklearn.ensemble import RandomForestClassifier  # <-- RF instead of GB
 from sklearn.inspection import PartialDependenceDisplay
 import shap, os, sys
 import seaborn as sns
-
+from sklearn.model_selection import GroupKFold
 
 # --- IO ---
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
@@ -53,20 +53,52 @@ param_grid = {
     "clf__max_features": ["sqrt", 0.5],
 }
 
-skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.3, stratify=y, random_state=42)
 
 # Class-weighting instead of SMOTE:
-# (RF supports class_weight; keeping the code block intact but not needed to pass sample_weight.)
+# (GradientBoostingClassifier lacks class_weight; instead upweight positives by sample_weight.)
 pos_wt = (len(y_tr) - y_tr.sum()) / y_tr.sum()
 sample_weight = np.where(y_tr==1, pos_wt, 1.0)
 
-gs = GridSearchCV(pipe, param_grid, scoring="average_precision", cv=skf, n_jobs=-1)
 
-# With RF + class_weight="balanced", we don't need sample_weight; leaving line structure intact:
-# gs.fit(X_tr, y_tr, clf__sample_weight=sample_weight)
-gs.fit(X_tr, y_tr)
+
+
+
+
+if df["site"].nunique() >= 2: 
+    groups = df.loc[X_tr.index, "site"]
+    skf = GroupKFold(n_splits=df["site"].nunique())
+    gs = GridSearchCV(
+        pipe,
+        param_grid,
+        cv=skf,
+        n_jobs=-1,
+        scoring="average_precision"
+    )
+    gs.fit(X_tr, y_tr, groups=groups,clf__sample_weight=sample_weight)
+else:
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    gs = GridSearchCV(pipe, param_grid, scoring="average_precision", cv=skf, n_jobs=-1)
+    gs.fit(X_tr, y_tr, clf__sample_weight=sample_weight)
+
+
+
+
+
 
 best = gs.best_estimator_
 print("Best params:", gs.best_params_)
