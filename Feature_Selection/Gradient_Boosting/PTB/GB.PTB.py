@@ -8,7 +8,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.inspection import PartialDependenceDisplay
 import shap, os, sys
 import seaborn as sns
-
+from sklearn.model_selection import GroupKFold
 
 # --- IO ---
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
