@@ -71,21 +71,17 @@ if df["site"].nunique() >= 2:
     # --- site-aware splits ---
     gss1 = GroupShuffleSplit(n_splits=1, test_size=0.30, random_state=SEED)
     train_idx, test_idx = next(gss1.split(X, y, groups=groups))
-
     X_train_full = X.iloc[train_idx]
     y_train_full = y.iloc[train_idx]
     X_test       = X.iloc[test_idx]
     y_test       = y.iloc[test_idx]
     groups_train = groups[train_idx]
-
     gss2 = GroupShuffleSplit(n_splits=1, test_size=0.50, random_state=SEED + 1)
     tr_idx, val_idx = next(gss2.split(X_train_full, y_train_full, groups=groups_train))
-
     X_train = X_train_full.iloc[tr_idx]
     y_train = y_train_full.iloc[tr_idx]
     X_val   = X_train_full.iloc[val_idx]
     y_val   = y_train_full.iloc[val_idx]
-
 else:
     # --- single-site: fall back to stratified random splits ---
     X_train, X_temp, y_train, y_temp = train_test_split(
@@ -95,7 +91,9 @@ else:
         X_temp, y_temp, test_size=0.50, random_state=SEED, stratify=y_temp
     )
 
-
+y_train = np.asarray(y_train).astype(int)
+y_val   = np.asarray(y_val).astype(int)
+y_test  = np.asarray(y_test).astype(int)
 
 # -----------------------------
 # Preprocessing (dense OHE)
