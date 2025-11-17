@@ -1,189 +1,286 @@
+# Gestational Age Prediction Pipeline (Neural Network + Site-Aware Splits + SHAP)
 
-# Neural Network for Gestational Age Prediction (Site-Aware, SHAP-Interpretable)
+This repository contains a complete machine‑learning pipeline for predicting **gestational age at birth (GAGEBRTH)** using a neural network with **hyperparameter tuning**, **site‑aware data splitting**, **one‑hot encoding**, **scaling**, and **SHAP feature interpretation**.
 
-This repository contains a **site-aware neural network pipeline** for predicting **gestational age (GAGEBRTH)** from multivariate metadata.  
-It includes:
-
-- **Group-aware train/validation/test splitting** (prevents site leakage)
-- **Keras Tuner hyperparameter optimization**
-- **Neural network regression model**
-- **Full preprocessing pipeline (StandardScaler + OneHotEncoder)**
-- **SHAP-based feature interpretation**
-- **Model evaluation and visualization**
-
-This pipeline is specifically designed for **multi-site biological datasets**, where avoiding site leakage is essential for honest generalization.
+The workflow is optimized for biomedical metadata containing categorical, binary, and continuous variables as well as site‑specific structure that must be respected to avoid data leakage.
 
 ---
 
-## 📌 Why Site-Aware Splitting?
+# 📌 Key Features of This Pipeline
 
-Traditional `train_test_split()` mixes samples across sites, which causes:
+### ✅ **1. Site‑aware Train/Val/Test Splits**
+- Uses `GroupShuffleSplit` to ensure that **no site appears in more than one dataset**.
+- Properly prevents leakage of site‑specific artifacts.
 
-- Inflated model performance  
-- SHAP falsely identifying site-correlated features  
-- Poor generalization to unseen cohorts  
-- Hidden batch/population structure influencing predictions  
+### ✅ **2. Fully Integrated Preprocessing**
+- `StandardScaler` for continuous features  
+- Pass‑through for binary features  
+- `OneHotEncoder` for categorical variables  
+- Clean `ColumnTransformer` pipeline  
+- Ensures preprocessing is fit only on training data.
 
-To avoid this, the workflow uses:
+### ✅ **3. Hyperparameter‑Tuned Neural Network**
+- Uses **Keras Tuner RandomSearch**
+- Tunable:
+  - Number of layers
+  - Units per layer
+  - Dropout
+  - Learning rate
+- Early stopping with `restore_best_weights=True`.
 
-### **GroupShuffleSplit**
-- Ensures **entire sites** are held out during:  
-  ✔ Train → Test split  
-  ✔ Train → Validation split  
+### ✅ **4. Full SHAP Explainability**
+- Uses `DeepExplainer`
+- Summary plots
+- Top‑feature ranking
+- Dependence plots for each top feature
 
-This makes both training and evaluation *site-independent*, producing a model that reflects true biological signal rather than site artifacts.
+### ✅ **5. Saved Model**
+- Best model saved as:  
+  `NN.GA_best_model.h5`
 
 ---
 
-## 🧬 Pipeline Overview
+# 📁 Input Data Requirements
 
-### 1. **Load and filter dataset**
-The script loads the metadata table and selects the required features plus `GAGEBRTH`.
+The script expects:
 
-### 2. **Define feature groups**
-You pass three comma-separated lists to the script:
-- `categorical_columns`
-- `continuous_columns`
-- `binary_columns`
+```
+Metadata.Final.tsv
+```
 
-### 3. **Site-aware splitting**
-Two levels of group-aware splitting:
+This file **must contain**:
 
-1. **Train/Test**  
-2. **Train/Validation**
+- `GAGEBRTH` – continuous target variable  
+- `site` – grouping variable  
+- Categorical, binary, and continuous features (specified via CLI)
 
-This guarantees no overlap in site labels across splits.
+Example columns:
 
-### 4. **Preprocessing**
-A `ColumnTransformer` handles:
-- Standardization of continuous features  
-- Passthrough of binary features  
-- OneHotEncoding of categorical features  
+| Type | Example |
+|------|---------|
+| Categorical | `SubHap`, `MainHap` |
+| Continuous | `Age`, `BMI` |
+| Binary | `PTB`, `Sex_binary` |
 
-Preprocessor is **fit only on training data**, then applied to validation and test sets.
+---
 
-### 5. **Neural Network Model**
-Hyperparameterized using **Keras Tuner**:
+# ▶️ How to Run
 
-- Dense layers (32–512 units)
-- Optional extra layers
-- Dropout (0–0.5)
-- L2 regularization
-- Learning rate search (`1e-4` → `1e-2`)
-- Linear output layer for regression
+## Command‑line invocation
 
-### 6. **SHAP Interpretation**
-Using `shap.DeepExplainer`:
+```bash
+python train_nn_ga.py "<categorical_columns>" "<continuous_columns>" "<binary_columns>"
+```
 
-- SHAP summary plot  
-- Top 20 features ranked by mean |SHAP|  
-- SHAP dependence plots  
+Example:
 
-SHAP is much more reliable with site-aware splitting because the network can no longer cheat using site-level patterns.
+```bash
+python train_nn_ga.py "SubHap,MainHap,site" "Age,BMI" "PTB,Sex_binary"
+```
 
-### 7. **Model evaluation**
-Metrics:
+The script automatically removes `site` from categorical features and uses it exclusively as the `groups=` variable for site‑aware splitting.
 
-- **MSE**
-- **MAE**
-- **R²**
-- Predicted vs Actual scatterplot
+---
 
-All plots are saved as PNG files.
+# 🧠 Data Splitting Logic
 
-### 8. **Model saving**
-Best model written as:
+## **If ≥2 unique sites:**
+- 1st split → **Train vs Test** (GroupShuffleSplit 70/30)
+- 2nd split → **Train vs Validation** (GroupShuffleSplit on training portion)
+
+Final approximate proportions:
+
+- 56% train  
+- 14% validation  
+- 30% test  
+
+## **If only 1 site:**
+Falls back to:
+- 70% train  
+- 15% validation  
+- 15% test  
+
+---
+
+# 🛠️ Preprocessing Details
+
+### **ColumnTransformer structure**
+
+```python
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', StandardScaler(), continuous_columns),
+        ('bin', 'passthrough', binary_columns),
+        ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_columns)
+    ]
+)
+```
+
+Training:
+
+```python
+X_tr_preprocessed = preprocessor.fit_transform(X_tr)
+```
+
+Then:
+
+```python
+X_val_preprocessed  = preprocessor.transform(X_val)
+X_test_preprocessed = preprocessor.transform(X_test)
+```
+
+⚠️ **Note about sparseness**  
+If using SHAP or some TensorFlow versions, convert to dense:
+
+```python
+if hasattr(X_tr_preprocessed, "toarray"):
+    X_tr_preprocessed = X_tr_preprocessed.toarray()
+    X_val_preprocessed = X_val_preprocessed.toarray()
+    X_test_preprocessed = X_test_preprocessed.toarray()
+```
+
+---
+
+# 🤖 Neural Network Model + Hyperparameter Tuning
+
+Model built in a `HyperModel`:
+
+### Tuned Parameters:
+- Units per layer (32–512)
+- Number of layers (1–3)
+- Dropout rate (0–0.5)
+- Learning rate (1e‑4 to 1e‑2, log‑sampled)
+
+### Optimization:
+- Loss: `mean_squared_error`
+- Metric: `mean_squared_error`
+- Optimizer: Adam
+
+### Early stopping:
+```python
+EarlyStopping(
+    monitor="val_mean_squared_error",
+    patience=5,
+    restore_best_weights=True
+)
+```
+
+Hyperparameter tuning search:
+
+```python
+tuner = RandomSearch(
+    hypermodel,
+    objective='val_mean_squared_error',
+    max_trials=10,
+    executions_per_trial=2,
+    directory='model_tuning',
+    project_name='gestational_age_prediction'
+)
+```
+
+---
+
+# 📊 Evaluation Metrics
+
+After selecting the best model:
+
+- **MSE** – Mean Squared Error  
+- **MAE** – Mean Absolute Error  
+- **R²** – Coefficient of Determination  
+
+Plot saved as:
+
+```
+ActualvsPredicted_GestationalAge.NN.GA.png
+```
+
+---
+
+# 🔍 SHAP Explainability
+
+### SHAP initialization:
+
+```python
+explainer = shap.DeepExplainer(best_model, X_tr_background)
+shap_values = explainer.shap_values(X_test_preprocessed)
+```
+
+### Correct handling of SHAP output:
+
+```python
+if isinstance(shap_values, list):
+    shap_values_squeezed = shap_values[0]
+else:
+    shap_values_squeezed = shap_values
+```
+
+### Outputs created:
+- `shap_summary_plot.NN.GA.png`
+- `shap.dependence_plot.NN.GA.<feature>.png` for each top feature
+
+### Ranking top features:
+
+```python
+mean_abs = np.abs(shap_values_squeezed).mean(axis=0)
+sorted_idx = np.argsort(mean_abs)[::-1]
+top_features = feature_names[sorted_idx[:20]]
+```
+
+---
+
+# 💾 Saved Model
+
+The best model is saved here:
+
 ```
 NN.GA_best_model.h5
 ```
 
----
-
-## 📂 File Outputs
-
-| Output File | Description |
-|------------|-------------|
-| `ActualvsPredicted_GestationalAge.NN.GA.png` | Predicted vs actual scatter |
-| `shap_summary_plot.NN.GA.png` | Global SHAP feature importance |
-| `shap.dependence_plot.NN.GA.<feature>.png` | Dependence plots for top features |
-| `NN.GA_best_model.h5` | Trained neural network |
-| `model_tuning/` | Keras Tuner trials |
+When reloading, you **must** also reuse the same preprocessing object.
 
 ---
 
-## 🚀 Running the Script
+# 🚀 Quick Start
 
-Example usage:
+1. Place `Metadata.Final.tsv` in working directory  
+2. Identify your feature columns  
+3. Run:
 
 ```bash
-python nn_ga.py \
-  "MotherAge,MotherHeight,Education" \
-  "BMI,GAGE_PRE,PrenatalVisits" \
-  "is_smoker,is_married"
+python train_nn_ga.py "<cats>" "<conts>" "<bins>"
 ```
 
-This corresponds to:
-
-- Categorical features = `"MotherAge,MotherHeight,Education"`
-- Continuous features = `"BMI,GAGE_PRE,PrenatalVisits"`
-- Binary features = `"is_smoker,is_married"`
-
-All features must exist in `Metadata.Final.tsv`.
-
----
-
-## 🧠 Best Practices & Notes
-
-### ✔ Always use `GroupShuffleSplit` for multi-site data  
-This prevents the model from memorizing site effects.
-
-### ✔ Fit preprocessing ONLY on the training set  
-Avoids future information leaking into training.
-
-### ✔ SHAP improves dramatically  
-Without site leakage, SHAP reveals **true biological signal** instead of site artifacts.
-
-### ✔ Keras Tuner uses proper validation  
-Since validation is site-aware, hyperparameter tuning reflects generalization ability.
+4. View outputs:
+   - Plots  
+   - SHAP interpretations  
+   - Tuned model  
+   - All metrics  
+   - Preprocessing pipeline behavior  
 
 ---
 
-## 📌 Requirements
+# 📈 Suggested Improvements
 
-```
-pandas
-numpy
-tensorflow
-keras-tuner
-scikit-learn
-matplotlib
-shap
-```
+- Add `argparse` for robust CLI parsing  
+- Add automated missing-data imputation  
+- Store preprocessor with model (pickle, joblib)  
+- Add logging output for traceability  
+- Add version pinning to avoid SHAP/TensorFlow mismatch  
 
 ---
 
-## 🧩 Future Extensions
+# ✔️ Summary
 
-- Incorporate **GroupKFold** analog for repeated CV in deep learning  
-- Add **per-site SHAP decomposition**  
-- Implement **bootstrap SHAP stability analysis**  
-- Compare against RandomForest, GradientBoosting, XGBoost  
-- Add logging and reproducibility utilities  
+This pipeline is a **robust and production‑grade** approach for biomedical regression settings that require site‑aware modeling, neural networks, explainability, and strict leakage prevention.
 
----
+It is optimized for your mtDNA/PTB/GA workflows but is generalizable to ANY similar biomedical structure.
 
-## ✨ Citation / Acknowledgment
+If you'd like:
+- A **PDF** version  
+- A **GitHub‑ready folder structure**
+- A **diagram of the ML flow**
+- A **version with argparse**
+- A **module‑based (importable) refactor**
 
-If you use this workflow in a publication, cite:
+Just tell me — I’ll generate it.
 
-**"Site-aware neural network modeling with SHAP interpretation for gestational age prediction."**
-
----
-
-## 📞 Contact
-For questions or improvements, feel free to contact the author.
-
----
-
-Enjoy the analysis! 🚀  
-This README fully documents the site-aware neural network pipeline, preprocessing, SHAP interpretation, and rationale.
