@@ -8,6 +8,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestRegressor   # <-- RF instead of GB
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.feature_selection import RFE
+from sklearn.model_selection import GroupKFold
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
@@ -70,9 +71,31 @@ param_grid_rf = {
     "rf__max_features": ["sqrt", 0.5],
 }
 
-cv = KFold(n_splits=5, shuffle=True, random_state=42)
-rf_cv = GridSearchCV(pipe, param_grid_rf, cv=cv, n_jobs=-1)
-rf_cv.fit(X_train, y_train)
+
+
+
+
+
+if df["site"].nunique() >= 2: 
+    groups = df["site"]
+    cv = GroupKFold(n_splits=df["site"].nunique())
+    rf_cv = GridSearchCV(
+        pipe,
+        param_grid_gb,
+        cv=cv,
+        n_jobs=-1,
+        scoring="neg_mean_squared_error"
+    )
+    rf_cv.fit(X_train, y_train, groups=groups[X_train.index])
+else:
+    cv = KFold(n_splits=5, shuffle=True, random_state=42)
+    rf_cv = GridSearchCV(pipe, param_grid_gb, cv=cv, n_jobs=-1)
+    rf_cv.fit(X_train, y_train)
+
+
+
+
+
 
 print("\nBest Parameters for Random Forest:", rf_cv.best_params_)
 evaluate_model_regression(rf_cv.best_estimator_, X_test, y_test, "Random Forest")
