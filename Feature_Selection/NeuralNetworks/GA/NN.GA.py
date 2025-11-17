@@ -10,12 +10,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, r2_score
 import sys
+from sklearn.model_selection import GroupShuffleSplit, train_test_split
 
-
+SEED=42
 import random
-random.seed(42)
-np.random.seed(42)
-tf.random.set_seed(42)
+random.seed(SEED)
+np.random.seed(SEED)
+tf.random.set_seed(SEED)
 
 
 # Set to display all columns
@@ -27,11 +28,9 @@ pd.set_option('display.max_rows', None)
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
 # Define features
-categorical_columns = sys.argv[1].split(',')
+categorical_columns = [c for c in sys.argv[1].split(',') if c != "site"]
 continuous_columns = sys.argv[2].split(',')
 binary_columns = sys.argv[3].split(',')
-
-df = df[categorical_columns + continuous_columns + binary_columns + ["GAGEBRTH"]]
 
 
 
@@ -44,35 +43,39 @@ y = df['GAGEBRTH']
 
 
 # Train-test split
-from sklearn.model_selection import GroupShuffleSplit
-
-# After loading df and defining X, y:
-groups = df["site"].values  # even if site is not in X
-
-# --- 1) Site-aware train vs test split ---
-gss1 = GroupShuffleSplit(n_splits=1, test_size=0.30, random_state=42)
-train_idx, test_idx = next(gss1.split(X, y, groups=groups))
-
-X_train = X.iloc[train_idx]
-y_train = y.iloc[train_idx]
-X_test  = X.iloc[test_idx]
-y_test  = y.iloc[test_idx]
-
-groups_train = groups[train_idx]
-
-# --- 2) Site-aware train vs val split within the train set ---
-gss2 = GroupShuffleSplit(n_splits=1, test_size=0.20, random_state=43)
-train_idx2, val_idx = next(
-    gss2.split(X_train, y_train, groups=groups_train)
-)
-
-X_tr = X_train.iloc[train_idx2]
-y_tr = y_train.iloc[train_idx2]
-X_val = X_train.iloc[val_idx]
-y_val = y_train.iloc[val_idx]
+from sklearn.model_selection import GroupShuffleSplit, train_test_split
 
 
+groups = df["site"].values
 
+if df["site"].nunique() >= 2:
+    # --- 1) Site-aware train vs test split ---
+    gss1 = GroupShuffleSplit(n_splits=1, test_size=0.30, random_state=SEED)
+    train_idx, test_idx = next(gss1.split(X, y, groups=groups))
+    X_train = X.iloc[train_idx]
+    y_train = y.iloc[train_idx]
+    X_test  = X.iloc[test_idx]
+    y_test  = y.iloc[test_idx]
+    groups_train = groups[train_idx]
+    # --- 2) Site-aware train vs val split within the train set ---
+    gss2 = GroupShuffleSplit(n_splits=1, test_size=0.20, random_state=SEED + 1)
+    train_idx2, val_idx = next(
+        gss2.split(X_train, y_train, groups=groups_train)
+    )
+    X_tr  = X_train.iloc[train_idx2]
+    y_tr  = y_train.iloc[train_idx2]
+    X_val = X_train.iloc[val_idx]
+    y_val = y_train.iloc[val_idx]
+else:
+    # Single-site: simple random splits, no stratify (regression target)
+    X_tr, X_temp, y_tr, y_temp = train_test_split(
+        X, y, test_size=0.30, random_state=SEED
+    )
+    X_val, X_test, y_val, y_test = train_test_split(
+        X_temp, y_temp, test_size=0.50, random_state=SEED
+    )
+
+    
 
 
 
@@ -133,12 +136,19 @@ tuner = RandomSearch(
     project_name='gestational_age_prediction'
 )
 
+early_stop = tf.keras.callbacks.EarlyStopping(
+    monitor="val_mean_squared_error",
+    patience=5,
+    restore_best_weights=True
+)
+
 tuner.search(
     X_tr_preprocessed,
     y_tr,
     epochs=50,
-    validation_data=(X_val_preprocessed, y_val),  # <-- key change
-    verbose=1
+    validation_data=(X_val_preprocessed, y_val),
+    verbose=1,
+    callbacks=[early_stop]
 )
 
 
