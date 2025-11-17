@@ -1,14 +1,14 @@
 import sys
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split, GridSearchCV, KFold
+from sklearn.model_selection import train_test_split, GridSearchCV, KFold, GroupKFold, GroupShuffleSplit
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestRegressor   # <-- RF instead of GB
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.feature_selection import RFE
-from sklearn.model_selection import GroupKFold
+
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
