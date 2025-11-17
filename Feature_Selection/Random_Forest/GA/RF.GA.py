@@ -81,7 +81,7 @@ if df["site"].nunique() >= 2:
     cv = GroupKFold(n_splits=df["site"].nunique())
     rf_cv = GridSearchCV(
         pipe,
-        param_grid_gb,
+        param_grid_rf,
         cv=cv,
         n_jobs=-1,
         scoring="neg_mean_squared_error"
@@ -89,7 +89,7 @@ if df["site"].nunique() >= 2:
     rf_cv.fit(X_train, y_train, groups=groups[X_train.index])
 else:
     cv = KFold(n_splits=5, shuffle=True, random_state=42)
-    rf_cv = GridSearchCV(pipe, param_grid_gb, cv=cv, n_jobs=-1)
+    rf_cv = GridSearchCV(pipe, param_grid_rf, cv=cv, n_jobs=-1,scoring="neg_mean_squared_error")
     rf_cv.fit(X_train, y_train)
 
 
