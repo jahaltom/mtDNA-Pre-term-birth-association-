@@ -1,5 +1,5 @@
 import pandas as pd, numpy as np, re, matplotlib.pyplot as plt
-from sklearn.model_selection import StratifiedKFold, GridSearchCV, train_test_split
+from sklearn.model_selection import StratifiedKFold, GridSearchCV, train_test_split, GroupShuffleSplit
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
@@ -49,13 +49,31 @@ param_grid = {
 }
 
 
+# -----------------------------
+# Outer split: unseen-site if possible, else stratified random
+# -----------------------------
+if "site" in df.columns and df["site"].nunique() >= 2:
+    # Site-aware split: test set contains (mostly) unseen sites
+    groups_all = df["site"].values
 
-X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.3, stratify=y, random_state=42)
+    gss = GroupShuffleSplit(n_splits=1, test_size=0.3, random_state=42)
+    train_idx, test_idx = next(gss.split(X, y, groups=groups_all))
 
-# Class-weighting instead of SMOTE:
-# (GradientBoostingClassifier lacks class_weight; instead upweight positives by sample_weight.)
+    X_tr, X_te = X.iloc[train_idx], X.iloc[test_idx]
+    y_tr, y_te = y.iloc[train_idx], y.iloc[test_idx]
+    groups_tr  = groups_all[train_idx]
+else:
+    # Fallback: standard stratified split if no/insufficient site info
+    X_tr, X_te, y_tr, y_te = train_test_split(
+        X, y, test_size=0.3, stratify=y, random_state=42
+    )
+    groups_tr = None
+
+# -----------------------------
+# Class-weighting via sample_weight (no SMOTE)
+# -----------------------------
 pos_wt = (len(y_tr) - y_tr.sum()) / y_tr.sum()
-sample_weight = np.where(y_tr==1, pos_wt, 1.0)
+sample_weight = np.where(y_tr == 1, pos_wt, 1.0)
 
 
 
@@ -75,9 +93,14 @@ sample_weight = np.where(y_tr==1, pos_wt, 1.0)
 
 
 
-if df["site"].nunique() >= 2: 
-    groups = df.loc[X_tr.index, "site"]
-    skf = GroupKFold(n_splits=df["site"].nunique())
+# -----------------------------
+# Inner CV: GroupKFold if we have site groups in training, else StratifiedKFold
+# -----------------------------
+if (groups_tr is not None) and (len(np.unique(groups_tr)) >= 2):
+    n_groups_tr = len(np.unique(groups_tr))
+    n_splits = min(5, n_groups_tr)  # cap at 5 to avoid tiny group folds
+
+    skf = GroupKFold(n_splits=n_splits)
     gb_cv = GridSearchCV(
         pipe,
         param_grid,
@@ -85,14 +108,17 @@ if df["site"].nunique() >= 2:
         n_jobs=-1,
         scoring="average_precision"
     )
-    gb_cv.fit(X_tr, y_tr, groups=groups,clf__sample_weight=sample_weight)
+    gb_cv.fit(X_tr, y_tr, groups=groups_tr, clf__sample_weight=sample_weight)
 else:
     skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    gb_cv = GridSearchCV(pipe, param_grid, scoring="average_precision", cv=skf, n_jobs=-1)
+    gb_cv = GridSearchCV(
+        pipe,
+        param_grid,
+        scoring="average_precision",
+        cv=skf,
+        n_jobs=-1
+    )
     gb_cv.fit(X_tr, y_tr, clf__sample_weight=sample_weight)
-
-
-
 
 
 
