@@ -13,6 +13,9 @@ from sklearn.model_selection import GroupKFold
 # --- IO ---
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
 
+categorical_columns = sys.argv[1].split(',')
+continuous_columns  = sys.argv[2].split(',')
+binary_columns      = sys.argv[3].split(',')
 
 
 X = df[categorical_columns + continuous_columns + binary_columns].copy()
