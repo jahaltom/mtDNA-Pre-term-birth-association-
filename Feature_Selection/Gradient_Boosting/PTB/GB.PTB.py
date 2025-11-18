@@ -307,12 +307,11 @@ top_names=raw
 
 
 
-# 1) PDP for first 12 top features (pass NAMES)
+# 1) PDP for  top features (pass NAMES)
 disp = PartialDependenceDisplay.from_estimator(
     best,
     X,                                    # raw X; pipeline handles transforms
-    features=top_names[:12],              # names, not indices
-    feature_names=feat_names_full,
+    features=top_names,              # names, not indices
     grid_resolution=101,
     response_method="predict_proba",
     n_cols=6,                             # 6 columns => 2 rows for 12 features
