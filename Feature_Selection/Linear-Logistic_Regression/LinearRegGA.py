@@ -1,6 +1,7 @@
 import pandas as pd 
 import numpy as np
-from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
+from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score, GroupShuffleSplit
+
 from sklearn.linear_model import ElasticNetCV, LassoCV, Ridge
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
@@ -59,9 +60,23 @@ binary_columns = sys.argv[3].split(',')
 X = df[categorical_columns + continuous_columns+ binary_columns]
 y = df['GAGEBRTH']  
 
-# Train-test split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+-
+# Train-test split: unseen-site if possible, else random
+# -----------------------------
+if "site" in df.columns and df["site"].nunique() >= 2:
+    # Site-aware split: test set contains sites not seen during training
+    groups_all = df["site"].values
 
+    gss = GroupShuffleSplit(n_splits=1, test_size=0.3, random_state=42)
+    train_idx, test_idx = next(gss.split(X, y, groups=groups_all))
+
+    X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
+    y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+else:
+    # Fallback: standard random split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, random_state=42
+    )
 # Preprocessing pipeline
 preprocessor = ColumnTransformer(
     transformers=[
@@ -122,4 +137,59 @@ elasticnet_importance = pd.DataFrame({
 plot_feat(elasticnet_importance, "ElasticNet")
 print(elasticnet_importance)
 
+# -----------------------------
+# SHAP analysis for ElasticNet (linear model)
+# -----------------------------
+# Use LinearExplainer (fast, exact for linear models)
+feature_names = preprocessor.get_feature_names_out()
+
+explainer = shap.LinearExplainer(elasticnet, X_train_preprocessed)
+shap_values = explainer.shap_values(X_test_preprocessed)  # (n_samples, n_features) for regression
+
+shap_values = np.asarray(shap_values)
+assert shap_values.ndim == 2 and shap_values.shape[1] == len(feature_names), \
+    f"Expected (N,F) SHAP matrix, got {shap_values.shape}"
+
+# Global importance: mean |SHAP|
+mean_abs_shap = np.abs(shap_values).mean(axis=0)
+order = np.argsort(mean_abs_shap)[::-1]
+top_k = min(30, len(feature_names))
+top_idx = order[:top_k]
+
+top_feature_names = feature_names[top_idx]
+top_shap_values = shap_values[:, top_idx]
+
+# Summary plot for top-K features
+plt.figure(figsize=(10, 6))
+shap.summary_plot(
+    top_shap_values,
+    X_test_preprocessed[:, top_idx],
+    feature_names=top_feature_names,
+    show=False,
+    max_display=top_k,
+)
+plt.tight_layout()
+plt.savefig("shap_summary_top30.ElasticNet.GA.png", dpi=300, bbox_inches="tight")
+plt.close()
+
+print("\nTop 20 features by mean |SHAP| (ElasticNet):")
+for name, val in zip(top_feature_names[:20], mean_abs_shap[top_idx][:20]):
+    print(f"{name}: {val:.6f}")
+
+# Optional: SHAP dependence plots for the top numeric features
+num_prefixes = ("num__", "bin__")
+top_numeric_feats = [f for f in top_feature_names if f.startswith(num_prefixes)]
+
+for fname in top_numeric_feats[:10]:  # limit to first 10 numeric features
+    shap.dependence_plot(
+        fname,
+        shap_values,
+        X_test_preprocessed,
+        feature_names=feature_names,
+        show=False,
+    )
+    safe = "".join(c if c.isalnum() or c in "-._" else "_" for c in fname)
+    plt.tight_layout()
+    plt.savefig(f"shap_dependence.ElasticNet.GA.{safe}.png", dpi=300, bbox_inches="tight")
+    plt.close()
 
