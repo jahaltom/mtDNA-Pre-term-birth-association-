@@ -16,12 +16,10 @@ file="Metadata.M.tsv"
 
 # Define Categorical features
 #Excluded: 'SNIFF_TOBA','PASSIVE_SMOK','ALCOHOL','SMOK_TYP'
-columnsCat=('TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX','MainHap','SMOKE_HIST','SMOK_FREQ','population','site') 
-
+columnsCat=CAT
 # Define Continuous  features
 #Excluded:  'SNIFF_FREQ','ALCOHOL_FREQ','SMOK_YR'
-columnsCont=('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI')
-
+columnsCont=CONT
 # Convert the array to a comma-separated string
 columnCat_string=$( echo "${columnsCat[*]}")
 columnCont_string=$( echo "${columnsCont[*]}")
