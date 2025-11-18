@@ -23,8 +23,17 @@ python scripts/MissingDataHeatmap.py Metadata.M.tsv
 
 
 #### workflow.sh
-- Use the missing data plot to exclude Categorical/Continuous features from those in workflow.sh (columnsCat and columnsCont). (Edit with vim)
+- Use the missing data plot to exclude Categorical/Continuous features from those in workflow.sh (columnsCat and columnsCont).
 ```
+#Excluded: 'SNIFF_TOBA','PASSIVE_SMOK','ALCOHOL','SMOK_TYP'
+columnCat="('TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX','MainHap','SMOKE_HIST','SMOK_FREQ','population','site')"
+
+#Excluded:  'SNIFF_FREQ','ALCOHOL_FREQ','SMOK_YR'
+columnCont="('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI')"
+
+sed -i "s/CAT/$columnCat/g" workflow.sh
+sed -i "s/CONT/$columnCont/g" workflow.sh
+
 sbatch workflow.sh
 ```
 - Removes samples where gestational age "GAGEBRTH" or  PTB (0 or 1) is na. Also removes samples with missing data in any of the input columns. Makes (IDs.txt) to be used for PCA. 
