@@ -13,9 +13,6 @@ from sklearn.model_selection import GroupKFold
 # --- IO ---
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
 
-categorical_columns = sys.argv[1].split(',')
-continuous_columns  = sys.argv[2].split(',')
-binary_columns      = sys.argv[3].split(',')
 
 
 X = df[categorical_columns + continuous_columns + binary_columns].copy()
@@ -73,10 +70,8 @@ param_grid = {
 if "site" in df.columns and df["site"].nunique() >= 2:
     # Use sites as groups so test set contains (mostly) unseen sites
     groups_all = df["site"]
-
     gss = GroupShuffleSplit(n_splits=1, test_size=0.3, random_state=42)
     train_idx, test_idx = next(gss.split(X, y, groups=groups_all))
-
     X_tr, X_te = X.iloc[train_idx], X.iloc[test_idx]
     y_tr, y_te = y.iloc[train_idx], y.iloc[test_idx]
     groups_tr = groups_all.iloc[train_idx]
@@ -100,7 +95,6 @@ sample_weight = np.where(y_tr == 1, pos_wt, 1.0)
 if (groups_tr is not None) and (groups_tr.nunique() >= 2):
     n_groups_tr = groups_tr.nunique()
     n_splits = min(5, n_groups_tr)  # cap at 5
-
     skf = GroupKFold(n_splits=n_splits)
     gs = GridSearchCV(
         pipe,
@@ -267,7 +261,7 @@ plt.close('all')
 ##########################Non -linear stuff
 
 #SHAP dependence plots (curvature = nonlinearity). Interpretation: a curved (non-monotone) relationship between SHAP value (log-odds contribution) and the raw feature indicates non-linearity. A straight line suggests linear or near-linear.
-top_names = feat_names[topk]
+top_names =  [x for x in feat_names[topk] if "cat" not in x]      
 for name in top_names:
     shap.dependence_plot(name, sv, X_te_dense[sub_ix], feature_names=feat_names, show=False)
     plt.savefig(f"dep_{name}.png", bbox_inches="tight")
@@ -283,7 +277,7 @@ from sklearn.preprocessing import SplineTransformer
 from sklearn.pipeline import make_pipeline
 
 # Always fetch the FULL transformed feature list
-feat_names_full = best.named_steps["pre"].get_feature_names_out()
+feat_names_full = [x for x in best.named_steps["pre"].get_feature_names_out() if "cat" not in x]
 
 raw = []
 seen = set()
@@ -296,7 +290,7 @@ for t in feat_names_full:
     if name not in seen:
         raw.append(name)
         seen.add(name)
-feat_names_full=raw
+feat_names_full= raw
 
 for t in top_names:
     # remove num__, bin__, cat__
@@ -312,8 +306,7 @@ top_names=raw
 disp = PartialDependenceDisplay.from_estimator(
     best,
     X,                                    # raw X; pipeline handles transforms
-    features=top_names[:12],              # names, not indices
-    feature_names=feat_names_full,
+    features=top_names,              # names, not indices
     grid_resolution=101,
     response_method="predict_proba",
     n_cols=6,                             # 6 columns => 2 rows for 12 features
