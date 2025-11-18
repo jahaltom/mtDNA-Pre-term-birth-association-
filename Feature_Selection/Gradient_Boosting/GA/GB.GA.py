@@ -22,13 +22,10 @@ def evaluate_model_regression(model, X_test, y_test, model_name):
 
 
 # Define features
-# categorical_columns = sys.argv[1].split(',')
-# continuous_columns = sys.argv[2].split(',')
-# binary_columns = sys.argv[3].split(',')
+categorical_columns = sys.argv[1].split(',')
+continuous_columns = sys.argv[2].split(',')
+binary_columns = sys.argv[3].split(',')
 
-categorical_columns = ['FUEL_FOR_COOK','site']
-continuous_columns = ['PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI','TOILET','WEALTH_INDEX','DRINKING_SOURCE']
-binary_columns = ['BABY_SEX','CHRON_HTN','DIABETES','HH_ELECTRICITY','TB','THYROID','TYP_HOUSE']
 
 
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
