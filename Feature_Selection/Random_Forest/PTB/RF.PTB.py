@@ -230,10 +230,7 @@ plt.tight_layout()
 plt.savefig("shap_interaction_summary_topk.png", dpi=300, bbox_inches="tight")
 plt.close('all')
 
-plt.tight_layout()
-plt.savefig("shap_interaction_summary_topk.png", dpi=300, bbox_inches="tight")
-#plt.clf()
-plt.close('all')
+
 
 # 2) Mean |interaction| matrix + top pairs
 int_mat = np.abs(sv_int).mean(axis=0)                # (k x k)
