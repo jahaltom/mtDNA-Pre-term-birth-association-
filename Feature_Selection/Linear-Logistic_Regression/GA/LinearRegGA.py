@@ -48,9 +48,8 @@ def evaluate_model_regression(model, X_test, y_test, model_name):
 # Load the dataset
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
-df = df[sys.argv[1].split(',') + sys.argv[2].split(',') + sys.argv[3].split(',') + ["GAGEBRTH"]]
-df = df[~df.isin([-88, -77]).any(axis=1)]  # Remove rows with invalid entries (-88, -77)
-df = df[df['MainHap'].map(df['MainHap'].value_counts()) >= 25]
+
+
 
 # Define features
 categorical_columns = sys.argv[1].split(',')
@@ -124,7 +123,13 @@ print(lasso_importance)
 
 
 # Step 3: ElasticNet Regression
-elasticnet = ElasticNetCV(alphas=[0.01], l1_ratio=0.5, cv=5, random_state=42)
+elasticnet = ElasticNetCV(
+    alphas=np.logspace(-3, 1, 20),   # 0.001 → 10
+    l1_ratio=[0.1, 0.5, 0.9],
+    cv=5,
+    random_state=42
+)
+
 elasticnet.fit(X_train_preprocessed, y_train)
 
 evaluate_model_regression(elasticnet, X_test_preprocessed, y_test, "ElasticNet Regression")
