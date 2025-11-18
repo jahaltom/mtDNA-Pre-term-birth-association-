@@ -305,7 +305,7 @@ for t in top_names:
         seen.add(name)
 top_names=raw
 
-# 1) PDP for first 12 top features (pass NAMES)
+# 1) PDP for top features (pass NAMES)
 disp = PartialDependenceDisplay.from_estimator(
     best,
     X,                                    # raw X; pipeline handles transforms
