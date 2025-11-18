@@ -133,7 +133,6 @@ tuner = RandomSearch(
     max_trials=10,
     executions_per_trial=2,
     directory='model_tuning',
-    project_name='gestational_age_prediction'
     seed=SEED
 )
 
