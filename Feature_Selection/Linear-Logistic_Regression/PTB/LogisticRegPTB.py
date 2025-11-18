@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
+from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score, GroupShuffleSplit
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import ElasticNetCV
@@ -8,7 +8,6 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import classification_report, roc_auc_score, roc_curve
-from imblearn.over_sampling import SMOTE
 from sklearn.neural_network import MLPClassifier
 import shap
 import matplotlib.pyplot as plt
@@ -70,9 +69,6 @@ def evaluate_model(model, X_test, y_test, model_name):
 # Load the dataset
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
-df = df[sys.argv[1].split(',') + sys.argv[2].split(',') + sys.argv[3].split(',') + ["PTB"]]
-df = df[~df.isin([-88, -77]).any(axis=1)]  # Remove rows with invalid entries (-88, -77)
-df = df[df['MainHap'].map(df['MainHap'].value_counts()) >= 25]
 
 # Define features
 categorical_columns = sys.argv[1].split(',')
@@ -80,34 +76,40 @@ continuous_columns = sys.argv[2].split(',')
 binary_columns = sys.argv[3].split(',')
 
 X = df[categorical_columns + continuous_columns + binary_columns]
-y = df['PTB']  
+y = df["PTB"]
 
-# Train-test split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+# -----------------------------
+# Train-test split: unseen-site if possible, else random
+# -----------------------------
+if "site" in df.columns and df["site"].nunique() >= 2:
+    # Site-aware split: test set contains (mostly) unseen sites
+    groups_all = df["site"].values
 
+    gss = GroupShuffleSplit(n_splits=1, test_size=0.3, random_state=42)
+    train_idx, test_idx = next(gss.split(X, y, groups=groups_all))
+
+    X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
+    y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+else:
+    # Fallback: standard random split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, random_state=42, stratify=y
+    )
+
+# -----------------------------
 # Preprocessing pipeline
+# -----------------------------
 preprocessor = ColumnTransformer(
     transformers=[
-        ('num', StandardScaler(), continuous_columns),
-        ('bin', 'passthrough', binary_columns),
-        ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_columns)
+        ("num", StandardScaler(), continuous_columns),
+        ("bin", "passthrough", binary_columns),
+        ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_columns),
     ]
 )
 
-# Preprocess the training data
+# Preprocess the data (no SMOTE, keep as sparse/dense as returned)
 X_train_preprocessed = preprocessor.fit_transform(X_train)
-X_test_preprocessed = preprocessor.transform(X_test)
-
-# Ensure dense matrix for SMOTE
-if hasattr(X_train_preprocessed, "toarray"):
-    X_train_preprocessed = X_train_preprocessed.toarray()
-
-# Step 2: Apply SMOTE
-smote = SMOTE(random_state=42)
-X_train_balanced, y_train_balanced = smote.fit_resample(X_train_preprocessed, y_train)
-
-# Convert balanced data to DataFrame
-X_train_balanced = pd.DataFrame(X_train_balanced, columns=preprocessor.get_feature_names_out())
+X_test_preprocessed  = preprocessor.transform(X_test)
 
 
 
@@ -120,7 +122,7 @@ X_train_balanced = pd.DataFrame(X_train_balanced, columns=preprocessor.get_featu
 
 # Step 2a: Penalized Logistic Regression (Lasso)
 lasso = LogisticRegressionCV(penalty='l1', solver='saga', cv=5, max_iter=5000, class_weight='balanced', random_state=42)
-lasso.fit(X_train_balanced, y_train_balanced)
+lasso.fit(X_train_preprocessed, y_train)
 
 evaluate_model(lasso, X_test_preprocessed, y_test, "Lasso Regression")
 
@@ -141,7 +143,7 @@ plot_feat(lasso_coefs,"LASSO")
 
 # Step 2a: Ridge Regression (Ridge)
 ridge = LogisticRegressionCV(penalty='l2', solver='saga', cv=5, max_iter=5000, class_weight='balanced', random_state=42)
-ridge.fit(X_train_balanced, y_train_balanced)
+ridge.fit(X_train_preprocessed, y_train)
 
 evaluate_model(ridge, X_test_preprocessed, y_test, "Ridge Regression")
 
