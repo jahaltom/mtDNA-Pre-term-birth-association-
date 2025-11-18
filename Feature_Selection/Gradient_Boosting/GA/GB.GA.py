@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split, GridSearchCV, KFold
+from sklearn.model_selection import train_test_split, GridSearchCV, KFold, GroupShuffleSplit
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
@@ -37,9 +37,20 @@ if missing:
 X = df[categorical_columns + continuous_columns + binary_columns]
 y = df["GAGEBRTH"]
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.3, random_state=42
-)
+if "site" in df.columns and df["site"].nunique() >= 2:
+    groups_all = df["site"].values
+
+    gss = GroupShuffleSplit(n_splits=1, test_size=0.3, random_state=42)
+    train_idx, test_idx = next(gss.split(X, y, groups=groups_all))
+
+    X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
+    y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+    groups_train = groups_all[train_idx]
+else:
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, random_state=42
+    )
+    groups_train = None
 
 # Dense OHE to support GB + SHAP
 ohe = OneHotEncoder(handle_unknown='ignore', sparse_output=False)  # or sparse=False on older sklearn
@@ -74,10 +85,14 @@ param_grid_gb = {
 
 
 
+# -----------------------------
+# Inner CV: GroupKFold if we have site groups in training, else KFold
+# -----------------------------
+if (groups_train is not None) and (len(np.unique(groups_train)) >= 2):
+    n_groups_train = len(np.unique(groups_train))
+    n_splits = min(5, n_groups_train)  # cap at 5
 
-if df["site"].nunique() >= 2: 
-    groups = df["site"]
-    cv = GroupKFold(n_splits=df["site"].nunique())
+    cv = GroupKFold(n_splits=n_splits)
     gb_cv = GridSearchCV(
         pipe,
         param_grid_gb,
@@ -85,12 +100,17 @@ if df["site"].nunique() >= 2:
         n_jobs=-1,
         scoring="neg_mean_squared_error"
     )
-    gb_cv.fit(X_train, y_train, groups=groups[X_train.index])
+    gb_cv.fit(X_train, y_train, groups=groups_train)
 else:
     cv = KFold(n_splits=5, shuffle=True, random_state=42)
-    gb_cv = GridSearchCV(pipe, param_grid_gb, cv=cv, n_jobs=-1)
+    gb_cv = GridSearchCV(
+        pipe,
+        param_grid_gb,
+        cv=cv,
+        n_jobs=-1,
+        scoring="neg_mean_squared_error"
+    )
     gb_cv.fit(X_train, y_train)
-
 
 
 
