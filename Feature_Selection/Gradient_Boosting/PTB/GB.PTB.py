@@ -248,7 +248,7 @@ plt.close('all')
 ##########################Non -linear stuff
 
 #SHAP dependence plots (curvature = nonlinearity). Interpretation: a curved (non-monotone) relationship between SHAP value (log-odds contribution) and the raw feature indicates non-linearity. A straight line suggests linear or near-linear.
-top_names = feat_names[topk]
+top_names = [x for x in feat_names[topk] if "cat" not in x]   
 for name in top_names:
     shap.dependence_plot(name, sv, X_te_dense[sub_ix], feature_names=feat_names, show=False)
     plt.savefig(f"dep_{name}.png", bbox_inches="tight")
@@ -268,7 +268,7 @@ from sklearn.preprocessing import SplineTransformer
 from sklearn.pipeline import make_pipeline
 
 # Always fetch the FULL transformed feature list
-feat_names_full = best.named_steps["pre"].get_feature_names_out()
+feat_names_full =   [x for x in best.named_steps["pre"].get_feature_names_out() if "cat" not in x]
 
 raw = []
 seen = set()
