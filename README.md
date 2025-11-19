@@ -64,7 +64,8 @@ sbatch workflow.sh
 
 #### workflow2.sh
 - Looking at out.txt from above, place "Categorical variables to keep for future model" in columnCat below.
-- Look for outliers in continuous features in plotsAll. Adjust if necessary.
+- Look for outliers in continuous features in plotsAll. 
+- Carry same continuous features down from input into workflow.sh.
 - Update workflow2.sh and run.
 ```
 columnCat="('TYP_HOUSE','HH_ELECTRICITY','TOILET','WEALTH_INDEX','THYROID','CHRON_HTN','DIABETES','TB','FUEL_FOR_COOK','MainHap','DRINKING_SOURCE','BABY_SEX','population','site')"
