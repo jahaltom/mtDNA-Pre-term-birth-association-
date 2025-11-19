@@ -65,8 +65,8 @@ for col in catigoricalFeat:
                 "PTB_1_Count": ptb_counts[1],
                 "PTB_1_Percentage": percentage
             })
-        # Only add to results if total counts are >= 25
-        if total_counts >= 25:
+        # Only add to results if total counts are >= 20
+        if total_counts >= 20:
             percentage = (ptb_counts[1] / total_counts * 100) 
             results.append({
                 "Column": col,
