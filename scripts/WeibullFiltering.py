@@ -93,6 +93,7 @@ final.to_csv('CategoricalVariablesToKeepTable.tsv', index=False, sep="\t")
 
 try: #df of troublesome classes to remove 
     classToRemove = troubleClass[~troubleClass['Column'].isin(featToExclude)]
+    classToRemove=classToRemove[classToRemove["Column"] != "MainHap"]
     # Remove unwanted class's
     for idx, row in classToRemove.iterrows():
         filtered_data = filtered_data[filtered_data[row['Column']] != row['Value']]
