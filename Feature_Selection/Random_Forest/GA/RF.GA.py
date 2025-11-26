@@ -140,11 +140,16 @@ best_pipe = rf_cv.best_estimator_
 print("\nBest Parameters for Random Forest:", rf_cv.best_params_)
 evaluate_model_regression(best_pipe, X_test, y_test, "Random Forest (GA)")
 
+
+
+best_pipe_full = clone(best_pipe)
+best_pipe_full.fit(X, y)   # X, y = ALL samples, all sites
+
 # -----------------------------
 # Common reports (shared for GA / PTB)
 # -----------------------------
 run_common_reports(
-    pipeline=best_pipe,
+    pipeline=best_pipe_full,
     X_raw=X,          # full raw dataframe with GA features
     y=y,              # full GAGEBRTH vector (for RFE etc.)
     task="reg",       # regression mode
