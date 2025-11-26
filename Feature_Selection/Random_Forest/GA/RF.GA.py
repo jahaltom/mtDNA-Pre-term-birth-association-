@@ -27,10 +27,7 @@ binary_columns=['BABY_SEX','CHRON_HTN','DIABETES','HH_ELECTRICITY','TB','THYROID
 
 
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
-required = categorical_columns + continuous_columns + binary_columns + ["GAGEBRTH"]
-missing = [c for c in required if c not in df.columns]
-if missing:
-    raise ValueError(f"Missing columns in input: {missing}")
+
 
 X = df[categorical_columns + continuous_columns + binary_columns]
 y = df["GAGEBRTH"]
@@ -129,8 +126,6 @@ else:
     rf_cv.fit(X_train, y_train)
 
 
-print("\nBest Parameters for Random Forest:", rf_cv.best_params_)
-evaluate_model_regression(rf_cv.best_estimator_, X_test, y_test, "Random Forest")
 
 
 
