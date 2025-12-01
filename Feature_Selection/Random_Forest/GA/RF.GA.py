@@ -9,9 +9,8 @@ from sklearn.ensemble import RandomForestRegressor   # <-- RF instead of GB
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.feature_selection import RFE
 from sklearn.base import clone
-
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_rows', None)
+from sklearn.model_selection import KFold, GroupKFold, GroupShuffleSplit
+from common_reports import run_common_reports
 
 def evaluate_model_regression(model, X_test, y_test, model_name):
     y_pred = model.predict(X_test)
@@ -23,11 +22,8 @@ categorical_columns = [c for c in sys.argv[1].split(',') if c != "site"]
 continuous_columns  = sys.argv[2].split(',')
 binary_columns      = sys.argv[3].split(',')
 
-# Columns
-
 
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
-
 
 X = df[categorical_columns + continuous_columns + binary_columns]
 y = df["GAGEBRTH"]
@@ -70,67 +66,90 @@ param_grid_rf = {
 
 
 
+# --- Site-aware train/test split ---
+if "site" in df.columns:
+    n_sites = df["site"].nunique()
+else:
+    n_sites = 0
 
-from sklearn.model_selection import KFold, GroupKFold, GroupShuffleSplit
-
-if "site" in df.columns and df["site"].nunique() >= 2:
-    # Use sites as groups so test contains (mostly) unseen sites
-    groups_all = df["site"]
+if ("site" in df.columns) and (n_sites >= 3):
+    # With 3+ sites, a true unseen-site test is meaningful
+    groups_all = df["site"].values
     gss = GroupShuffleSplit(n_splits=1, test_size=0.3, random_state=42)
     train_idx, test_idx = next(gss.split(X, y, groups=groups_all))
+
     X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
     y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
-    groups_train = groups_all.iloc[train_idx]
-    # -----------------------------
-    # Inner CV: try GroupKFold, fall back if only 1 train site
-    # -----------------------------
-    n_groups_train = groups_train.nunique()
-    if n_groups_train >= 2:
-        # safe to use GroupKFold
-        n_splits = min(5, n_groups_train)  # cap at 5
-        cv = GroupKFold(n_splits=n_splits)
-        rf_cv = GridSearchCV(
-            pipe,
-            param_grid_rf,
-            cv=cv,
-            n_jobs=-1,
-            scoring="neg_mean_squared_error"
-        )
-        rf_cv.fit(X_train, y_train, groups=groups_train)
-    else:
-        # Only one site in training data -> GroupKFold impossible.
-        # Fall back to standard KFold on rows.
-        n_splits = min(5, len(X_train))  # at most number of samples
-        cv = KFold(n_splits=n_splits, shuffle=True, random_state=42)
-        rf_cv = GridSearchCV(
-            pipe,
-            param_grid_rf,
-            cv=cv,
-            n_jobs=-1,
-            scoring="neg_mean_squared_error"
-        )
-        rf_cv.fit(X_train, y_train)
-else:
-    # Fallback: no/insufficient site info → standard random split
+    groups_train = groups_all[train_idx]
+
+elif ("site" in df.columns) and (n_sites == 2):
+    # With only 2 sites, we prefer site-aware CV over a pure unseen-site test,
+    # so do a row-wise split but keep site labels for GroupKFold.
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=42
     )
-    cv = KFold(n_splits=5, shuffle=True, random_state=42)
-    rf_cv = GridSearchCV(
+    groups_train = df.loc[X_train.index, "site"].values
+
+else:
+    # No / insufficient site info → standard split, no groups
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, random_state=42
+    )
+    groups_train = None
+
+
+
+# --- Inner CV: GroupKFold if possible, else row-level KFold ---
+if (groups_train is not None) and (len(np.unique(groups_train)) >= 2):
+    n_groups_train = len(np.unique(groups_train))
+    n_splits = min(5, n_groups_train)  # cap at 5
+
+    cv = GroupKFold(n_splits=n_splits)
+    model_cv = GridSearchCV(
         pipe,
-        param_grid_rf,
+        param_grid_model,   # param_grid_gb in GB script; param_grid_rf in RF script
         cv=cv,
         n_jobs=-1,
         scoring="neg_mean_squared_error"
     )
-    rf_cv.fit(X_train, y_train)
+    model_cv.fit(X_train, y_train, groups=groups_train)
+else:
+    cv = KFold(n_splits=5, shuffle=True, random_state=42)
+    model_cv = GridSearchCV(
+        pipe,
+        param_grid_model,
+        cv=cv,
+        n_jobs=-1,
+        scoring="neg_mean_squared_error"
+    )
+    model_cv.fit(X_train, y_train)
 
 
 
 
 
 
-from common_reports import run_common_reports
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # -----------------------------
 # After CV: best model + eval
