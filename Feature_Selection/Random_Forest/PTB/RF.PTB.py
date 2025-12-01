@@ -12,7 +12,7 @@ from sklearn.model_selection import GroupKFold
 from sklearn.base import clone
 from common_reports import run_common_reports
 
-# --- IO ---
+
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
 
 categorical_columns = [c for c in sys.argv[1].split(',') if c != "site"]
@@ -28,10 +28,9 @@ pre = ColumnTransformer([
     ("num", StandardScaler(), continuous_columns),
     ("bin", "passthrough", binary_columns),
     ("cat", OneHotEncoder(handle_unknown="ignore", sparse_output=True), categorical_columns)
-
 ], remainder="drop", sparse_threshold=1.0)
 
-# --- MODEL: RandomForest (drop GB) ---
+# --- MODEL: RandomForest ---
 rf = RandomForestClassifier(
     n_estimators=600,
     max_depth=None,
@@ -130,13 +129,10 @@ else:
 
 
 
+best = rf_cv.best_estimator_
+print("Best params:", rf_cv.best_params_)
 
-
-
-best = gs.best_estimator_
-print("Best params:", gs.best_params_)
-
-# --- Eval ---
+# Evaluation on held-out test set
 proba = best.predict_proba(X_te)[:,1]
 print(classification_report(y_te, (proba>=0.5).astype(int)))
 print("ROC AUC:", roc_auc_score(y_te, proba))
@@ -154,7 +150,6 @@ sample_weight_full = np.where(y == 1, pos_wt_full, 1.0)
 
 best_pipe_full = clone(best)
 best_pipe_full.fit(X, y, clf__sample_weight=sample_weight_full)
-
 
 
 # ----- Run common interpretation reports on the FULL data -----
