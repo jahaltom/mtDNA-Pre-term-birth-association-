@@ -85,7 +85,7 @@ preprocessor = ColumnTransformer(
 gb = GradientBoostingRegressor(random_state=42)
 
 pipe = Pipeline([
-    ("prep", preprocessor),
+    ("pre", preprocessor),
     ("gb", gb),
 ])
 
