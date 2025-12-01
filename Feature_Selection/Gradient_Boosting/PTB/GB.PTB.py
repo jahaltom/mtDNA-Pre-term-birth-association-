@@ -5,40 +5,24 @@ import re
 from sklearn.base import clone
 import numpy as np
 import pandas as pd
-import matplotlib
-matplotlib.use("Agg")  # non-interactive backend
+import matplotlib matplotlib.use("Agg")  # non-interactive backend
 import matplotlib.pyplot as plt
 import seaborn as sns
 from common_reports import run_common_reports
 from sklearn.base import clone
 import shap
-
-from sklearn.model_selection import (
-    StratifiedKFold,
-    GridSearchCV,
-    train_test_split,
-    GroupShuffleSplit,
-    GroupKFold,
-)
+from sklearn.model_selection import (StratifiedKFold,GridSearchCV, train_test_split,GroupShuffleSplit,GroupKFold,)
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import (
-    classification_report,
-    roc_auc_score,
-    average_precision_score,
-    RocCurveDisplay,
-    PrecisionRecallDisplay,
-)
+from sklearn.metrics import ( classification_report,roc_auc_score, average_precision_score,RocCurveDisplay, PrecisionRecallDisplay,)
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.inspection import PartialDependenceDisplay, partial_dependence
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import SplineTransformer
 from sklearn.pipeline import make_pipeline
 
-# -------------------------------------------------------------------
-# IO
-# -------------------------------------------------------------------
+
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
 
 categorical_columns = [c for c in sys.argv[1].split(',') if c != "site"]
@@ -48,21 +32,12 @@ binary_columns = sys.argv[3].split(",")
 X = df[categorical_columns + continuous_columns + binary_columns].copy()
 y = df["PTB"].astype(int)
 
-# -------------------------------------------------------------------
-# Preprocess
-#  - Use dense output from OHE to keep SHAP / PDP simple
-# -------------------------------------------------------------------
-ohe = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
 
-pre = ColumnTransformer(
-    [
+pre = ColumnTransformer([
         ("num", StandardScaler(), continuous_columns),
         ("bin", "passthrough", binary_columns),
-        ("cat", ohe, categorical_columns),
-    ],
-    remainder="drop",
-    sparse_threshold=0.0,  # force dense matrix from transformer
-)
+        ("cat", OneHotEncoder(handle_unknown="ignore", sparse_output=False), categorical_columns),
+    ],remainder="drop", sparse_threshold=0.0)
 
 gb = GradientBoostingClassifier(
     random_state=42,
@@ -157,25 +132,15 @@ else:
 best = gb_cv.best_estimator_
 print("Best params:", gb_cv.best_params_)
 
-# -------------------------------------------------------------------
 # Evaluation on held-out test set
-# -------------------------------------------------------------------
 proba = best.predict_proba(X_te)[:, 1]
-y_pred = (proba >= 0.5).astype(int)
-
-print(classification_report(y_te, y_pred))
+print(classification_report(y_te, (proba>=0.5).astype(int)))
 print("ROC AUC:", roc_auc_score(y_te, proba))
 print("PR AUC :", average_precision_score(y_te, proba))
-
 RocCurveDisplay.from_predictions(y_te, proba)
-plt.savefig("roc_auc.png", dpi=200)
-plt.clf()
-
+plt.savefig("roc_auc.png", dpi=200); plt.clf()
 PrecisionRecallDisplay.from_predictions(y_te, proba)
-plt.savefig("pr_auc.png", dpi=200)
-plt.clf()
-
-
+plt.savefig("pr_auc.png", dpi=200); plt.clf()
 
 
 
@@ -184,9 +149,7 @@ pos_wt_full = (len(y) - y.sum()) / y.sum()
 sample_weight_full = np.where(y == 1, pos_wt_full, 1.0)
 
 best_pipe_full = clone(best)
-best_pipe_full.fit(X, y, gb__sample_weight=sample_weight_full)
-
-
+best_pipe_full.fit(X, y, clf__sample_weight=sample_weight_full)
 
 
 # ----- Run common interpretation reports on the FULL data -----
