@@ -40,11 +40,14 @@ def compute_shap_main_and_interactions(model, X_trans, feature_names, task="reg"
 
     # --- main SHAP values ---
     sv_raw = expl.shap_values(X_trans)
-    sv_arr = np.asarray(sv_raw)
 
+    # Regression is simple: SHAP should already be (N, F)
     if task == "reg":
-        # regression : (N, F)
-        shap_main = sv_arr
+        shap_main = np.asarray(sv_raw)
+        if shap_main.ndim != 2:
+            # squeeze or flatten if needed
+            shap_main = shap_main.reshape(shap_main.shape[0], -1)
+
     else:
         # classification : pick positive class
         classes_ = getattr(model, "classes_", None)
@@ -52,20 +55,39 @@ def compute_shap_main_and_interactions(model, X_trans, feature_names, task="reg"
             raise ValueError("Need classes_ for classification SHAP.")
         pos_idx = int(np.where(classes_ == pos_label)[0][0])
 
+        # Case 1: SHAP returns list-of-arrays per class [class0, class1, ...]
         if isinstance(sv_raw, list):
-            shap_main = np.asarray(sv_raw[pos_idx])       # (N, F)
-        elif sv_arr.ndim == 3:
-            # (N, C, F) or (N, F, C)
-            if sv_arr.shape[2] == len(feature_names):     # (N, C, F)
-                shap_main = sv_arr[:, pos_idx, :]
-            elif sv_arr.shape[1] == len(feature_names):   # (N, F, C)
-                shap_main = sv_arr[:, :, pos_idx]
-            else:
-                raise ValueError(f"Unexpected SHAP shape {sv_arr.shape}")
-        else:
-            raise ValueError(f"Unexpected SHAP shape {sv_arr.shape}")
+            shap_main = np.asarray(sv_raw[pos_idx])  # (N, F)
 
-    assert shap_main.shape[1] == len(feature_names)
+        else:
+            sv_arr = np.asarray(sv_raw)
+
+            # Case 2: Newer SHAP: directly (N, F) for binary clf
+            if sv_arr.ndim == 2 and sv_arr.shape[1] == len(feature_names):
+                shap_main = sv_arr
+
+            # Case 3: Older/multi-class: (N, C, F) or (N, F, C)
+            elif sv_arr.ndim == 3:
+                # (N, C, F)
+                if sv_arr.shape[2] == len(feature_names):
+                    shap_main = sv_arr[:, pos_idx, :]
+                # (N, F, C)
+                elif sv_arr.shape[1] == len(feature_names):
+                    shap_main = sv_arr[:, :, pos_idx]
+                else:
+                    raise ValueError(f"Unexpected SHAP shape {sv_arr.shape}")
+            else:
+                # Anything else is unusual; try to flatten last dims
+                print(f"[WARN] Unexpected SHAP main shape {sv_arr.shape}, reshaping.")
+                shap_main = sv_arr.reshape(sv_arr.shape[0], -1)
+
+    # Final sanity check
+    if shap_main.ndim != 2:
+        shap_main = shap_main.reshape(shap_main.shape[0], -1)
+    assert shap_main.shape[1] == len(feature_names), (
+        f"shap_main.shape[1]={shap_main.shape[1]} "
+        f"!= len(feature_names)={len(feature_names)}"
+    )
 
     # --- interactions ---
     int_raw = expl.shap_interaction_values(X_trans)
@@ -74,21 +96,27 @@ def compute_shap_main_and_interactions(model, X_trans, feature_names, task="reg"
     if task == "reg":
         # regression: (N, F, F)
         shap_int = int_arr
+
     else:
         # classification: possibly list-of-classes or (N, C, F, F)
         pos_idx = int(np.where(model.classes_ == pos_label)[0][0])
+
         if isinstance(int_raw, list):
             shap_int = np.asarray(int_raw[pos_idx])
+
         elif int_arr.ndim == 4:
             # (N, C, F, F) or (N, F, F, C)
-            if int_arr.shape[1] == len(feature_names):    # (N, F, F, C)
-                shap_int = int_arr[:, :, :, pos_idx]
-            elif int_arr.shape[2] == len(feature_names):  # (N, C, F, F)
+            if int_arr.shape[2] == len(feature_names):    # (N, C, F, F)
                 shap_int = int_arr[:, pos_idx, :, :]
+            elif int_arr.shape[1] == len(feature_names):  # (N, F, F, C)
+                shap_int = int_arr[:, :, :, pos_idx]
             else:
                 raise ValueError(f"Unexpected interaction shape {int_arr.shape}")
+
         elif int_arr.ndim == 3:
+            # Already (N, F, F)
             shap_int = int_arr
+
         else:
             raise ValueError(f"Unexpected interaction shape {int_arr.shape}")
 
