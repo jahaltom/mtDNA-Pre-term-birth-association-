@@ -37,27 +37,24 @@ X = df[categorical_columns + continuous_columns + binary_columns]
 y = df["GAGEBRTH"]
 
 
-# Dense OHE to support GB + SHAP
-ohe = OneHotEncoder(handle_unknown='ignore', sparse_output=False)  # or sparse=False on older sklearn
-preprocessor = ColumnTransformer(
+
+pre = ColumnTransformer(
     transformers=[
         ("num", StandardScaler(), continuous_columns),
         ("bin", "passthrough", binary_columns),
-        ("cat", ohe, categorical_columns),
-    ]
-)
+        ("cat", OneHotEncoder(handle_unknown='ignore', sparse_output=False), categorical_columns),  ])
 
 gb = GradientBoostingRegressor(random_state=42)
 
 pipe = Pipeline([
-    ("pre", preprocessor),
-    ("gb", gb),
+    ("pre", pre),
+    ("reg", gb),
 ])
 
 param_grid_gb = {
-    "gb__n_estimators": [100, 200],
-    "gb__learning_rate": [0.01, 0.1],
-    "gb__max_depth": [3, 5],
+    "reg__n_estimators": [100, 200],
+    "reg__learning_rate": [0.01, 0.1],
+    "reg__max_depth": [3, 5],
 }
 
 
@@ -140,10 +137,10 @@ else:
 # -----------------------------
 # After CV: best model + eval
 # -----------------------------
-best_pipe = gb_cv.best_estimator_
+best_pipe = reg_cv.best_estimator_
 
 
-print("\nBest Parameters for Gradient Boosting:", gb_cv.best_params_)
+print("\nBest Parameters for Gradient Boosting:", reg_cv.best_params_)
 evaluate_model_regression(best_pipe, X_test, y_test, "Gradient Boosting")
 
 
