@@ -30,15 +30,12 @@ y = df["GAGEBRTH"]
 
 
 
-# Dense OHE to support tree SHAP & downstream ops
-ohe = OneHotEncoder(handle_unknown='ignore', sparse_output=False)  # or sparse=False on older sklearn
-preprocessor = ColumnTransformer(
+
+pre = ColumnTransformer(
     transformers=[
         ("num", StandardScaler(), continuous_columns),
         ("bin", "passthrough", binary_columns),
-        ("cat", ohe, categorical_columns),
-    ]
-)
+        ("cat", OneHotEncoder(handle_unknown='ignore', sparse_output=False), categorical_columns), ])
 
 # --- Random Forest model (replaces GradientBoostingRegressor) ---
 rf = RandomForestRegressor(
@@ -51,16 +48,16 @@ rf = RandomForestRegressor(
 )
 
 pipe = Pipeline([
-    ("pre", preprocessor),
-    ("rf", rf),
+    ("pre", pre),
+    ("reg", rf),
 ])
 
 # RF hyperparameter grid
 param_grid_rf = {
-    "rf__n_estimators": [300, 600, 900],
-    "rf__max_depth": [None, 10, 20],
-    "rf__min_samples_leaf": [1, 2, 5],
-    "rf__max_features": ["sqrt", 0.5],
+    "reg__n_estimators": [300, 600, 900],
+    "reg__max_depth": [None, 10, 20],
+    "reg__min_samples_leaf": [1, 2, 5],
+    "reg__max_features": ["sqrt", 0.5],
 }
 
 
@@ -154,9 +151,9 @@ else:
 # -----------------------------
 # After CV: best model + eval
 # -----------------------------
-best_pipe = rf_cv.best_estimator_
+best_pipe = reg_cv.best_estimator_
 
-print("\nBest Parameters for Random Forest:", rf_cv.best_params_)
+print("\nBest Parameters for Random Forest:", reg_cv.best_params_)
 evaluate_model_regression(best_pipe, X_test, y_test, "Random Forest (GA)")
 
 
