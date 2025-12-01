@@ -1,170 +1,159 @@
-# GA & PTB Random Forest Modeling Pipeline
-This repository contains two major components:
 
-1. **RF.GA.py** – End‑to‑end Random Forest modeling workflow for *Gestational Age (GA)* regression  
-2. **common_reports.py** – A unified interpretability/reporting engine shared across GA, PTB, and future models
+# GA Covariate Screening Pipeline  
+### Random Forest Regression With Site-Aware Cross‑Validation & Full‑Data SHAP Interpretation
 
-It is designed for large‑scale epidemiological and genomic datasets, including:
-- Continuous covariates  
-- Binary clinical/household variables  
-- Categorical site and cooking‑fuel variables  
-- Nested site structure handled via Group-aware CV  
-- SHAP-based interpretability  
-- PDP/ICE visualization  
-- Nonlinearity scoring  
-- Interaction heatmaps  
-- RFE feature selection  
+This repository contains a complete workflow for **exploratory covariate screening** for *Gestational Age at Birth (GAGEBRTH)* across multiple international study sites.
+
+The purpose of this pipeline is **not prediction**, but **interpretation** — specifically:
+
+- Identify covariates that explain **within‑site variation in gestational age**
+- Extract nonlinear effects using **PDP** and **SHAP**
+- Identify interaction effects using SHAP interactions
+- Provide a principled set of covariates for downstream **linear mixed‑effects regression** or **Bayesian GLMM** with site as a random effect
+
+This approach ensures that biological, demographic, and environmental predictors are interpreted **independently of between‑site differences**, which is critical for multisite clinical datasets.
 
 ---
 
-# 📦 File Overview
+## 🎯 Key Principle
 
-## **1. RF.GA.py**
-Main script to train a **RandomForestRegressor** for predicting gestational age.
+### **Site is *never* used as a predictor.**  
+### **Site is only used as a grouping factor for cross‑validation.**
 
-### **Workflow**
-1. Load metadata  
-2. Validate required columns  
-3. Define categorical, continuous, and binary feature groups  
-4. Construct preprocessing pipeline:  
+This design ensures:
+
+- No leakage of between‑site information  
+- Hyperparameter tuning penalizes models that rely on site distributions  
+- SHAP values reflect **true covariate effects within each site**  
+- Results align perfectly with downstream models like:
+
+```r
+GAGEBRTH ~ covariate_1 + covariate_2 + ... + (1 | site)
+```
+
+---
+
+# 📐 Workflow Overview
+
+## **Stage 1 — Hyperparameter Tuning (Site‑Aware)**
+
+1. Load `Metadata.Final.tsv`
+2. Remove `"site"` from categorical predictors automatically
+3. Preprocess using:
    - StandardScaler for continuous variables  
-   - Passthrough for binary features  
-   - OneHotEncoder for categorical variables  
-5. Group-aware **train/test split** using site  
-6. Group-aware **cross‑validated hyperparameter tuning**  
-7. Fit final best model  
-8. Evaluate on test set  
-9. Run shared interpretability suite via `run_common_reports()`
-
-### **Main Features**
-- Protects against **site leakage** using GroupShuffleSplit  
-- Uses **GroupKFold** when multiple sites exist  
-- Saves:
-  - Best parameters  
-  - Test MSE / R²  
-  - Full interpretability reports  
+   - OneHotEncoder (dense) for categorical variables  
+   - Passthrough for binary variables  
+4. Perform an **outer split**:
+   - If `site` exists → `GroupShuffleSplit` (hold out entire sites)
+   - Otherwise → simple random split  
+5. Perform **inner CV**:
+   - If ≥2 training sites → `GroupKFold`
+   - Otherwise → fallback to row‑level `KFold`  
+6. Run **GridSearchCV** over RandomForest hyperparameters  
+7. Select the best model using `neg_mean_squared_error`
 
 ---
 
-## **2. common_reports.py**
-This module centralizes advanced interpretability for both regression and classification tasks.
+## **Stage 2 — Full Dataset Fit & Interpretation**
 
-### **SHAP Analysis**
-✔ Handles all SHAP formats:
-- (N, F)  
-- (N, F, 2)  
-- (N, 2, F)  
-- List-of-arrays output  
+1. Clone the best hyperparameters  
+2. Refit the model on **all samples from all sites**  
+3. Run:
 
-Outputs:
-- **shap_importance.csv**  
-- **Top interaction pairs**  
-- **SHAP bar plot**  
-- **SHAP beeswarm plot**  
-- **Interaction summary plot**  
-- **Interaction heatmap (top K features)**  
-
-### **Interaction Analysis**
-- Computes full SHAP interaction matrix  
-- Extracts strongest interacting feature pairs  
-- Saves to CSV  
-- Produces heatmap & interaction summary  
-
-### **RFE (Recursive Feature Elimination)**
-- Performs RFE using the tuned RF estimator  
-- Works on **post-transform** feature space  
-- Outputs selected features list
-
-### **PDP & ICE**
-- Partial Dependence Plots (PDP)  
-- Individual Conditional Expectation (ICE)  
-- Multiple-grid visualization  
-
-### **Nonlinearity Index**
-Evaluates functional form of each main feature via:
-
-- Linear regression fit  
-- Spline regression fit  
-- Nonlinearity score = R²_spline − R²_linear  
-- Saves nonlinearity ranking CSV  
-
----
-
-# 🧪 Outputs Generated
-Running `RF.GA.py` produces:
-
-### **CSV Files**
-| File | Description |
-|------|-------------|
-| `GA.shap_importance.csv` | Mean |SHAP| values for each feature |
-| `GA.shap_interactions.csv` | Pairwise interaction strengths |
-| `GA.rfe_features.csv` | Features selected by RFE |
-| `GA.nonlinearity_scores.csv` | Sorted scores for spline nonlinear behavior |
-
-### **Plots / Images**
-| Plot | Purpose |
-|------|---------|
-| `GA_shap_bar.png` | Ranking of top features |
-| `GA_shap_beeswarm.png` | Full SHAP distribution |
-| `GA_shap_interaction_heatmap.png` | Heatmap of top-K interactions |
-| `GA_shap_interaction_summary.png` | Interaction impact summary |
-| `GA_pdp_<FEATURE>.png` | PDP + ICE for each selected feature |
-
----
-
-# 🧠 Model Architecture
-
-### **Preprocessing**
+```python
+run_common_reports(...)
 ```
-ColumnTransformer(
-  num = StandardScaler() → continuous vars
-  bin = passthrough        → binary vars
-  cat = OneHotEncoder()    → categorical vars
+
+This generates:
+
+- **SHAP summary plots**
+- **SHAP interaction heatmaps**
+- **PDP curves (nonlinear effects)**
+- **RFE variable ranking**
+- **CSV and PNG outputs for publication-ready analysis**
+
+---
+
+# 🧬 Why SHAP Gives “Within‑Site” Effects
+
+- `site` is not a predictor  
+- GroupKFold prevents learning site distributions  
+- Hyperparameter search selects models that generalize across sites  
+
+Therefore, SHAP importance represents covariates that matter **within each population**, not site differences.
+
+---
+
+# 🚀 How to Run
+
+### Example:
+
+```
+python RF_GA_covariate_screen.py \
+    "TYP_HOUSE,MainHap" \
+    "MAT_HEIGHT,MAT_WEIGHT,BMI,PW_AGE" \
+    "TOILET"
+```
+
+- `"site"` is automatically removed  
+- Supports mtDNA haplogroups as categorical variables  
+- Produces dense feature matrices compatible with SHAP
+
+---
+
+# 📦 Output Files
+
+```
+GA.shap_summary.png
+GA.shap_importance.csv
+GA.interaction_heatmap.png
+GA.shap_interactions.csv
+GA.pdp_<feature>.png
+GA.rfe_results.csv
+```
+
+QC metrics:
+
+```
+GA_model_mse.txt
+GA_model_r2.txt
+```
+
+---
+
+# 🧠 Recommended Downstream Use
+
+### Mixed‑Effects Regression
+
+```r
+lmer(GAGEBRTH ~ cov1 + cov2 + (1 | site), data=df)
+```
+
+### Bayesian GAMM (ideal)
+
+```r
+brm(
+  GAGEBRTH ~ s(BMI) + s(PW_AGE) + cov1 + cov2 + (1 | site),
+  data=df,
+  family=gaussian(),
+  cores=4
 )
 ```
 
-### **Model**
-```
-RandomForestRegressor(
-    n_estimators=[300–900],
-    max_depth=[None, 10, 20],
-    min_samples_leaf=[1,2,5],
-    max_features=["sqrt", 0.5]
-)
-```
-
-### **Cross‑Validation**
-- Test split: **GroupShuffleSplit** (site-level)
-- Hyperparameter CV: **GroupKFold** if ≥2 sites; else KFold
+Use SHAP importance, PDPs, and interactions to choose covariates and functional forms.
 
 ---
 
-# ▶️ How to Run
+# 📚 Citation
 
-```
-python RF.GA.py
-```
-
-Outputs appear in working directory as CSVs and PNGs.
+- Breiman (2001) — Random Forest  
+- Lundberg & Lee (2017) — SHAP  
+- scikit‑learn documentation  
 
 ---
 
-# 📁 Directory Structure
+# 📩 Contact
 
-```
-.
-├── RF.GA.py
-├── common_reports.py
-├── GA.shap_importance.csv
-├── GA.shap_interactions.csv
-├── GA_nonlinearity_scores.csv
-├── GA_rfe_features.csv
-├── plots/
-│   ├── GA_shap_bar.png
-│   ├── GA_shap_beeswarm.png
-│   ├── GA_shap_interaction_heatmap.png
-│   ├── GA_pdp_*.png
-```
-
----
-
+**Jeff Haltom, PhD**  
+Bioinformatics Scientist  
+Children’s Hospital of Philadelphia  
