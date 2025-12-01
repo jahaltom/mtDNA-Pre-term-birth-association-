@@ -1,5 +1,3 @@
-# common_reports.py
-
 import re
 import numpy as np
 import pandas as pd
@@ -45,10 +43,10 @@ def compute_shap_main_and_interactions(model, X_trans, feature_names, task="reg"
     sv_arr = np.asarray(sv_raw)
 
     if task == "reg":
-        # regression RF: (N, F)
+        # regression : (N, F)
         shap_main = sv_arr
     else:
-        # classification RF: pick positive class
+        # classification : pick positive class
         classes_ = getattr(model, "classes_", None)
         if classes_ is None:
             raise ValueError("Need classes_ for classification SHAP.")
@@ -181,7 +179,7 @@ def run_common_reports(
 
     # 1) Extract preprocessor + model and feature names
     pre = pipeline.named_steps["pre"]
-    model = pipeline.named_steps["rf"]  # RF classifier OR regressor
+    model = list(pipeline.named_steps.values())[-1]
 
     X_trans = pre.transform(X_raw)
     if hasattr(X_trans, "toarray"):
@@ -219,15 +217,15 @@ def run_common_reports(
         fi = model.feature_importances_
         fi_df = (pd.DataFrame({"Feature": feature_names, "Importance": fi})
                  .sort_values("Importance", ascending=False))
-        fi_df.to_csv(f"{out_prefix}.rf_importance.csv", index=False)
-        print(f"\n[{out_prefix}] Top 10 by RF feature_importances_:")
+        fi_df.to_csv(f"{out_prefix}.importance.csv", index=False)
+        print(f"\n[{out_prefix}] Top 10 by  feature_importances_:")
         print(fi_df.head(10))
 
     # ------------------ RFE ------------------
     from sklearn.base import clone
-    rf_for_rfe = clone(model)
+    mod_for_rfe = clone(model)
     n_feats = min(n_rfe, X_trans.shape[1])
-    rfe = RFE(rf_for_rfe, n_features_to_select=n_feats)
+    rfe = RFE(mod_for_rfe, n_features_to_select=n_feats)
     rfe.fit(X_trans, y)
     selected_features = feature_names[rfe.support_]
 
