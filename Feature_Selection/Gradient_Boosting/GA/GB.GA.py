@@ -137,10 +137,10 @@ else:
 # -----------------------------
 # After CV: best model + eval
 # -----------------------------
-best_pipe = reg_cv.best_estimator_
+best_pipe = model_cv.best_estimator_
 
 
-print("\nBest Parameters for Gradient Boosting:", reg_cv.best_params_)
+print("\nBest Parameters for Gradient Boosting:", model_cv.best_params_)
 evaluate_model_regression(best_pipe, X_test, y_test, "Gradient Boosting")
 
 
