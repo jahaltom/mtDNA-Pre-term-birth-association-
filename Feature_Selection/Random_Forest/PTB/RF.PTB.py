@@ -130,14 +130,15 @@ PrecisionRecallDisplay.from_predictions(y_te, proba)
 plt.savefig("pr_auc.png", dpi=200); plt.clf()
 
 
-
+best_pipe_full = clone(best)
+best_pipe_full.fit(X, y)   # X, y = ALL samples, all sites
 
 
 # ----- Run common interpretation reports on the TRAINING data -----
 run_common_reports(
-    pipeline=best,
-    X_raw=X_tr,          # raw features (not transformed)
-    y=y_tr,
+    pipeline=best_pipe_full,
+    X_raw=X,          # raw features (not transformed)
+    y=y,
     task="clf",          # classification mode
     pos_label=1,         # PTB = 1
     out_prefix="PTB",    # prefix for all output files
