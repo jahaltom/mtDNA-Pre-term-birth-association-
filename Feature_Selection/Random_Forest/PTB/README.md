@@ -1,105 +1,31 @@
 
 # PTB Covariate Screening Pipeline  
-### Random Forest + Site-Aware Cross-Validation + Full-Data SHAP Interpretation
+### Random Forest With Site-Aware Cross-Validation & Full-Data SHAP Interpretation
 
-This repository contains a complete and rigorous workflow for **covariate screening** for **Preterm Birth (PTB)** across multiple international study sites.  
+This repository contains a full workflow for **exploratory covariate screening** for *Preterm Birth (PTB)* in a multi‑site, multi‑population study.  
 
-This pipeline is **not intended for predictive modeling**.  
-Its purpose is to identify **robust covariates**, evaluate **nonlinear effects**, and generate **interpretation diagnostics** (SHAP, PDP, interactions) that guide the construction of a final **GLMM / brms** inferential model.
+The primary goal is **NOT predictive modeling**.  
+Instead, this workflow identifies:
 
----
+- Important covariates that affect PTB **within sites**
+- Nonlinear relationships (via PDP/SHAP)
+- Interaction effects
+- Features to carry into a final **GLMM / brms** mixed-effects model
 
-# 🔍 Overview
-
-The workflow operates in **two stages**:
-
-## **1. Site-aware model tuning (quality control)**  
-A Random Forest is tuned using **GroupKFold (groups = site)** so that validation folds contain **entirely unseen sites**.  
-This design *forces the model to generalize across sites* and prevents it from memorizing site labels.
-
-Because unseen site categories are encoded as all-zero one-hot vectors (`OneHotEncoder(handle_unknown="ignore")`), hyperparameters that rely heavily on site are **penalized during tuning**.  
-This results in a model that focuses on **within-site covariate effects**, not between-site differences.
-
-This stage is only for **QC and stable hyperparameter selection**.
+This pipeline is optimized for **interpretability**, **generalization across sites**, and **biological plausibility**, not accuracy alone.
 
 ---
 
-## **2. Full-data model fitting + SHAP interpretation (covariate screening)**  
-After tuning, the best hyperparameters are cloned and used to fit a Random Forest on **all samples, all sites**, with proper **class weighting** applied.
+# 📌 Key Idea
 
-This final model is passed to `run_common_reports`, which computes:
+### **Site is used ONLY as a grouping variable for cross-validation. It is NOT included as a predictor.**
 
-- SHAP global feature importance  
-- SHAP interaction strengths  
-- SHAP interaction heatmaps  
-- PDP (Partial Dependence Plots)  
-- ICE curves (optional)  
-- Nonlinearity metrics  
-- RFE (Recursive Feature Elimination)  
-- Exported CSVs of all rankings and metrics  
+This design ensures that:
 
-These diagnostics provide a rich, stable picture of **which covariates matter**, **how** they matter, and **what functional forms** should be used in a final GLMM/brms model.
-
----
-
-# 📁 Script Summary
-
-The script performs the following steps:
-
-1. **Load data**  
-   - PTB label is binarized  
-   - Categorical, continuous, and binary covariates are user-specified  
-
-2. **Preprocessing pipeline**  
-   - Continuous → StandardScaler  
-   - Binary → passthrough  
-   - Categorical → OneHotEncoder (`handle_unknown="ignore"`)  
-
-3. **Random Forest model specification**  
-   - RF chosen for interpretability + SHAP support  
-   - Hyperparameters grid-searched using AP (Average Precision)  
-
-4. **Outer split (QC)**  
-   If `site` column exists and has ≥2 levels:
-   - Use GroupShuffleSplit (30% sites held out)  
-   Else:
-   - Use Stratified shuffle split  
-
-5. **Class imbalance handling**  
-   - Compute weights: `neg/pos` ratio  
-   - Weights passed through `rf__sample_weight` during fitting  
-
-6. **Inner CV (hyperparameter tuning)**  
-   - **If sites available:** use GroupKFold  
-   - **Else:** stratified K-fold  
-
-7. **Train best model** and evaluate on held-out outer split  
-
-8. **Refit on full dataset** using the best hyperparameters + recalculated class weights  
-
-9. **Run `run_common_reports`** to produce:  
-   - SHAP global importance  
-   - SHAP interactions  
-   - Top PDP curves  
-   - Nonlinearity scores  
-   - RFE rankings  
-   - CSV outputs  
-   - PNG visualizations  
-
----
-
-# 🧠 Why SHAP Shows *Within-Site* Effects
-
-Because GroupKFold forces the model to validate on unseen sites, any hyperparameter set that relies on “site” as a feature performs poorly.  
-Thus, the final tuned hyperparameters produce a model that emphasizes **covariates whose effects generalize across sites**.
-
-This results in:
-
-- Site one-hot encoded columns having **near-zero SHAP importance**  
-- Maternal, demographic, and socioeconomic variables rising to the top  
-- PDP and SHAP plots that capture **within-site variation**, not merely between-site differences  
-
-This behavior is exactly what we want for a pipeline that ultimately feeds a **mixed-effects final model**:
+- The model captures **within-site effects**, not between-site differences.
+- No site leakage inflates feature importance.
+- SHAP values reflect **true covariate signals**, not population structure.
+- Results align perfectly with downstream mixed-effects modeling:
 
 ```
 PTB ~ covariate_1 + covariate_2 + ... + (1 | site)
@@ -107,28 +33,84 @@ PTB ~ covariate_1 + covariate_2 + ... + (1 | site)
 
 ---
 
-# 🛠 How to Run
+# 📁 Workflow Overview
 
-### **Command-Line Usage**
+The pipeline executes in two main stages:
+
+---
+
+## **Stage 1 — Site-Aware Hyperparameter Tuning (QC)**
+
+1. Load covariates and PTB labels from `Metadata.Final.tsv`
+2. Remove `"site"` from the feature list automatically
+3. Preprocess:
+   - Standardize continuous variables
+   - OHE categorical features (`handle_unknown="ignore"`)
+   - Pass binary features as-is
+4. Outer split:
+   - If site exists → **GroupShuffleSplit** (hold out entire sites)
+   - Otherwise → Stratified split
+5. Compute class weights to handle imbalance
+6. Use **GroupKFold** for hyperparameter tuning:
+   - Ensures every validation fold is made of different sites
+7. Grid-search best Random Forest parameters using **Average Precision (PR AUC)**
+
+This prevents the model from cheating by memorizing site differences.
+
+---
+
+## **Stage 2 — Full-Data Fit + SHAP Interpretation**
+
+1. Clone tuned model and refit it on **all samples** using recalculated class weights  
+2. Run `run_common_reports` to generate:
+   - SHAP global importance
+   - SHAP interaction effects
+   - SHAP heatmap
+   - PDPs for nonlinear relationships
+   - RFE summary
+   - CSV + PNG exports for all diagnostics
+
+This is the model you use for selecting covariates to include in the final mixed model.
+
+---
+
+# 🧬 Why This Workflow Produces “Within-Site SHAP”
+
+Because:
+
+- **GroupKFold** makes validation folds contain *unseen sites*
+- `OneHotEncoder(handle_unknown="ignore")` zeros out unseen categories  
+- Any model relying on `"site"` performs poorly during tuning  
+- Hyperparameter search therefore picks models that generalize **across sites**
+- The final model ends up learning **within-site** patterns
+
+Thus, SHAP importance reflects predictors whose effects are **robust in every site**, not confounded by site identity.
+
+This is *exactly* the interpretation needed before fitting a mixed-effects model.
+
+---
+
+# ⚙️ How to Run the Script
+
+### **Command-line:**
 
 ```
 python RF_PTB_covariate_screen.py \
-    "cat1,cat2,site,..." \
-    "height,BMI,age,..." \
-    "toilet,electricity,..."
+    "cat1,cat2,MainHap,SubHap,..." \
+    "MAT_HEIGHT,MAT_WEIGHT,BMI,..." \
+    "TOILET,ELECTRICITY,..."
 ```
 
-Where:
-- First argument = comma-separated categorical columns  
-- Second argument = continuous columns  
-- Third argument = binary columns  
+Note:
+- `"site"` is automatically removed from the categorical columns
+- You may include mtDNA haplogroups as categorical variables (MainHap, SubHap)
 
 ### Example:
 
 ```
 python RF_PTB_covariate_screen.py \
-    "site,TYP_HOUSE,TOILET" \
-    "MAT_HEIGHT,MAT_WEIGHT,BMI,PW_AGE" \
+    "TYP_HOUSE,TOILET,MainHap" \
+    "MAT_HEIGHT,BMI,PW_AGE" \
     "ELECTRICITY,CHRON_HTN"
 ```
 
@@ -136,59 +118,69 @@ python RF_PTB_covariate_screen.py \
 
 # 📦 Output Files
 
-Outputs from `run_common_reports` follow this naming pattern:
+After running, you will see files like:
 
 ```
+PTB.shap_summary.png
 PTB.shap_importance.csv
 PTB.shap_interactions.csv
-PTB.pdp_<feature>.png
-PTB.shap_summary.png
-PTB.rfe_selected.csv
 PTB.interaction_heatmap.png
-...
+PTB.pdp_<feature>.png
+PTB.rfe_results.csv
+roc_auc.png
+pr_auc.png
 ```
 
-A complete report summarizing interpretability diagnostics will be produced.
+These include:
+- ranked feature importance
+- nonlinear effect plots
+- interaction rankings
+- variable selection suggestions
+- quality-control performance plots
 
 ---
 
-# 🧬 How to Use These Results for Your Final Inferential Model
+# 🧠 How to Use the Results in a Mixed Model
 
-The final inferential model should be built using **GLMM (e.g., glmmTMB)** or **Bayesian brms**:
+From SHAP/PDP/RFE, choose:
 
-- Use SHAP/RFE to select covariates  
-- Use PDP and nonlinearity metrics to decide:
-  - linear term  
-  - spline  
-  - cutoff  
-  - logistic transform  
-- Use interactions flagged by SHAP to test or stratify models  
-- Add `(1 | site)` as the random intercept term  
+- Covariates with strong main effects
+- Covariates with strong nonlinearities → consider splines
+- Covariates with interactions worth modeling or testing
+- Add site as a **random intercept**:
 
-This workflow ensures that the final model:
-- is interpretable  
-- is biologically plausible  
-- captures within-site relationships  
-- properly partitions out between-site variation  
+### **BRMS example:**
+
+```r
+brm(
+  PTB ~ cov1 + cov2 + s(BMI) + (1 | site),
+  data = df,
+  family = bernoulli(),
+  prior = ...,
+  cores = 4
+)
+```
+
+This guarantees:
+- Site-specific differences are correctly modeled
+- Covariate effects reflect **within-site** relationships
 
 ---
 
-# 📚 Citation & Credit
+# 📚 Citation
 
-If using this workflow in a publication, consider citing:
+If you use this workflow in a publication, consider citing:
 
 - Lundberg & Lee (2017) — SHAP  
 - Breiman (2001) — Random Forests  
-- scikit-learn developers  
-
-And, of course, acknowledge your own PTB dataset sources.
+- scikit-learn  
+- Any relevant PTB consortium datasets
 
 ---
 
-# 📬 Contact
-
-For questions or technical issues, contact:
+# ✉️ Contact
 
 **Jeff Haltom, PhD**  
 Bioinformatics Scientist  
 Children’s Hospital of Philadelphia  
+
