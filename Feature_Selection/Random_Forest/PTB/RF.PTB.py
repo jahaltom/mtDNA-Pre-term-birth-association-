@@ -44,15 +44,15 @@ rf = RandomForestClassifier(
 
 pipe = Pipeline([
     ("pre", pre),
-    ("rf", rf)
+    ("clf", rf)
 ])
 
 # --- RF grid (mirrors your style, but with RF params) ---
 param_grid = {
-    "rf__n_estimators": [300, 600, 900],
-    "rf__max_depth": [None, 10, 20],
-    "rf__min_samples_leaf": [1, 2, 5],
-    "rf__max_features": ["sqrt", 0.5],
+    "clf__n_estimators": [300, 600, 900],
+    "clf__max_depth": [None, 10, 20],
+    "clf__min_samples_leaf": [1, 2, 5],
+    "clf__max_features": ["sqrt", 0.5],
 }
 
 
@@ -103,28 +103,29 @@ sample_weight = np.where(y_tr == 1, pos_wt, 1.0)
 # -----------------------------
 # Inner CV: GroupKFold if we have ≥2 training sites, else StratifiedKFold
 # -----------------------------
-if (groups_tr is not None) and (groups_tr.nunique() >= 2):
-    n_groups_tr = groups_tr.nunique()
+
+if (groups_tr is not None) and (len(np.unique(groups_tr)) >= 2):
+    n_groups_tr = len(np.unique(groups_tr))
     n_splits = min(5, n_groups_tr)
-    skf = GroupKFold(n_splits=n_splits)
-    gs = GridSearchCV(
+    cv = GroupKFold(n_splits=n_splits)
+    rf_cv = GridSearchCV(
         pipe,
         param_grid,
-        cv=skf,
+        cv=cv,
         n_jobs=-1,
         scoring="average_precision",
     )
-    gs.fit(X_tr, y_tr, groups=groups_tr, rf__sample_weight=sample_weight)
+    rf_cv.fit(X_tr, y_tr, groups=groups_tr, clf__sample_weight=sample_weight)
 else:
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    gs = GridSearchCV(
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    rf_cv = GridSearchCV(
         pipe,
         param_grid,
         scoring="average_precision",
-        cv=skf,
+        cv=cv,
         n_jobs=-1,
     )
-    gs.fit(X_tr, y_tr, rf__sample_weight=sample_weight)
+    rf_cv.fit(X_tr, y_tr, clf__sample_weight=sample_weight)
 
 
 
@@ -152,7 +153,7 @@ pos_wt_full = (len(y) - y.sum()) / y.sum()
 sample_weight_full = np.where(y == 1, pos_wt_full, 1.0)
 
 best_pipe_full = clone(best)
-best_pipe_full.fit(X, y, rf__sample_weight=sample_weight_full)
+best_pipe_full.fit(X, y, clf__sample_weight=sample_weight_full)
 
 
 
