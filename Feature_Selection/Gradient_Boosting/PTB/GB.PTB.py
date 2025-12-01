@@ -5,7 +5,6 @@ import re
 from sklearn.base import clone
 import numpy as np
 import pandas as pd
-import matplotlib matplotlib.use("Agg")  # non-interactive backend
 import matplotlib.pyplot as plt
 import seaborn as sns
 from common_reports import run_common_reports
