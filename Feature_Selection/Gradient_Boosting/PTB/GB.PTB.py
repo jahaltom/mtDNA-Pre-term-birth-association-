@@ -127,28 +127,30 @@ sample_weight = np.where(y_tr == 1, pos_wt, 1.0)
 # -----------------------------
 # Inner CV: GroupKFold if we have ≥2 training sites, else StratifiedKFold
 # -----------------------------
-if (groups_tr is not None) and (groups_tr.nunique() >= 2):
-    n_groups_tr = groups_tr.nunique()
+
+if (groups_tr is not None) and (len(np.unique(groups_tr)) >= 2):
+    n_groups_tr = len(np.unique(groups_tr))
     n_splits = min(5, n_groups_tr)
-    skf = GroupKFold(n_splits=n_splits)
-    gs = GridSearchCV(
+    cv = GroupKFold(n_splits=n_splits)
+    gb_cv = GridSearchCV(
         pipe,
         param_grid,
-        cv=skf,
+        cv=cv,
         n_jobs=-1,
         scoring="average_precision",
     )
-    gs.fit(X_tr, y_tr, groups=groups_tr, rf__sample_weight=sample_weight)
+    gb_cv.fit(X_tr, y_tr, groups=groups_tr, clf__sample_weight=sample_weight)
 else:
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    gs = GridSearchCV(
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    gb_cv = GridSearchCV(
         pipe,
         param_grid,
         scoring="average_precision",
-        cv=skf,
+        cv=cv,
         n_jobs=-1,
     )
-    gs.fit(X_tr, y_tr, rf__sample_weight=sample_weight)
+    gb_cv.fit(X_tr, y_tr, clf__sample_weight=sample_weight)
+
 
 
 
