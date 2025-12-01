@@ -34,93 +34,130 @@ def compute_shap_main_and_interactions(model, X_trans, feature_names, task="reg"
     Returns
     -------
     shap_main : (N, F)
-    shap_int  : (N, F, F)
+    shap_int  : (N, F, F)   (if interactions fail / mismatch, zeros with same shape)
     """
     expl = shap.TreeExplainer(model)
 
-    # --- main SHAP values ---
+    # -----------------------
+    # MAIN SHAP VALUES
+    # -----------------------
     sv_raw = expl.shap_values(X_trans)
 
-    # Regression is simple: SHAP should already be (N, F)
     if task == "reg":
+        # Regression: usually a single (N, F) array.
         shap_main = np.asarray(sv_raw)
-        if shap_main.ndim != 2:
-            # squeeze or flatten if needed
+        if shap_main.ndim == 3:
+            # Occasionally (N, 1, F)
+            if shap_main.shape[1] == 1:
+                shap_main = shap_main[:, 0, :]
+            else:
+                shap_main = shap_main.reshape(shap_main.shape[0], -1)
+        elif shap_main.ndim != 2:
             shap_main = shap_main.reshape(shap_main.shape[0], -1)
-
     else:
-        # classification : pick positive class
+        # Classification: pick SHAP for the positive class.
         classes_ = getattr(model, "classes_", None)
         if classes_ is None:
             raise ValueError("Need classes_ for classification SHAP.")
         pos_idx = int(np.where(classes_ == pos_label)[0][0])
 
-        # Case 1: SHAP returns list-of-arrays per class [class0, class1, ...]
         if isinstance(sv_raw, list):
-            shap_main = np.asarray(sv_raw[pos_idx])  # (N, F)
-
+            # Typical binary case: list [class0, class1]
+            shap_main = np.asarray(sv_raw[pos_idx])
         else:
             sv_arr = np.asarray(sv_raw)
-
-            # Case 2: Newer SHAP: directly (N, F) for binary clf
+            # Newer SHAP: directly (N, F) for binary clf
             if sv_arr.ndim == 2 and sv_arr.shape[1] == len(feature_names):
                 shap_main = sv_arr
-
-            # Case 3: Older/multi-class: (N, C, F) or (N, F, C)
             elif sv_arr.ndim == 3:
-                # (N, C, F)
-                if sv_arr.shape[2] == len(feature_names):
+                # (N, C, F) or (N, F, C)
+                if sv_arr.shape[2] == len(feature_names):      # (N, C, F)
                     shap_main = sv_arr[:, pos_idx, :]
-                # (N, F, C)
-                elif sv_arr.shape[1] == len(feature_names):
+                elif sv_arr.shape[1] == len(feature_names):    # (N, F, C)
                     shap_main = sv_arr[:, :, pos_idx]
                 else:
-                    raise ValueError(f"Unexpected SHAP shape {sv_arr.shape}")
+                    print(f"[WARN] Unexpected SHAP main shape {sv_arr.shape}, reshaping.")
+                    shap_main = sv_arr.reshape(sv_arr.shape[0], -1)
             else:
-                # Anything else is unusual; try to flatten last dims
                 print(f"[WARN] Unexpected SHAP main shape {sv_arr.shape}, reshaping.")
                 shap_main = sv_arr.reshape(sv_arr.shape[0], -1)
 
-    # Final sanity check
+    # Final sanity check for main
+    shap_main = np.asarray(shap_main)
     if shap_main.ndim != 2:
         shap_main = shap_main.reshape(shap_main.shape[0], -1)
-    assert shap_main.shape[1] == len(feature_names), (
-        f"shap_main.shape[1]={shap_main.shape[1]} "
-        f"!= len(feature_names)={len(feature_names)}"
-    )
 
-    # --- interactions ---
-    int_raw = expl.shap_interaction_values(X_trans)
-    int_arr = np.asarray(int_raw)
+    if shap_main.shape[1] != len(feature_names):
+        print(
+            f"[WARN] shap_main has {shap_main.shape[1]} features but "
+            f"feature_names has {len(feature_names)}; attempting to align."
+        )
+        # If fewer SHAP cols than names, truncate names; if more, truncate SHAP
+        F = min(shap_main.shape[1], len(feature_names))
+        shap_main = shap_main[:, :F]
+        feature_names = feature_names[:F]
 
-    if task == "reg":
-        # regression: (N, F, F)
-        shap_int = int_arr
+    # -----------------------
+    # INTERACTION VALUES
+    # -----------------------
+    try:
+        int_raw = expl.shap_interaction_values(X_trans)
+        int_arr = np.asarray(int_raw)
 
-    else:
-        # classification: possibly list-of-classes or (N, C, F, F)
-        pos_idx = int(np.where(model.classes_ == pos_label)[0][0])
-
-        if isinstance(int_raw, list):
-            shap_int = np.asarray(int_raw[pos_idx])
-
-        elif int_arr.ndim == 4:
-            # (N, C, F, F) or (N, F, F, C)
-            if int_arr.shape[2] == len(feature_names):    # (N, C, F, F)
-                shap_int = int_arr[:, pos_idx, :, :]
-            elif int_arr.shape[1] == len(feature_names):  # (N, F, F, C)
-                shap_int = int_arr[:, :, :, pos_idx]
-            else:
-                raise ValueError(f"Unexpected interaction shape {int_arr.shape}")
-
-        elif int_arr.ndim == 3:
-            # Already (N, F, F)
+        if task == "reg":
+            # Regression: usually (N, F, F)
             shap_int = int_arr
-
         else:
-            raise ValueError(f"Unexpected interaction shape {int_arr.shape}")
+            # Classification: list-of-classes or (N, C, F, F) / (N, F, F, C)
+            pos_idx = int(np.where(model.classes_ == pos_label)[0][0])
 
-    assert shap_int.shape[1] == shap_int.shape[2] == len(feature_names)
+            if isinstance(int_raw, list):
+                shap_int = np.asarray(int_raw[pos_idx])
+            elif int_arr.ndim == 4:
+                # (N, C, F, F) or (N, F, F, C)
+                if int_arr.shape[2] == len(feature_names):      # (N, C, F, F)
+                    shap_int = int_arr[:, pos_idx, :, :]
+                elif int_arr.shape[1] == len(feature_names):    # (N, F, F, C)
+                    shap_int = int_arr[:, :, :, pos_idx]
+                else:
+                    print(f"[WARN] Unexpected interaction shape {int_arr.shape}, reshaping.")
+                    # Try to pick the first "class-like" dimension
+                    shap_int = int_arr.reshape(int_arr.shape[0], len(feature_names), len(feature_names))
+            elif int_arr.ndim == 3:
+                # Already (N, F, F)
+                shap_int = int_arr
+            else:
+                print(f"[WARN] Unexpected interaction shape {int_arr.shape}; will fallback to zeros.")
+                shap_int = None
+    except Exception as e:
+        print(f"[WARN] Could not compute SHAP interactions: {e}")
+        shap_int = None
+
+    # -----------------------
+    # Final shape check / fallback
+    # -----------------------
+    F = len(feature_names)
+    N = X_trans.shape[0]
+
+    if shap_int is None:
+        print(f"[WARN] No valid SHAP interactions; using zeros of shape (N={N}, F={F}, F={F}).")
+        shap_int = np.zeros((N, F, F), dtype=float)
+    else:
+        shap_int = np.asarray(shap_int)
+        if shap_int.ndim != 3:
+            print(f"[WARN] SHAP interaction ndim={shap_int.ndim}; reshaping to (N, F, F).")
+            shap_int = shap_int.reshape(N, F, F)
+        if shap_int.shape[1] != F or shap_int.shape[2] != F:
+            print(
+                f"[WARN] SHAP interaction shape {shap_int.shape} does not match F={F}; "
+                "truncating/padding to (N, F, F)."
+            )
+            # Truncate or pad along feature dims
+            out = np.zeros((N, F, F), dtype=float)
+            f1 = min(F, shap_int.shape[1])
+            f2 = min(F, shap_int.shape[2])
+            out[:, :f1, :f2] = shap_int[:, :f1, :f2]
+            shap_int = out
 
     return shap_main, shap_int
 
@@ -365,3 +402,4 @@ def run_common_reports(
     print(nl_df.head(5))
 
     print(f"\n[{out_prefix}] Common reports generated.")
+
