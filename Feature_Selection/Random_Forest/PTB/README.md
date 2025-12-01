@@ -1,217 +1,194 @@
-# PTB Random Forest Classification Pipeline with SHAP & Site-Aware Cross-Validation
 
-This project implements a **Random Forest classifier** to model **Preterm Birth (PTB)** using maternal, fetal, mtDNA, and demographic metadata.  
-It includes **rigorous cross-site modeling**, **class imbalance handling**, and **deep interpretability** via **SHAP**, **interaction SHAP**, **PDP**, **ICE**, and **nonlinearity scoring**.
+# PTB Covariate Screening Pipeline  
+### Random Forest + Site-Aware Cross-Validation + Full-Data SHAP Interpretation
 
-The script is designed to answer **two key questions**:
+This repository contains a complete and rigorous workflow for **covariate screening** for **Preterm Birth (PTB)** across multiple international study sites.  
 
-1. **Can we generalize to new, unseen sites?**  
-2. **What features most strongly drive PTB risk?** (including non-linear & interaction effects)
-
----
-
-## 🔍 Key Features
-
-### ✔️ **Unseen-Site Evaluation (Outer Split)**
-If a `site` column exists with ≥2 unique sites, the script uses:
-
-- **GroupShuffleSplit** (test) → ensures **test set contains sites not seen during training**  
-- **GroupKFold** (CV) → prevents site leakage in hyperparameter tuning
-
-This isolates **geographic/site-specific confounding**.
+This pipeline is **not intended for predictive modeling**.  
+Its purpose is to identify **robust covariates**, evaluate **nonlinear effects**, and generate **interpretation diagnostics** (SHAP, PDP, interactions) that guide the construction of a final **GLMM / brms** inferential model.
 
 ---
 
-### ✔️ **Class Imbalance Handling**
-PTB is heavily imbalanced → model uses:
+# 🔍 Overview
 
-- Manual **sample weighting**  
-- No `class_weight` to avoid double-weighting  
+The workflow operates in **two stages**:
 
-Formula:
+## **1. Site-aware model tuning (quality control)**  
+A Random Forest is tuned using **GroupKFold (groups = site)** so that validation folds contain **entirely unseen sites**.  
+This design *forces the model to generalize across sites* and prevents it from memorizing site labels.
+
+Because unseen site categories are encoded as all-zero one-hot vectors (`OneHotEncoder(handle_unknown="ignore")`), hyperparameters that rely heavily on site are **penalized during tuning**.  
+This results in a model that focuses on **within-site covariate effects**, not between-site differences.
+
+This stage is only for **QC and stable hyperparameter selection**.
+
+---
+
+## **2. Full-data model fitting + SHAP interpretation (covariate screening)**  
+After tuning, the best hyperparameters are cloned and used to fit a Random Forest on **all samples, all sites**, with proper **class weighting** applied.
+
+This final model is passed to `run_common_reports`, which computes:
+
+- SHAP global feature importance  
+- SHAP interaction strengths  
+- SHAP interaction heatmaps  
+- PDP (Partial Dependence Plots)  
+- ICE curves (optional)  
+- Nonlinearity metrics  
+- RFE (Recursive Feature Elimination)  
+- Exported CSVs of all rankings and metrics  
+
+These diagnostics provide a rich, stable picture of **which covariates matter**, **how** they matter, and **what functional forms** should be used in a final GLMM/brms model.
+
+---
+
+# 📁 Script Summary
+
+The script performs the following steps:
+
+1. **Load data**  
+   - PTB label is binarized  
+   - Categorical, continuous, and binary covariates are user-specified  
+
+2. **Preprocessing pipeline**  
+   - Continuous → StandardScaler  
+   - Binary → passthrough  
+   - Categorical → OneHotEncoder (`handle_unknown="ignore"`)  
+
+3. **Random Forest model specification**  
+   - RF chosen for interpretability + SHAP support  
+   - Hyperparameters grid-searched using AP (Average Precision)  
+
+4. **Outer split (QC)**  
+   If `site` column exists and has ≥2 levels:
+   - Use GroupShuffleSplit (30% sites held out)  
+   Else:
+   - Use Stratified shuffle split  
+
+5. **Class imbalance handling**  
+   - Compute weights: `neg/pos` ratio  
+   - Weights passed through `rf__sample_weight` during fitting  
+
+6. **Inner CV (hyperparameter tuning)**  
+   - **If sites available:** use GroupKFold  
+   - **Else:** stratified K-fold  
+
+7. **Train best model** and evaluate on held-out outer split  
+
+8. **Refit on full dataset** using the best hyperparameters + recalculated class weights  
+
+9. **Run `run_common_reports`** to produce:  
+   - SHAP global importance  
+   - SHAP interactions  
+   - Top PDP curves  
+   - Nonlinearity scores  
+   - RFE rankings  
+   - CSV outputs  
+   - PNG visualizations  
+
+---
+
+# 🧠 Why SHAP Shows *Within-Site* Effects
+
+Because GroupKFold forces the model to validate on unseen sites, any hyperparameter set that relies on “site” as a feature performs poorly.  
+Thus, the final tuned hyperparameters produce a model that emphasizes **covariates whose effects generalize across sites**.
+
+This results in:
+
+- Site one-hot encoded columns having **near-zero SHAP importance**  
+- Maternal, demographic, and socioeconomic variables rising to the top  
+- PDP and SHAP plots that capture **within-site variation**, not merely between-site differences  
+
+This behavior is exactly what we want for a pipeline that ultimately feeds a **mixed-effects final model**:
 
 ```
-pos_weight = (# negatives) / (# positives)
+PTB ~ covariate_1 + covariate_2 + ... + (1 | site)
 ```
 
-Positives get upweighted in training.
-
 ---
 
-### ✔️ **Random Forest Classifier**
-Hyperparameters tuned via GridSearchCV:
+# 🛠 How to Run
 
-- `n_estimators`: 300, 600, 900  
-- `max_depth`: {None, 10, 20}  
-- `min_samples_leaf`: {1, 2, 5}  
-- `max_features`: {"sqrt", 0.5}
-
-Scored using **Average Precision (PR AUC)** — standard for imbalanced classification.
-
----
-
-### ✔️ **Full Feature Preprocessing Pipeline**
-Uses `ColumnTransformer`:
-
-- **StandardScaler** for continuous variables  
-- **Passthrough** for binary variables  
-- **OneHotEncoder** (sparse) for categorical variables  
-- Efficient sparse → dense conversion for SHAP
-
----
-
-### ✔️ **Comprehensive Model Evaluation**
-Outputs:
-
-- **Classification report (precision, recall, F1)**
-- **ROC AUC**
-- **PR AUC**
-- Saved plots:  
-  - `roc_auc.png`  
-  - `pr_auc.png`
-
----
-
-## 🧠 SHAP-BASED INTERPRETABILITY
-
-### ✔️ SHAP Main Effects
-Generates:
-
-- `shap_summary_top30.png`  
-- Sorted feature importances (mean |SHAP|)
-
-### ✔️ SHAP Interaction Effects
-To reveal feature synergy:
-
-- Interaction SHAP values computed on **top-k features**  
-- Results saved as:  
-  - `shap_interaction_summary_topk.png`  
-  - `shap_interactions_heatmap_topk.png`
-
-Also prints **top 10 strongest interactions**.
-
----
-
-## 📈 PDP, ICE, and Nonlinearity
-
-### ✔️ PDP for top features
-Partial dependence curves (top 12 features):
-
-- `pdp_top12.png`
-
-### ✔️ ICE for BMI
-Individual Conditional Expectations:
-
-- `ice_bmi.png`
-
-### ✔️ Nonlinearity scoring
-Spline-based curvature analysis:
-
-- Saved to: `nonlinearity_scores.csv`  
-- Identifies features with **non-monotonic effects**.
-
----
-
-## 🧬 Input Format
-
-Run script as:
+### **Command-Line Usage**
 
 ```
-python script.py "cat1,cat2" "cont1,cont2" "bin1,bin2"
+python RF_PTB_covariate_screen.py \
+    "cat1,cat2,site,..." \
+    "height,BMI,age,..." \
+    "toilet,electricity,..."
 ```
 
 Where:
+- First argument = comma-separated categorical columns  
+- Second argument = continuous columns  
+- Third argument = binary columns  
 
-- `categorical_columns` → fed to OHE  
-- `continuous_columns` → scaled  
-- `binary_columns` → passthrough  
-- Must include:
-  - `PTB` column (binary outcome)
-  - `site` column (optional but recommended)
-
-The dataset must be named:
+### Example:
 
 ```
-Metadata.Final.tsv
+python RF_PTB_covariate_screen.py \
+    "site,TYP_HOUSE,TOILET" \
+    "MAT_HEIGHT,MAT_WEIGHT,BMI,PW_AGE" \
+    "ELECTRICITY,CHRON_HTN"
 ```
 
 ---
 
-## 📁 Outputs
+# 📦 Output Files
 
-The script generates:
+Outputs from `run_common_reports` follow this naming pattern:
 
-### **Model Performance**
-- `roc_auc.png`
-- `pr_auc.png`
+```
+PTB.shap_importance.csv
+PTB.shap_interactions.csv
+PTB.pdp_<feature>.png
+PTB.shap_summary.png
+PTB.rfe_selected.csv
+PTB.interaction_heatmap.png
+...
+```
 
-### **SHAP Main Effects**
-- `shap_summary_top30.png`
-
-### **SHAP Interaction Effects**
-- `shap_interaction_summary_topk.png`
-- `shap_interactions_heatmap_topk.png`
-
-### **PDP & Nonlinearity**
-- `pdp_top12.png`
-- `ice_bmi.png`
-- `nonlinearity_scores.csv`
+A complete report summarizing interpretability diagnostics will be produced.
 
 ---
 
-## 🧪 Scientific Motivation
+# 🧬 How to Use These Results for Your Final Inferential Model
 
-PTB prediction is influenced by:
+The final inferential model should be built using **GLMM (e.g., glmmTMB)** or **Bayesian brms**:
 
-- mtDNA variants / haplogroups  
-- nDNA ancestry (PCs)  
-- demographic covariates  
-- environmental & site-specific factors  
+- Use SHAP/RFE to select covariates  
+- Use PDP and nonlinearity metrics to decide:
+  - linear term  
+  - spline  
+  - cutoff  
+  - logistic transform  
+- Use interactions flagged by SHAP to test or stratify models  
+- Add `(1 | site)` as the random intercept term  
 
-This pipeline:
-
-- isolates **site effects**
-- evaluates **cross-site generalizability**
-- reveals **main drivers** of PTB risk
-- highlights **interaction structure**
-- analyzes **non-linear biology**
-
-It's suitable for:
-
-- Manuscript supplements  
-- Internal reproducibility  
-- Exploratory modeling  
-- Feature significance screening  
+This workflow ensures that the final model:
+- is interpretable  
+- is biologically plausible  
+- captures within-site relationships  
+- properly partitions out between-site variation  
 
 ---
 
-## 🏁 Final Notes
+# 📚 Citation & Credit
 
-This pipeline is computationally heavy due to:
+If using this workflow in a publication, consider citing:
 
-- SHAP interactions  
-- PDP + spline nonlinearity  
-- full-grid RF tuning  
+- Lundberg & Lee (2017) — SHAP  
+- Breiman (2001) — Random Forests  
+- scikit-learn developers  
 
-For fast iteration, comment out:
-
-- SHAP interaction section  
-- PDP/ICE section  
-- Nonlinearity scoring  
+And, of course, acknowledge your own PTB dataset sources.
 
 ---
 
-## 📜 Author
+# 📬 Contact
 
-Jeff Haltom  
-Bioinformatics Scientist II  
-Children’s Hospital of Philadelphia (CHOP)
+For questions or technical issues, contact:
 
----
-
-Feel free to ask for:
-
-- A **lighter version**  
-- A **GPU-ready version**  
-- A **cluster SLURM script**  
-- A **paired regression README**  
+**Jeff Haltom, PhD**  
+Bioinformatics Scientist  
+Children’s Hospital of Philadelphia  
