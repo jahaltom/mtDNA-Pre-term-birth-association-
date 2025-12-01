@@ -1,5 +1,5 @@
 import pandas as pd, numpy as np, re, matplotlib.pyplot as plt
-from sklearn.model_selection import StratifiedKFold, GridSearchCV, train_test_split, GroupShuffleSplit
+from sklearn.model_selection import StratifiedKFold, GridSearchCV, train_test_split, GroupShuffleSplit, GroupKFold
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
@@ -59,7 +59,7 @@ param_grid = {
 
 
 
-from sklearn.model_selection import GroupShuffleSplit, GroupKFold, StratifiedKFold, train_test_split
+
 
 
 # -----------------------------
