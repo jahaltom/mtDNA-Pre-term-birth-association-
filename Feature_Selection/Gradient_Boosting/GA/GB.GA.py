@@ -40,16 +40,33 @@ if missing:
 X = df[categorical_columns + continuous_columns + binary_columns]
 y = df["GAGEBRTH"]
 
-if "site" in df.columns and df["site"].nunique() >= 2:
-    groups_all = df["site"].values
+if "site" in df.columns:
+    n_sites = df["site"].nunique()
+else:
+    n_sites = 0
 
+if ("site" in df.columns) and (n_sites >= 3):
+    # Unseen-site split is meaningful here
+    groups_all = df["site"].values
     gss = GroupShuffleSplit(n_splits=1, test_size=0.3, random_state=42)
     train_idx, test_idx = next(gss.split(X, y, groups=groups_all))
 
     X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
     y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
     groups_train = groups_all[train_idx]
+
+elif ("site" in df.columns) and (n_sites == 2):
+    # With only 2 sites, a pure unseen-site split can leave only
+    # one site in training, which breaks GroupKFold. Here we prefer
+    # site-aware *CV*, so use a standard row-level split but keep
+    # site labels as groups for inner GroupKFold.
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, random_state=42
+    )
+    groups_train = df.loc[X_train.index, "site"].values
+
 else:
+    # No / insufficient site info → standard split, no groups
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=42
     )
