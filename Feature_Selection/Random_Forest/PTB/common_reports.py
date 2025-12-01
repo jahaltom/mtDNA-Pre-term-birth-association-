@@ -402,3 +402,4 @@ def run_common_reports(
     print(nl_df.head(5))
 
     print(f"\n[{out_prefix}] Common reports generated.")
+
