@@ -9,7 +9,7 @@ from sklearn.inspection import PartialDependenceDisplay
 import shap, os, sys
 import seaborn as sns
 from sklearn.model_selection import GroupKFold
-
+from sklearn.base import clone
 # --- IO ---
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
 
