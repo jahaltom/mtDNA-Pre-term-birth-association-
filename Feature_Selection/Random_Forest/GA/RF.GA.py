@@ -53,7 +53,7 @@ pipe = Pipeline([
 ])
 
 # RF hyperparameter grid
-param_grid_rf = {
+param_grid_model = {
     "reg__n_estimators": [300, 600, 900],
     "reg__max_depth": [None, 10, 20],
     "reg__min_samples_leaf": [1, 2, 5],
