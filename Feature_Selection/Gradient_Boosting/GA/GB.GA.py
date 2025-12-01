@@ -51,7 +51,7 @@ pipe = Pipeline([
     ("reg", gb),
 ])
 
-param_grid_gb = {
+param_grid_model = {
     "reg__n_estimators": [100, 200],
     "reg__learning_rate": [0.01, 0.1],
     "reg__max_depth": [3, 5],
@@ -104,7 +104,7 @@ if (groups_train is not None) and (len(np.unique(groups_train)) >= 2):
     cv = GroupKFold(n_splits=n_splits)
     model_cv = GridSearchCV(
         pipe,
-        param_grid_model,   # param_grid_gb in GB script; param_grid_rf in RF script
+        param_grid_model,   
         cv=cv,
         n_jobs=-1,
         scoring="neg_mean_squared_error"
