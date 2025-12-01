@@ -19,9 +19,9 @@ def evaluate_model_regression(model, X_test, y_test, model_name):
     print(f"Mean Squared Error (MSE): {mean_squared_error(y_test, y_pred):.4f}")
     print(f"R-squared: {r2_score(y_test, y_pred):.4f}")
 
-categorical_columns=['FUEL_FOR_COOK','site']
-continuous_columns  = ['PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI','TOILET','WEALTH_INDEX','DRINKING_SOURCE']
-binary_columns=['BABY_SEX','CHRON_HTN','DIABETES','HH_ELECTRICITY','TB','THYROID','TYP_HOUSE']
+categorical_columns = sys.argv[1].split(',')
+continuous_columns  = sys.argv[2].split(',')
+binary_columns      = sys.argv[3].split(',')
 
 # Columns
 
