@@ -19,7 +19,7 @@ def evaluate_model_regression(model, X_test, y_test, model_name):
     print(f"Mean Squared Error (MSE): {mean_squared_error(y_test, y_pred):.4f}")
     print(f"R-squared: {r2_score(y_test, y_pred):.4f}")
 
-categorical_columns = sys.argv[1].split(',')
+categorical_columns = [c for c in sys.argv[1].split(',') if c != "site"]
 continuous_columns  = sys.argv[2].split(',')
 binary_columns      = sys.argv[3].split(',')
 
