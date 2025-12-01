@@ -381,12 +381,12 @@ def run_common_reports(
         nl_scores.append(sc)
 
         # PDP/ICE plot
-        kind = "average" if task == "reg" else "both"
+
         disp = PartialDependenceDisplay.from_estimator(
             pipeline,
             X_raw,
             features=[feat],
-            kind="both" if task == "reg" else "average",
+            kind=both,
             grid_resolution=50
         )
         disp.figure_.set_size_inches(6, 4)
