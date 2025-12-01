@@ -64,13 +64,16 @@ param_grid_gb = {
 
 
 
+
+
+# --- Site-aware train/test split ---
 if "site" in df.columns:
     n_sites = df["site"].nunique()
 else:
     n_sites = 0
 
 if ("site" in df.columns) and (n_sites >= 3):
-    # Unseen-site split is meaningful here
+    # With 3+ sites, a true unseen-site test is meaningful
     groups_all = df["site"].values
     gss = GroupShuffleSplit(n_splits=1, test_size=0.3, random_state=42)
     train_idx, test_idx = next(gss.split(X, y, groups=groups_all))
@@ -80,10 +83,8 @@ if ("site" in df.columns) and (n_sites >= 3):
     groups_train = groups_all[train_idx]
 
 elif ("site" in df.columns) and (n_sites == 2):
-    # With only 2 sites, a pure unseen-site split can leave only
-    # one site in training, which breaks GroupKFold. Here we prefer
-    # site-aware *CV*, so use a standard row-level split but keep
-    # site labels as groups for inner GroupKFold.
+    # With only 2 sites, we prefer site-aware CV over a pure unseen-site test,
+    # so do a row-wise split but keep site labels for GroupKFold.
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=42
     )
@@ -98,41 +99,30 @@ else:
 
 
 
-
-
-
-# -----------------------------
-# Inner CV: GroupKFold if we have site groups in training, else KFold
-# -----------------------------
+# --- Inner CV: GroupKFold if possible, else row-level KFold ---
 if (groups_train is not None) and (len(np.unique(groups_train)) >= 2):
     n_groups_train = len(np.unique(groups_train))
     n_splits = min(5, n_groups_train)  # cap at 5
 
     cv = GroupKFold(n_splits=n_splits)
-    gb_cv = GridSearchCV(
+    model_cv = GridSearchCV(
         pipe,
-        param_grid_gb,
+        param_grid_model,   # param_grid_gb in GB script; param_grid_rf in RF script
         cv=cv,
         n_jobs=-1,
         scoring="neg_mean_squared_error"
     )
-    gb_cv.fit(X_train, y_train, groups=groups_train)
+    model_cv.fit(X_train, y_train, groups=groups_train)
 else:
     cv = KFold(n_splits=5, shuffle=True, random_state=42)
-    gb_cv = GridSearchCV(
+    model_cv = GridSearchCV(
         pipe,
-        param_grid_gb,
+        param_grid_model,
         cv=cv,
         n_jobs=-1,
         scoring="neg_mean_squared_error"
     )
-    gb_cv.fit(X_train, y_train)
-
-
-
-
-
-
+    model_cv.fit(X_train, y_train)
 
 
 
