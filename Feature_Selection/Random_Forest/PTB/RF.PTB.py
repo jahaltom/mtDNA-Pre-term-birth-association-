@@ -134,7 +134,7 @@ best_pipe_full = clone(best)
 best_pipe_full.fit(X, y)   # X, y = ALL samples, all sites
 
 
-# ----- Run common interpretation reports on the TRAINING data -----
+# ----- Run common interpretation reports on the FULL data -----
 run_common_reports(
     pipeline=best_pipe_full,
     X_raw=X,          # raw features (not transformed)
