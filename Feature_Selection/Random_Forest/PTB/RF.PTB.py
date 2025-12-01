@@ -15,7 +15,7 @@ from common_reports import run_common_reports
 # --- IO ---
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
 
-categorical_columns = sys.argv[1].split(',')
+categorical_columns = [c for c in sys.argv[1].split(',') if c != "site"]
 continuous_columns  = sys.argv[2].split(',')
 binary_columns      = sys.argv[3].split(',')
 
