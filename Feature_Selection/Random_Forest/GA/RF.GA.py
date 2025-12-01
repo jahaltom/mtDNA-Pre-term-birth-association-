@@ -8,7 +8,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestRegressor   # <-- RF instead of GB
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.feature_selection import RFE
-
+from sklearn.base import clone
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
