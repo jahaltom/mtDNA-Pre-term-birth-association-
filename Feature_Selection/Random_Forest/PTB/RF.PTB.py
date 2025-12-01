@@ -10,6 +10,8 @@ import shap, os, sys
 import seaborn as sns
 from sklearn.model_selection import GroupKFold
 from sklearn.base import clone
+from common_reports import run_common_reports
+
 # --- IO ---
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
 
