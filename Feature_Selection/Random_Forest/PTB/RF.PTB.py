@@ -15,12 +15,10 @@ from common_reports import run_common_reports
 # --- IO ---
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
 
-# categorical_columns = sys.argv[1].split(',')
-# continuous_columns  = sys.argv[2].split(',')
-# binary_columns      = sys.argv[3].split(',')
-categorical_columns=['FUEL_FOR_COOK','site']
-continuous_columns  = ['PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI','TOILET','WEALTH_INDEX','DRINKING_SOURCE']
-binary_columns=['BABY_SEX','CHRON_HTN','DIABETES','HH_ELECTRICITY','TB','THYROID','TYP_HOUSE']
+categorical_columns = sys.argv[1].split(',')
+continuous_columns  = sys.argv[2].split(',')
+binary_columns      = sys.argv[3].split(',')
+
 
 X = df[categorical_columns + continuous_columns + binary_columns].copy()
 y = df["PTB"].astype(int)
