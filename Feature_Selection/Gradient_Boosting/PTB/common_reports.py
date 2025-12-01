@@ -386,7 +386,7 @@ def run_common_reports(
             pipeline,
             X_raw,
             features=[feat],
-            kind=both,
+            kind="both",
             grid_resolution=50
         )
         disp.figure_.set_size_inches(6, 4)
