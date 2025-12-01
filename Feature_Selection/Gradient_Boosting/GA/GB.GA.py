@@ -32,13 +32,37 @@ binary_columns = sys.argv[3].split(',')
 
 
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
-required = categorical_columns + continuous_columns + binary_columns + ["GAGEBRTH"]
-missing = [c for c in required if c not in df.columns]
-if missing:
-    raise ValueError(f"Missing columns in input: {missing}")
 
 X = df[categorical_columns + continuous_columns + binary_columns]
 y = df["GAGEBRTH"]
+
+
+# Dense OHE to support GB + SHAP
+ohe = OneHotEncoder(handle_unknown='ignore', sparse_output=False)  # or sparse=False on older sklearn
+preprocessor = ColumnTransformer(
+    transformers=[
+        ("num", StandardScaler(), continuous_columns),
+        ("bin", "passthrough", binary_columns),
+        ("cat", ohe, categorical_columns),
+    ]
+)
+
+gb = GradientBoostingRegressor(random_state=42)
+
+pipe = Pipeline([
+    ("pre", preprocessor),
+    ("gb", gb),
+])
+
+param_grid_gb = {
+    "gb__n_estimators": [100, 200],
+    "gb__learning_rate": [0.01, 0.1],
+    "gb__max_depth": [3, 5],
+}
+
+
+
+
 
 if "site" in df.columns:
     n_sites = df["site"].nunique()
@@ -71,34 +95,6 @@ else:
         X, y, test_size=0.3, random_state=42
     )
     groups_train = None
-
-# Dense OHE to support GB + SHAP
-ohe = OneHotEncoder(handle_unknown='ignore', sparse_output=False)  # or sparse=False on older sklearn
-preprocessor = ColumnTransformer(
-    transformers=[
-        ("num", StandardScaler(), continuous_columns),
-        ("bin", "passthrough", binary_columns),
-        ("cat", ohe, categorical_columns),
-    ]
-)
-
-gb = GradientBoostingRegressor(random_state=42)
-
-pipe = Pipeline([
-    ("pre", preprocessor),
-    ("gb", gb),
-])
-
-param_grid_gb = {
-    "gb__n_estimators": [100, 200],
-    "gb__learning_rate": [0.01, 0.1],
-    "gb__max_depth": [3, 5],
-}
-
-
-
-
-
 
 
 
