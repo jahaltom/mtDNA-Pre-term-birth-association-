@@ -130,8 +130,14 @@ PrecisionRecallDisplay.from_predictions(y_te, proba)
 plt.savefig("pr_auc.png", dpi=200); plt.clf()
 
 
+
+# Recompute weights on FULL data
+pos_wt_full = (len(y) - y.sum()) / y.sum()
+sample_weight_full = np.where(y == 1, pos_wt_full, 1.0)
+
 best_pipe_full = clone(best)
-best_pipe_full.fit(X, y)   # X, y = ALL samples, all sites
+best_pipe_full.fit(X, y, rf__sample_weight=sample_weight_full)
+
 
 
 # ----- Run common interpretation reports on the FULL data -----
