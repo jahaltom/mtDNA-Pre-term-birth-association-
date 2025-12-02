@@ -12,32 +12,20 @@ from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCh
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
-from sklearn.metrics import (
-    classification_report,
-    roc_auc_score,
-    average_precision_score,
-    roc_curve,
-    precision_recall_curve,
-)
-
+from sklearn.metrics import ( classification_report, roc_auc_score,average_precision_score,  roc_curve, precision_recall_curve)
 from keras_tuner import RandomSearch, HyperModel, Objective
-
-# Optional SMOTE (off by default; NNs often do better with class_weight)
-# from imblearn.over_sampling import SMOTE
-
 import shap
 
-# -----------------------------
-# Reproducibility
-# -----------------------------
+
+
 SEED = 42
-np.random.seed(SEED)
 random.seed(SEED)
+np.random.seed(SEED)
 tf.random.set_seed(SEED)
 os.environ["PYTHONHASHSEED"] = str(SEED)
 
 
-
+df = pd.read_csv("Metadata.Final.tsv", sep="\t")
 
 categorical_columns = [c for c in sys.argv[1].split(',') if c != "site"]
 continuous_columns = sys.argv[2].split(',')
@@ -45,80 +33,105 @@ binary_columns = sys.argv[3].split(',')
 
 
 
-# -----------------------------
-# IO
-# -----------------------------
-
-OUTDIR = "ptb_nn_outputs"
-os.makedirs(OUTDIR, exist_ok=True)
-
-df = pd.read_csv("Metadata.Final.tsv", sep="\t")
-
 
 
 X = df[categorical_columns + continuous_columns + binary_columns]
 y = df["PTB"]
 
-# -----------------------------
-# Split: train / val / test
-# -----------------------------
-groups = df["site"].values
 
 
 from sklearn.model_selection import GroupShuffleSplit, train_test_split
 
-if df["site"].nunique() >= 2:
-    # --- site-aware splits ---
-    gss1 = GroupShuffleSplit(n_splits=1, test_size=0.30, random_state=SEED)
-    train_idx, test_idx = next(gss1.split(X, y, groups=groups))
+# -----------------------------
+# Outer split: site-aware if possible
+#   - ≥3 sites: unseen-site test via GroupShuffleSplit
+#   - 2 sites: stratified row split + keep site labels for group-aware inner split
+#   - <2 sites: standard stratified split, no groups
+# -----------------------------
+if "site" in df.columns:
+    n_sites = df["site"].nunique()
+else:
+    n_sites = 0
+
+if ("site" in df.columns) and (n_sites >= 3):
+    groups_all = df["site"].values
+    gss_outer = GroupShuffleSplit(n_splits=1, test_size=0.30, random_state=SEED)
+    train_idx, test_idx = next(gss_outer.split(X, y, groups=groups_all))
+
     X_train_full = X.iloc[train_idx]
     y_train_full = y.iloc[train_idx]
     X_test       = X.iloc[test_idx]
     y_test       = y.iloc[test_idx]
-    groups_train = groups[train_idx]
-    gss2 = GroupShuffleSplit(n_splits=1, test_size=0.50, random_state=SEED + 1)
-    tr_idx, val_idx = next(gss2.split(X_train_full, y_train_full, groups=groups_train))
+    groups_train = groups_all[train_idx]
+
+elif ("site" in df.columns) and (n_sites == 2):
+    # Prefer site-aware inner tuning over a strict unseen-site test
+    X_train_full, X_test, y_train_full, y_test = train_test_split(
+        X, y,
+        test_size=0.30,
+        stratify=y,
+        random_state=SEED
+    )
+    groups_train = df.loc[X_train_full.index, "site"].values
+
+else:
+    # No usable site structure
+    X_train_full, X_test, y_train_full, y_test = train_test_split(
+        X, y,
+        test_size=0.30,
+        stratify=y,
+        random_state=SEED
+    )
+    groups_train = None
+
+# -----------------------------
+# Inner split: train vs val
+#   - GroupShuffleSplit if we still have ≥2 training sites
+#   - Else Stratified split (classification)
+# -----------------------------
+if (groups_train is not None) and (len(np.unique(groups_train)) >= 2):
+    gss_inner = GroupShuffleSplit(n_splits=1, test_size=0.20, random_state=SEED + 1)
+    tr_idx, val_idx = next(
+        gss_inner.split(X_train_full, y_train_full, groups=groups_train)
+    )
     X_train = X_train_full.iloc[tr_idx]
     y_train = y_train_full.iloc[tr_idx]
     X_val   = X_train_full.iloc[val_idx]
     y_val   = y_train_full.iloc[val_idx]
 else:
-    # --- single-site: fall back to stratified random splits ---
-    X_train, X_temp, y_train, y_temp = train_test_split(
-        X, y, test_size=0.30, random_state=SEED, stratify=y
-    )
-    X_val, X_test, y_val, y_test = train_test_split(
-        X_temp, y_temp, test_size=0.50, random_state=SEED, stratify=y_temp
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_train_full,
+        y_train_full,
+        test_size=0.20,
+        stratify=y_train_full,
+        random_state=SEED
     )
 
+# Ensure numpy int arrays as before
 y_train = np.asarray(y_train).astype(int)
 y_val   = np.asarray(y_val).astype(int)
 y_test  = np.asarray(y_test).astype(int)
 
-# -----------------------------
-# Preprocessing (dense OHE)
-# -----------------------------
-# For sklearn >= 1.2 use 'sparse_output=False'. If older, replace with 'sparse=False'.
-ohe = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
+
+
+
+
 
 preprocessor = ColumnTransformer(
     transformers=[
         ("num", StandardScaler(), continuous_columns),
         ("bin", "passthrough", binary_columns),
-        ("cat", ohe, categorical_columns),
+        ("cat", OneHotEncoder(handle_unknown="ignore", sparse_output=False), categorical_columns),
     ],
     remainder="drop",
 )
 
-X_train_p = preprocessor.fit_transform(X_train)
-X_val_p   = preprocessor.transform(X_val)
-X_test_p  = preprocessor.transform(X_test)
+X_train_preprocessed = preprocessor.fit_transform(X_train)
+X_val_preprocessed   = preprocessor.transform(X_val)
+X_test_preprocessed  = preprocessor.transform(X_test)
 
 feature_names = preprocessor.get_feature_names_out()
 
-# OPTIONAL: SMOTE on X_train_p (commented out by default)
-# sm = SMOTE(random_state=SEED)
-# X_train_p, y_train = sm.fit_resample(X_train_p, y_train)
 
 # -----------------------------
 # Class weights (balanced heuristic)
@@ -132,7 +145,7 @@ class_weight = {int(c): float(total / (n_classes * n)) for c, n in zip(classes, 
 # -----------------------------
 # HyperModel
 # -----------------------------
-class PTBHyperModel(HyperModel):
+class HyperModel(HyperModel):
     def __init__(self, input_dim: int):
         self.input_dim = input_dim
     def build(self, hp):
@@ -176,7 +189,7 @@ class PTBHyperModel(HyperModel):
 # -----------------------------
 # Tuner
 # -----------------------------
-hypermodel = PTBHyperModel(input_dim=X_train_p.shape[1])
+hypermodel = HyperModel(input_dim=X_train_preprocessed.shape[1])
 
 tuner = RandomSearch(
     hypermodel,
@@ -204,9 +217,9 @@ BATCH_SIZE = 256
 EPOCHS = 100
 
 tuner.search(
-    X_train_p,
+    X_train_preprocessed,
     y_train,
-    validation_data=(X_val_p, y_val),
+    validation_data=(X_val_preprocessed, y_val),
     epochs=EPOCHS,
     batch_size=BATCH_SIZE,
     callbacks=callbacks,
@@ -225,7 +238,7 @@ for k, v in best_hps.values.items():
 # -----------------------------
 # Final evaluation on untouched test set
 # -----------------------------
-y_prob = best_model.predict(X_test_p).ravel()
+y_prob = best_model.predict(X_test_preprocessed).ravel()
 y_pred = (y_prob >= 0.5).astype(int)
 
 print("\nClassification report @0.5 threshold:")
@@ -261,102 +274,4 @@ plt.tight_layout()
 plt.savefig(os.path.join(OUTDIR, "PR_AUC_plot.NN.PTB.png"), dpi=150)
 plt.close()
 
-# -----------------------------
-# SHAP (robust, small background)
-# -----------------------------
-# Use a small background sample to keep DeepExplainer sane
-bg_n = min(200, X_train_p.shape[0])
-bg_idx = np.random.choice(X_train_p.shape[0], size=bg_n, replace=False)
-background = X_train_p[bg_idx]
-
-# Test sample for SHAP plotting
-ts_n = min(500, X_test_p.shape[0])
-ts_idx = np.random.choice(X_test_p.shape[0], size=ts_n, replace=False)
-X_test_sample = X_test_p[ts_idx]
-
-# Some TF/SHAP combos work best with TF functions disabled eager; modern SHAP usually OK.
-explainer = shap.DeepExplainer(best_model, background)
-shap_values = explainer(X_test_sample)
-
-# Handle SHAP API differences
-vals = getattr(shap_values, "values", shap_values)
-if isinstance(vals, list):
-    # binary sigmoid can return list of arrays; take first
-    vals = vals[0]
-
-
-# Fix shape: ensure (n_samples, n_features)
-if vals.ndim == 3:
-    vals = np.squeeze(vals, axis=-1)
-elif vals.ndim == 1:
-    vals = vals.reshape(-1, 1)
-
-
-# Summary plot (top 20)
-shap.summary_plot(vals, X_test_sample, feature_names=feature_names, show=False, max_display=20)
-plt.tight_layout()
-plt.savefig(os.path.join(OUTDIR, "shap_summary_plot.NN.PTB.png"), dpi=150)
-plt.close()
-
-# Top 20 features & dependence plots
-mean_abs = np.abs(vals).mean(axis=0)
-topk_idx = np.argsort(mean_abs)[::-1][:20]
-top_feats = [feature_names[i] for i in topk_idx]
-
-# Print top 20 to stdout
-print("\nTop 20 features by mean |SHAP|:")
-for fn, mv in zip(top_feats, mean_abs[topk_idx]):
-    print(f"{fn}: {mv:.6f}")
-
-num_feats = [f for f in top_feats if f.startswith("num__") or f.startswith("bin__")]
-
-
-
-
-# Dependence plots for top 20
-for feat in num_feats:
-    shap.dependence_plot(feat, vals, X_test_sample, feature_names=feature_names, show=False)
-    safe = feat.replace("/", "_").replace(" ", "_").replace("[", "").replace("]", "")
-    plt.tight_layout()
-    plt.savefig(os.path.join(OUTDIR, f"shap.dependence_plot.NN.PTB.{safe}.png"), dpi=150)
-    plt.close()
-
-
-
-
-
-
-
-
-
-
-
-
-# -----------------------------
-# Save model
-# -----------------------------
-best_model.save(os.path.join(OUTDIR, "NN.PTB_best_model.keras"))
-print(f"\nSaved model to {os.path.join(OUTDIR, 'NN.PTB_best_model.keras')}")
-print(f"Outputs in: {OUTDIR}")
-
-
-
-
-
-
-
-
-
-
-results_df = pd.DataFrame({
-    "y_test": y_test,
-    "y_prob": y_prob,
-    "y_pred": y_pred,
-})
-results_df.to_csv(os.path.join(OUTDIR, "NN.PTB_test_predictions.tsv"), sep="\t", index=False)
-
-with open(os.path.join(OUTDIR, "NN.PTB_metrics.txt"), "w") as f:
-    f.write(f"ROC AUC: {roc_auc_score(y_test, y_prob):.4f}\n")
-    f.write(f"PR  AUC: {average_precision_score(y_test, y_prob):.4f}\n")
-    f.write("\nClassification report @0.5:\n")
-    f.write(classification_report(y_test, y_pred, digits=3))
+# ---------
