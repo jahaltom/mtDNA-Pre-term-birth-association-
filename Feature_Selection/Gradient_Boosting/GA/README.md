@@ -1,146 +1,115 @@
+# Gradient Boosting GA Prediction Pipeline
 
-# GA/PTB Covariate Feature Selection & Explainability Pipeline
+This repository contains a **site‑aware Gradient Boosting Regression workflow** for predicting gestational age at birth (GAGEBRTH).
 
-This repository/script builds a **Gradient Boosting** model on maternal, socioeconomic, and clinical covariates to explain **Gestational Age (GA)**, then performs **model explainability** and **diagnostics** to:
-- Rank covariates by importance
-- Quantify **pairwise interactions** via SHAP
-- Detect **non-linear** features
-- Export plots for reporting and to inform a downstream **mixed-effects** association model (with `site` as a random effect and **mtDNA haplogroup** as the fixed effect of interest)
+The script:
 
-> **Design choice:** This step intentionally **excludes** `site`, population labels, and **nDNA PCs** from feature selection, because those are structural/ancestry controls to be modeled later (e.g., `(1 | site)` in your GLMM). It also **excludes mtDNA haplogroup** since that is the predictor of interest to be tested in the final association model, not a nuisance covariate.
-
----
-
-## Contents
-
-- [Requirements](#requirements)
-- [Data Expectations](#data-expectations)
-- [How It Works (Step by Step)](#how-it-works-step-by-step)
-- [Outputs](#outputs)
-- [Customization](#customization)
-- [Interpretation Notes](#interpretation-notes)
-- [Troubleshooting](#troubleshooting)
-
----
+- Loads metadata
+- Handles preprocessing (scaling + one‑hot encoding)
+- Performs site‑aware CV / splitting
+- Tunes model hyperparameters
+- Evaluates performance
+- Retrains best model on full dataset
+- Generates interpretability reports
 
 ## Requirements
 
-- Python 3.9+
-- Packages:
-  - `numpy`, `pandas`
-  - `scikit-learn` ≥ 1.2 (for `OneHotEncoder(sparse_output=False)`); if older, use `sparse=False`
-  - `matplotlib`
-  - `seaborn`
-  - `shap`
+- Python 3.10+
+- pandas
+- numpy
+- scikit‑learn
+- seaborn
+- common_reports.py
 
-Install (example):
+## Input File
+
+`Metadata.Final.tsv` must contain:
+
+- `GAGEBRTH` (target)
+- feature columns
+- `site` column recommended
+
+## Usage
+
+Example:
+
 ```bash
-pip install numpy pandas scikit-learn matplotlib seaborn shap
+python GB.GA.py \
+    "HAPLOGROUP,SEX" \
+    "MAT_HEIGHT,MAT_WEIGHT" \
+    "TOILET,WATER"
 ```
 
----
+Arguments:
 
-## Data Expectations
+1. comma‑separated categorical columns  
+2. comma‑separated continuous numeric columns  
+3. comma‑separated binary columns  
 
-- Input file: `Metadata.Final.tsv` (tab-separated)
+⚠ Do not include `site` in argument 1 — the script detects it automatically.
 
----
+## What the Script Does
 
-## How It Works (Step by Step)
+### 1. Preprocesses features  
+- standardizes numeric features  
+- applies one‑hot encoding to categorical features  
 
-1. **Load & Validate Data**  
-   Reads `Metadata.Final.tsv`, asserts all required columns exist, and selects the covariate matrix `X` and target `y=GAGEBRTH`.
+### 2. Site‑Aware Splitting  
+- ≥3 sites → unseen‑site generalization test  
+- 2 sites → CV respects site but test split mixes  
+- otherwise → standard splits  
 
-2. **Train/Test Split**  
-   70/30 split with `random_state=42` for reproducibility.
+### 3. Model Training  
+Uses scikit‑learn `GradientBoostingRegressor`.
 
-3. **Preprocessing (ColumnTransformer)**  
-   - `StandardScaler` on continuous features
-   - `'passthrough'` for binary features
-   - `OneHotEncoder(handle_unknown='ignore', sparse_output=False)` for categorical → **dense** matrix to support GradientBoosting + SHAP
+Hyperparameters searched:
 
-4. **Model & Pipeline**  
-   - `GradientBoostingRegressor` wrapped in a `Pipeline` with the preprocessor to **avoid leakage**.
-   - `GridSearchCV` over `n_estimators`, `learning_rate`, and `max_depth` using an adaptive cross-validation strategy: when the dataset contains two or more sites, we used GroupKFold with one fold per site (site-out CV, passing site as the grouping variable), and when only a single site was present, we used standard 5-fold KFold(shuffle=True).
+```python
+n_estimators = [100, 200]
+learning_rate = [0.01, 0.1]
+max_depth = [3, 5]
+```
 
-5. **Evaluation**  
-   Prints best hyperparameters and evaluates on held-out test data (MSE, R²).
+### 4. Evaluation  
+Outputs:
 
-6. **Feature Importances**  
-   Extracts `feature_importances_` from the fitted GB and prints top 10 (using the **expanded** feature names from the fitted preprocessor).
+- Mean squared error (MSE)
+- R²
 
-7. **RFE (Recursive Feature Elimination)**  
-   Runs RFE on the **transformed** design (post-OHE) to select the top 20 features by model-based importance; prints their names.
+### 5. Full Retrain + Interpretation
 
-8. **SHAP (Main Effects)**  
-   - Builds a `TreeExplainer` on the trained GB.
-   - Computes SHAP values on the transformed training design.
-   - Saves the **SHAP summary plot** of main effects.
+Runs:
 
-9. **SHAP (Interactions)**  
-   - Computes `shap_interaction_values` and aggregates mean |interaction| across samples, yielding an **interaction matrix**.
-   - Prints top-10 interacting pairs.
-   - Produces a **heatmap** of interactions for the **top-K** features by main |SHAP|.
-   - Draws **2D Partial Dependence** plots for the top 5 pairs.
-   - Generates a **SHAP interaction summary** plot for the same **top-K** subset.
+```
+run_common_reports(...)
+```
 
-10. **Non-Linearity Scoring + Plots**  
-    - For each feature, fits **linear** vs **cubic** regression to model *SHAP contribution* from the feature value; the ΔR² is a **nonlinearity score**.
-    - Prints the top-10 suspected non-linear features.
-    - Saves SHAP **dependence plots** (colored by strongest partner) for the top non-linear features.
-    - Saves 1D **PDP** panels for the same set.
+producing:
 
----
-
-
+- feature rankings
+- interaction effects
+- PDP plots
+- RFE summary
 
 ## Outputs
 
-Generated files include (names may vary slightly):
+Files begin with:
 
-- `shap.summary_plot.GB.GA.png` — SHAP main-effects summary (beeswarm)
-- `shap_interactions_heatmap_top.png` — Heatmap of SHAP interactions among top-K important features
-- `pdp_top_interactions.png` — PDP grid for the top 5 interaction pairs
-- `shap_interaction_summary_topk.png` — SHAP **interaction** summary (beeswarm) for top-K features
-- `shap_dependence_<FEATURE>.png` — SHAP dependence plots for top non-linear features
-- `pdp_top_nonlinear.png` — PDP grid of the top non-linear candidates
-- Console prints:
-  - Best GB params
-  - Test MSE & R²
-  - Top 10 GB importances
-  - RFE-selected features
-  - Top 10 SHAP interaction pairs
-  - Top 10 non-linear features (ΔR² cubic vs linear)
+```
+GA_*
+```
 
-> **Note:** In the code, the print statement says `Saved SHAP summary plot to 'shap_summary_GB_GA.png'` but the actual filename is `shap.summary_plot.GB.GA.png`. You can update either to match.
+Example outputs:
 
----
+- `GA_top_main_features.tsv`
+- `GA_interaction_scores.tsv`
+- `GA_pdp*.png`
+- `GA_rfe.txt`
 
-## Customization
+## Author
 
-- **Top-K for interaction heatmap:** `K = min(30, len(feature_names))`
-- **RFE feature count:** `n_feats = min(20, Xtr.shape[1])`
-- **Non-linear plot count:** change `nl_df.head(8)`
-- **Grid search space:** edit `param_grid_gb`
+Jeff Haltom
 
----
+## License
 
-
-## Interpretation Notes
-
-- **Positive SHAP** → pushes GA **higher** (longer gestation); **negative** → pushes GA **lower**.
-- For **one-hot dummies** (e.g., `cat__FUEL_FOR_COOK_3`), **red** points indicate “category present (1)”. Red on the **right** = category increases predicted GA.
-- Interaction patterns often reflect **site/ancestry confounding** when those variables are excluded by design. In the **final mixed model** (with `(1 | site)`), such effects may attenuate or flip direction.
-- Use this pipeline to **choose covariates**, then test **mtDNA haplogroup** in a separate GLMM/BRMS model.
-
----
-
-## Troubleshooting
-
-- `ValueError: Missing columns in input` — Your TSV lacks one or more required fields; adjust the column lists or the data.
-- `TypeError: A sparse matrix was passed, but dense data is required` — Ensure `OneHotEncoder(..., sparse_output=False)` (or `sparse=False` on older sklearn).
-- `MemoryError` or very slow **interaction** plots — Reduce `row_sample` and `K`.
-
----
-
-Happy modeling! Use these outputs to lock in your adjustment set, then proceed to your GA/PTB mixed-effects models with **mtDNA haplogroup** as the fixed effect of interest.
+MIT
