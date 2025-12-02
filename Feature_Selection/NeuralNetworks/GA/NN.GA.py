@@ -11,20 +11,16 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, r2_score
 import sys
 from sklearn.model_selection import GroupShuffleSplit, train_test_split
+import random
 
 SEED=42
-import random
 random.seed(SEED)
 np.random.seed(SEED)
 tf.random.set_seed(SEED)
 
 
-# Set to display all columns
-pd.set_option('display.max_columns', None)
-# Set to display all rows
-pd.set_option('display.max_rows', None)
 
-# Load the dataset
+
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
 # Define features
@@ -42,40 +38,65 @@ y = df['GAGEBRTH']
 
 
 
-# Train-test split
 from sklearn.model_selection import GroupShuffleSplit, train_test_split
 
-
-groups = df["site"].values
-
-if df["site"].nunique() >= 2:
-    # --- 1) Site-aware train vs test split ---
-    gss1 = GroupShuffleSplit(n_splits=1, test_size=0.30, random_state=SEED)
-    train_idx, test_idx = next(gss1.split(X, y, groups=groups))
-    X_train = X.iloc[train_idx]
-    y_train = y.iloc[train_idx]
-    X_test  = X.iloc[test_idx]
-    y_test  = y.iloc[test_idx]
-    groups_train = groups[train_idx]
-    # --- 2) Site-aware train vs val split within the train set ---
-    gss2 = GroupShuffleSplit(n_splits=1, test_size=0.20, random_state=SEED + 1)
-    train_idx2, val_idx = next(
-        gss2.split(X_train, y_train, groups=groups_train)
-    )
-    X_tr  = X_train.iloc[train_idx2]
-    y_tr  = y_train.iloc[train_idx2]
-    X_val = X_train.iloc[val_idx]
-    y_val = y_train.iloc[val_idx]
+# -----------------------------
+# Outer split: site-aware if possible
+#   - ≥3 sites: unseen-site test via GroupShuffleSplit
+#   - 2 sites: row-level split, keep site labels for group-aware inner split
+#   - <2 sites: standard split, no groups
+# -----------------------------
+if "site" in df.columns:
+    n_sites = df["site"].nunique()
 else:
-    # Single-site: simple random splits, no stratify (regression target)
-    X_tr, X_temp, y_tr, y_temp = train_test_split(
+    n_sites = 0
+
+if ("site" in df.columns) and (n_sites >= 3):
+    groups_all = df["site"].values
+    gss_outer = GroupShuffleSplit(n_splits=1, test_size=0.30, random_state=SEED)
+    train_idx, test_idx = next(gss_outer.split(X, y, groups=groups_all))
+
+    X_train_full = X.iloc[train_idx]
+    y_train_full = y.iloc[train_idx]
+    X_test       = X.iloc[test_idx]
+    y_test       = y.iloc[test_idx]
+    groups_train = groups_all[train_idx]
+
+elif ("site" in df.columns) and (n_sites == 2):
+    # Prefer site-aware inner tuning over a strict unseen-site test
+    X_train_full, X_test, y_train_full, y_test = train_test_split(
         X, y, test_size=0.30, random_state=SEED
     )
-    X_val, X_test, y_val, y_test = train_test_split(
-        X_temp, y_temp, test_size=0.50, random_state=SEED
+    groups_train = df.loc[X_train_full.index, "site"].values
+
+else:
+    # No usable site structure
+    X_train_full, X_test, y_train_full, y_test = train_test_split(
+        X, y, test_size=0.30, random_state=SEED
+    )
+    groups_train = None
+
+# -----------------------------
+# Inner split: train vs val
+#   - GroupShuffleSplit if we still have ≥2 training sites
+#   - Else plain random split (regression → no stratify)
+# -----------------------------
+if (groups_train is not None) and (len(np.unique(groups_train)) >= 2):
+    gss_inner = GroupShuffleSplit(n_splits=1, test_size=0.20, random_state=SEED + 1)
+    tr_idx, val_idx = next(
+        gss_inner.split(X_train_full, y_train_full, groups=groups_train)
+    )
+    X_train  = X_train_full.iloc[tr_idx]
+    y_train  = y_train_full.iloc[tr_idx]
+    X_val = X_train_full.iloc[val_idx]
+    y_val = y_train_full.iloc[val_idx]
+else:
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_train_full, y_train_full,
+        test_size=0.20,
+        random_state=SEED
     )
 
-    
 
 
 
@@ -89,8 +110,7 @@ preprocessor = ColumnTransformer(
     ]
 )
 
-# Fit preprocessor only on training part (X_tr)
-X_tr_preprocessed   = preprocessor.fit_transform(X_tr)
+X_train_preprocessed   = preprocessor.fit_transform(X_train)
 X_val_preprocessed  = preprocessor.transform(X_val)
 X_test_preprocessed = preprocessor.transform(X_test)
 
@@ -98,75 +118,119 @@ X_test_preprocessed = preprocessor.transform(X_test)
 
 
 
-
-
-
-
-
-
-
 # Define hypermodel class with dropout and regularization, suitable for regression
-class PTBHyperModel(HyperModel):
-    def __init__(self, input_shape):
-        self.input_shape = input_shape
+import tensorflow as tf
+from tensorflow.keras import Sequential, Input
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras import regularizers
+from keras_tuner import HyperModel
+
+class HyperModel(HyperModel):
+    def __init__(self, input_dim: int):
+        self.input_dim = input_dim
+
     def build(self, hp):
-        model = Sequential([
-            Dense(units=hp.Int('units', min_value=32, max_value=512, step=32),
-                  activation='relu', input_shape=(self.input_shape,)),
-            Dropout(rate=hp.Float('dropout', min_value=0.0, max_value=0.5, step=0.05))
-        ])
-        for i in range(hp.Int('layers', 1, 3)):
-            model.add(Dense(units=hp.Int(f'units_{i}', 32, 512, 32), activation='relu'))
-            model.add(Dropout(rate=hp.Float(f'dropout_{i}', 0.0, 0.5, 0.05)))
-        model.add(Dense(1, activation='linear'))
-        model.compile(optimizer=tf.keras.optimizers.Adam(hp.Float('learning_rate', 1e-4, 1e-2, sampling='log')),
-                      loss='mean_squared_error',
-                      metrics=['mean_squared_error'])
+        model = Sequential()
+        model.add(Input(shape=(self.input_dim,)))
+
+        # First hidden layer (mirrors PTB style)
+        units0 = hp.Int("units0", min_value=64, max_value=512, step=64)
+        l2_0   = hp.Choice("l2_0", [0.0, 1e-6, 1e-5, 1e-4])
+        model.add(
+            Dense(
+                units=units0,
+                activation="relu",
+                kernel_regularizer=regularizers.l2(l2_0),
+            )
+        )
+        model.add( Dropout( hp.Float("dropout0", min_value=0.0, max_value=0.5, step=0.1)))
+        # Additional hidden layers (0–2), same pattern as PTB
+        n_hidden = hp.Int("n_hidden", min_value=0, max_value=2)
+        for i in range(n_hidden):
+            units_i = hp.Int(f"units{i+1}", min_value=64, max_value=512, step=64)
+            l2_i    = hp.Choice(f"l2_{i+1}", [0.0, 1e-6, 1e-5, 1e-4])
+            model.add(
+                Dense(
+                    units=units_i,
+                    activation="relu",
+                    kernel_regularizer=regularizers.l2(l2_i),
+                )
+            )
+            model.add(  Dropout(hp.Float(f"dropout{i+1}", min_value=0.0, max_value=0.5, step=0.1)))
+        # Regression output: linear
+        model.add(Dense(1, activation="linear"))
+        # Same lr concept as PTB, just name it 'lr' to match
+        lr = hp.Float("lr", min_value=1e-4, max_value=3e-3, sampling="log")
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=lr),
+            loss="mean_squared_error",
+            metrics=["mean_squared_error"],
+        )
         return model
 
-# Initialize and run the tuner
-hypermodel = PTBHyperModel(input_shape=X_tr_preprocessed.shape[1])
 
+from keras_tuner import RandomSearch, Objective
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
+
+# Initialize hypermodel
+hypermodel = HyperModel(input_dim=X_train_preprocessed.shape[1])
+
+# Tuner (similar spirit to PTB)
 tuner = RandomSearch(
     hypermodel,
-    objective='val_mean_squared_error',
+    objective=Objective("val_mean_squared_error", direction="min"),
     max_trials=10,
-    executions_per_trial=2,
-    directory='model_tuning',
-    seed=SEED
+    executions_per_trial=1,
+    overwrite=True,
+    directory=os.path.join(OUTDIR, "my_dir"),
+    project_name="ga_hyperopt",
 )
 
-early_stop = tf.keras.callbacks.EarlyStopping(
-    monitor="val_mean_squared_error",
-    patience=5,
-    restore_best_weights=True
-)
+# Callbacks – mirror PTB logic, but for val MSE (minimize)
+callbacks = [
+    EarlyStopping(  monitor="val_mean_squared_error",  mode="min",patience=10, restore_best_weights=True,),
+    ReduceLROnPlateau( monitor="val_mean_squared_error",mode="min", patience=5, factor=0.5, min_lr=1e-5,),
+    ModelCheckpoint( filepath=os.path.join(OUTDIR, "checkpoint.best.keras"), monitor="val_mean_squared_error",mode="min",save_best_only=True,save_weights_only=False,
+    ),
+]
+
+BATCH_SIZE = 256
+EPOCHS = 100
 
 tuner.search(
-    X_tr_preprocessed,
-    y_tr,
-    epochs=50,
+    X_train_preprocessed,
+    y_train,
     validation_data=(X_val_preprocessed, y_val),
+    epochs=EPOCHS,
+    batch_size=BATCH_SIZE,
+    callbacks=callbacks,
     verbose=1,
-    callbacks=[early_stop]
 )
 
+# Best model + evaluation (same as before)
+best_model = tuner.get_best_models(1)[0]
 
-# Get the best model
-best_model = tuner.get_best_models(num_models=1)[0]
+print("Best hyperparameters:")
+best_hps = tuner.get_best_hyperparameters(1)[0]
+for k, v in best_hps.values.items():
+    print(f"  {k}: {v}")
 
-# Evaluate the best model
-best_model.evaluate(X_test_preprocessed, y_test)
+best_model.evaluate(X_test_preprocessed, y_test, verbose=1)
 y_pred = best_model.predict(X_test_preprocessed).flatten()
+
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 
 mse = mean_squared_error(y_test, y_pred)
 r_squared = r2_score(y_test, y_pred)
+mae = mean_absolute_error(y_test, y_pred)
 
 print(f"Mean Squared Error (MSE): {mse:.4f}")
 print(f"R-squared: {r_squared:.4f}")
-from sklearn.metrics import mean_absolute_error
-mae = mean_absolute_error(y_test, y_pred)
 print(f"Mean Absolute Error (MAE): {mae:.4f}")
+
+
+
+
 
 
 
@@ -184,43 +248,7 @@ plt.clf()
 
 
 
-
-# SHAP values and summary plot
-explainer = shap.DeepExplainer(best_model, X_tr_preprocessed) 
-shap_values = explainer.shap_values(X_test_preprocessed)
-
-
-# Squeeze the SHAP values to remove the unnecessary dimension
-shap_values_squeezed = np.squeeze(np.array(shap_values), axis=2)
-
-# Now try plotting with the corrected shape
+explainer = shap.DeepExplainer(best_model, X_train_preprocessed) 
 shap.summary_plot(shap_values_squeezed, X_test_preprocessed, feature_names=preprocessor.get_feature_names_out(), show=True)
-plt.savefig("shap_summary_plot.NN.GA.png")
-plt.clf()
-
-#Top 20
-mean_abs_shap_values = np.abs(shap_values_squeezed).mean(axis=0)
-# Get the feature names from the preprocessor
-feature_names = preprocessor.get_feature_names_out()
-# Sort the features by mean absolute SHAP value
-sorted_indices = np.argsort(mean_abs_shap_values)[::-1]
-top_feature_names = np.array(feature_names)[sorted_indices[:20]]
-top_shap_values = mean_abs_shap_values[sorted_indices[:20]]
-# Output top 10 features and their SHAP values
-print("Top 10 SHAP Values and Corresponding Features:")
-for feature, value in zip(top_feature_names, top_shap_values):
-    print(f"{feature}: {value:.4f}")
-
-for feature in top_feature_names:
-    shap.dependence_plot(feature, shap_values_squeezed, X_test_preprocessed, feature_names=preprocessor.get_feature_names_out())
-    plt.savefig("shap.dependence_plot.NN.GA."+feature+".png")
-    plt.clf()
-
-#shap.force_plot(explainer.expected_value, shap_values_squeezed[sample_idx, :], X_test_preprocessed[sample_idx, :], feature_names=preprocessor.get_feature_names_out())
-
-
-
-
-
-# Save the best model
-best_model.save("NN.GA_best_model.h5")
+#Top 20mean_abs_shap_values =
+top_feature - names:shap.dependence_plot
