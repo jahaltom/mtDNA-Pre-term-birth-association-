@@ -184,7 +184,7 @@ class HyperModel(HyperModel):
     def build(self, hp):
         model = Sequential()
         model.add(Input(shape=(self.input_dim,)))
-        # First hidden layer (mirrors PTB style)
+        # First hidden layer
         units0 = hp.Int("units0", min_value=64, max_value=512, step=64)
         l2_0   = hp.Choice("l2_0", [0.0, 1e-6, 1e-5, 1e-4])
         model.add(
@@ -195,7 +195,7 @@ class HyperModel(HyperModel):
             )
         )
         model.add( Dropout( hp.Float("dropout0", min_value=0.0, max_value=0.5, step=0.1)))
-        # Additional hidden layers (0–2), same pattern as PTB
+        # Additional hidden layers (0–2), 
         n_hidden = hp.Int("n_hidden", min_value=0, max_value=2)
         for i in range(n_hidden):
             units_i = hp.Int(f"units{i+1}", min_value=64, max_value=512, step=64)
@@ -210,7 +210,6 @@ class HyperModel(HyperModel):
             model.add(  Dropout(hp.Float(f"dropout{i+1}", min_value=0.0, max_value=0.5, step=0.1)))
         # Regression output: linear
         model.add(Dense(1, activation="linear"))
-        # Same lr concept as PTB, just name it 'lr' to match
         lr = hp.Float("lr", min_value=1e-4, max_value=3e-3, sampling="log")
         model.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=lr),
@@ -226,7 +225,7 @@ from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCh
 # Initialize hypermodel
 hypermodel = HyperModel(input_dim=X_train_preprocessed.shape[1])
 
-# Tuner (similar spirit to PTB)
+# Tuner 
 tuner = RandomSearch(
     hypermodel,
     objective=Objective("val_mean_squared_error", direction="min"),
@@ -236,7 +235,7 @@ tuner = RandomSearch(
     directory=os.path.join("tuning"),
 )
 
-# Callbacks – mirror PTB logic, but for val MSE (minimize)
+
 callbacks = [
     EarlyStopping(  monitor="val_mean_squared_error",  mode="min",patience=10, restore_best_weights=True,),
     ReduceLROnPlateau( monitor="val_mean_squared_error",mode="min", patience=5, factor=0.5, min_lr=1e-5,),
@@ -324,7 +323,7 @@ import matplotlib.pyplot as plt
 X_for_shap = np.asarray(X_all_preprocessed)
 
 # 3) Build DeepExplainer
-explainer = shap.DeepExplainer(best_model, X_all_preprocessed)
+explainer = shap.DeepExplainer(best_model, X_train_preprocessed)
 
 # 4) Compute SHAP values on FULL DATA
 shap_raw = explainer.shap_values(X_for_shap)
@@ -369,7 +368,7 @@ shap.summary_plot(
 )
 plt.tight_layout()
 
-summary_name = "SHAP_summary_top20.NN.PTB.png"  # or .GA for the GA script
+summary_name = "SHAP_summary_top20.NN.GA.png"  # or .GA for the GA script
 plt.savefig(summary_name, dpi=150)
 plt.close()
 
@@ -401,5 +400,60 @@ for fname in top20_features[:5]:
         show=False,
     )
     plt.tight_layout()
-    plt.savefig(f"SHAP_dependence_{fname.replace(os.sep, '_')}.NN.PTB.png", dpi=150)
+    plt.savefig(f"SHAP_dependence_{fname.replace(os.sep, '_')}.NN.GA.png", dpi=150)
     plt.close()
+
+
+
+
+
+###########Kernal######
+# -----------------------------
+# SHAP KernelExplainer on GA (subset for speed)
+# -----------------------------
+import shap
+import numpy as np
+import matplotlib.pyplot as plt
+
+print("\n[SHAP-Kernel] Starting KernelExplainer for GA...")
+
+# 1) Background sample (for baseline expectation)
+X_all_np = np.asarray(X_all_preprocessed)
+bg_n = min(300, X_all_np.shape[0])
+bg_idx = np.random.choice(X_all_np.shape[0], size=bg_n, replace=False)
+background = X_all_np[bg_idx]
+
+# 2) Data to explain – use a subset to keep it tractable
+exp_n = min(2000, X_all_np.shape[0])
+exp_idx = np.random.choice(X_all_np.shape[0], size=exp_n, replace=False)
+X_exp = X_all_np[exp_idx]
+
+# 3) Define prediction function for KernelExplainer
+def predict_fn(data):
+    # Keras returns (n, 1); flatten to (n,)
+    return best_model.predict(data).ravel()
+
+explainer = shap.KernelExplainer(predict_fn, background)
+
+print(f"[SHAP-Kernel] Computing SHAP values on {exp_n} samples "
+      f"with background size {bg_n}...")
+shap_values = explainer.shap_values(X_exp, nsamples="auto")
+shap_values = np.asarray(shap_values)
+
+print("[SHAP-Kernel] SHAP values shape:", shap_values.shape)
+
+# 4) SHAP summary plot (top 20 features)
+plt.figure()
+shap.summary_plot(
+    shap_values,
+    X_exp,
+    feature_names=feature_names,
+    max_display=20,
+    show=False,
+)
+plt.tight_layout()
+summary_name = "SHAP_summary_top20.NN.GA.Kernel.png"
+plt.savefig(summary_name, dpi=150)
+plt.close()
+print(f"[SHAP-Kernel] Saved summary plot to {summary_name}")
+
