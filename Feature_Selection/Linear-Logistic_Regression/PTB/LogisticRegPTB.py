@@ -91,16 +91,13 @@ if ("site" in df.columns) and (n_sites >= 3):
     groups_all = df["site"].values
     gss = GroupShuffleSplit(n_splits=1, test_size=0.3, random_state=42)
     train_idx, test_idx = next(gss.split(X, y, groups=groups_all))
-
     X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
     y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
-
 elif ("site" in df.columns) and (n_sites == 2):
     # With only 2 sites, we just do a stratified row-wise split
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=42, stratify=y
     )
-
 else:
     # No / insufficient site info → standard stratified split
     X_train, X_test, y_train, y_test = train_test_split(
