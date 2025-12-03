@@ -335,7 +335,7 @@ shap.summary_plot(
 )
 plt.tight_layout()
 
-summary_name = "SHAP_summary_top20.NN.PTB.png"  # or .GA for the GA script
+summary_name = "SHAP_summary_top20.NN.PTB.png"  
 plt.savefig(summary_name, dpi=150)
 plt.close()
 
