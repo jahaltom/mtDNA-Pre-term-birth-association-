@@ -290,7 +290,7 @@ import matplotlib.pyplot as plt
 X_for_shap = np.asarray(X_all_preprocessed)
 
 # 3) Build DeepExplainer
-explainer = shap.DeepExplainer(best_model, X_all_preprocessed)
+explainer = shap.DeepExplainer(best_model, X_train_preprocessed)
 
 # 4) Compute SHAP values on FULL DATA
 shap_raw = explainer.shap_values(X_for_shap)
