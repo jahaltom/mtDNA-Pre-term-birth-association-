@@ -11,16 +11,8 @@ from sklearn.feature_selection import RFE
 import seaborn as sns
 from common_reports import run_common_reports
 from sklearn.base import clone
-
 from sklearn.model_selection import GroupKFold
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_rows', None)
 
-def evaluate_model_regression(model, X_test, y_test, model_name):
-    y_pred = model.predict(X_test)
-    print(f"\n{model_name} Evaluation:")
-    print(f"Mean Squared Error (MSE): {mean_squared_error(y_test, y_pred):.4f}")
-    print(f"R-squared: {r2_score(y_test, y_pred):.4f}")
 
 
 
@@ -139,10 +131,12 @@ else:
 # -----------------------------
 best_pipe = model_cv.best_estimator_
 
-
-print("\nBest Parameters for Gradient Boosting:", model_cv.best_params_)
-evaluate_model_regression(best_pipe, X_test, y_test, "Gradient Boosting")
-
+with open(os.path.join("GB.GA_metrics.txt"), "w") as f:
+    f.write("\nBest Parameters for Gradient Boosting:", model_cv.best_params_)
+    y_pred = best_pipe.predict(X_test)
+    f.write(f"\n{"Gradient Boosting"} Evaluation:")
+    f.write(f"Mean Squared Error (MSE): {mean_squared_error(y_test, y_pred):.4f}")
+    f.write(f"R-squared: {r2_score(y_test, y_pred):.4f}")
 
 
 best_pipe_full = clone(best_pipe)
