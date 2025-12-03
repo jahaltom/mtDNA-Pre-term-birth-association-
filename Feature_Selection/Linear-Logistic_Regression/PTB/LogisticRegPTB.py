@@ -174,3 +174,80 @@ plot_feat(ridge_coefs,"Ridge")
 
 
 
+
+
+
+
+
+# -----------------------------
+# SHAP analysis for L1 Logistic (Lasso) model
+# -----------------------------
+# Use LinearExplainer (fast, exact for linear models)
+feature_names = preprocessor.get_feature_names_out()
+
+# SHAP for the l1-penalized logistic regression (lasso)
+explainer = shap.LinearExplainer(lasso, X_train_preprocessed)
+shap_values = explainer.shap_values(X_test_preprocessed)
+
+# Some SHAP versions return a list for classification; normalize to (N, F)
+if isinstance(shap_values, list):
+    # For binary logistic with LinearExplainer we usually get a single array,
+    # but if a list is returned, use the first element.
+    shap_values = shap_values[0]
+
+shap_values = np.asarray(shap_values)
+assert shap_values.ndim == 2 and shap_values.shape[1] == len(feature_names), \
+    f"Expected (N,F) SHAP matrix, got {shap_values.shape}"
+
+# Global importance: mean |SHAP| across samples
+mean_abs_shap = np.abs(shap_values).mean(axis=0)
+order = np.argsort(mean_abs_shap)[::-1]
+top_k = min(30, len(feature_names))
+top_idx = order[:top_k]
+
+top_feature_names = feature_names[top_idx]
+top_shap_values = shap_values[:, top_idx]
+
+# Summary plot for top-K features
+plt.figure(figsize=(10, 6))
+shap.summary_plot(
+    top_shap_values,
+    X_test_preprocessed[:, top_idx],
+    feature_names=top_feature_names,
+    show=False,
+    max_display=top_k,
+)
+plt.tight_layout()
+plt.savefig("shap_summary_top30.LogReg.PTB.png", dpi=300, bbox_inches="tight")
+plt.close()
+
+print("\nTop 20 features by mean |SHAP| (L1 Logistic - PTB):")
+for name, val in zip(top_feature_names[:20], mean_abs_shap[top_idx][:20]):
+    print(f"{name}: {val:.6f}")
+
+# Optional: SHAP dependence plots for the top numeric / binary features
+num_prefixes = ("num__", "bin__")
+top_numeric_feats = [f for f in top_feature_names if f.startswith(num_prefixes)]
+
+for fname in top_numeric_feats[:10]:  # limit to first 10 numeric/bin features
+    shap.dependence_plot(
+        fname,
+        shap_values,
+        X_test_preprocessed,
+        feature_names=feature_names,
+        show=False,
+    )
+    safe = "".join(c if c.isalnum() or c in "-._" else "_" for c in fname)
+    plt.tight_layout()
+    plt.savefig(f"shap_dependence.LogReg.PTB.{safe}.png", dpi=300, bbox_inches="tight")
+    plt.close()
+
+
+
+
+
+
+
+
+
+
