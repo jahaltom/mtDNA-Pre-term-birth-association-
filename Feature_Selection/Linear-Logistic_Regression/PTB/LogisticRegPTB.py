@@ -177,13 +177,13 @@ plot_feat(ridge_coefs,"Ridge")
 
 
 # -----------------------------
-# SHAP analysis for L1 Logistic (Lasso) model
+# SHAP analysis for Ridge model
 # -----------------------------
 # Use LinearExplainer (fast, exact for linear models)
 feature_names = preprocessor.get_feature_names_out()
 
-# SHAP for the l1-penalized logistic regression (lasso)
-explainer = shap.LinearExplainer(lasso, X_train_preprocessed)
+# SHAP for Ridge
+explainer = shap.LinearExplainer(ridge, X_train_preprocessed)
 shap_values = explainer.shap_values(X_test_preprocessed)
 
 # Some SHAP versions return a list for classification; normalize to (N, F)
