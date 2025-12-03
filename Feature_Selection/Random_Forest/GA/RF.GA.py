@@ -12,11 +12,7 @@ from sklearn.base import clone
 from sklearn.model_selection import KFold, GroupKFold, GroupShuffleSplit
 from common_reports import run_common_reports
 
-def evaluate_model_regression(model, X_test, y_test, model_name):
-    y_pred = model.predict(X_test)
-    print(f"\n{model_name} Evaluation:")
-    print(f"Mean Squared Error (MSE): {mean_squared_error(y_test, y_pred):.4f}")
-    print(f"R-squared: {r2_score(y_test, y_pred):.4f}")
+
 
 categorical_columns = [c for c in sys.argv[1].split(',') if c != "site"]
 continuous_columns  = sys.argv[2].split(',')
@@ -128,33 +124,19 @@ else:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # -----------------------------
 # After CV: best model + eval
 # -----------------------------
 best_pipe = model_cv.best_estimator_
 
-print("\nBest Parameters for Random Forest:", model_cv.best_params_)
-evaluate_model_regression(best_pipe, X_test, y_test, "Random Forest (GA)")
+
+with open(os.path.join("RF.GA_metrics.txt"), "w") as f:
+    f.write("\nBest Parameters for Random Forest:", model_cv.best_params_)
+    y_pred = best_pipe.predict(X_test)
+    f.write(f"\n{"Random Forest"} Evaluation:")
+    f.write(f"Mean Squared Error (MSE): {mean_squared_error(y_test, y_pred):.4f}")
+    f.write(f"R-squared: {r2_score(y_test, y_pred):.4f}")
+
 
 
 
