@@ -261,38 +261,54 @@ best_model = tuner.get_best_models(1)[0]
 
 
 best_hps = tuner.get_best_hyperparameters(1)[0]
+# -----------------------------
+# Evaluation: scaled and original GA units
+# -----------------------------
 best_model.evaluate(X_test_preprocessed, y_test_scaled, verbose=1)
-y_pred = best_model.predict(X_test_preprocessed).flatten()
+y_pred_scaled = best_model.predict(X_test_preprocessed).flatten()
 
+# --- Metrics in scaled space (y ~ N(0,1)) ---
+mse_scaled = mean_squared_error(y_test_scaled, y_pred_scaled)
+r2_scaled  = r2_score(y_test_scaled, y_pred_scaled)
+mae_scaled = mean_absolute_error(y_test_scaled, y_pred_scaled)
 
-mse = mean_squared_error(y_test_scaled, y_pred)
-r_squared = r2_score(y_test_scaled, y_pred)
-mae = mean_absolute_error(y_test_scaled, y_pred)
+# --- Inverse-transform to original GA units (e.g., days) ---
+y_pred_orig = y_scaler.inverse_transform(y_pred_scaled.reshape(-1, 1)).ravel()
+y_test_orig = y_test.values  # original GA from df
 
+mse_orig = mean_squared_error(y_test_orig, y_pred_orig)
+r2_orig  = r2_score(y_test_orig, y_pred_orig)
+mae_orig = mean_absolute_error(y_test_orig, y_pred_orig)
 
-
-
+# --- Write both sets of metrics ---
 with open(os.path.join("NN.GA_metrics.txt"), "w") as f:
-    f.write("Best hyperparameters:")
+    f.write("Best hyperparameters:\n")
     for k, v in best_hps.values.items():
-        f.write(f"  {k}: {v}")
-    f.write(f"Mean Squared Error (MSE): {mse:.4f}")
-    f.write(f"R-squared: {r_squared:.4f}")
-    f.write(f"Mean Absolute Error (MAE): {mae:.4f}")
+        f.write(f"  {k}: {v}\n")
 
-    
+    f.write("\nMetrics in scaled GA space (y ~ N(0,1)):\n")
+    f.write(f"  MSE_scaled: {mse_scaled:.4f}\n")
+    f.write(f"  MAE_scaled: {mae_scaled:.4f}\n")
+    f.write(f"  R2_scaled:  {r2_scaled:.4f}\n")
 
+    f.write("\nMetrics in original GA units:\n")
+    f.write(f"  MSE_orig: {mse_orig:.4f}\n")
+    f.write(f"  MAE_orig: {mae_orig:.4f}\n")
+    f.write(f"  R2_orig:  {r2_orig:.4f}\n")
 
-# Plot predictions vs actual
+# -----------------------------
+# Plot Actual vs Predicted GA in ORIGINAL units
+# -----------------------------
 plt.figure(figsize=(10, 6))
-plt.scatter(y_test_scaled, y_pred, alpha=0.3)
-y_min, y_max = y_test_scaled.min(), y_test_scaled.max()
+plt.scatter(y_test_orig, y_pred_orig, alpha=0.3)
+y_min, y_max = y_test_orig.min(), y_test_orig.max()
 plt.plot([y_min, y_max], [y_min, y_max], 'k--', lw=2)
-plt.xlabel('Actual')
-plt.ylabel('Predicted')
-plt.title('Actual vs. Predicted Gestational Age')
-plt.savefig("ActualvsPredicted_GestationalAge.NN.GA.png")
-plt.clf()
+plt.xlabel('Actual Gestational Age')
+plt.ylabel('Predicted Gestational Age')
+plt.title('Actual vs. Predicted Gestational Age (NN, original units)')
+plt.tight_layout()
+plt.savefig("ActualvsPredicted_GestationalAge.NN.GA.png", dpi=150)
+plt.close()
 
 
 
