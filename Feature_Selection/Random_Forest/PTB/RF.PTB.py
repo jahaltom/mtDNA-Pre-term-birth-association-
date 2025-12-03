@@ -130,17 +130,20 @@ else:
 
 
 best = rf_cv.best_estimator_
-print("Best params:", rf_cv.best_params_)
-
-# Evaluation on held-out test set
 proba = best.predict_proba(X_te)[:,1]
-print(classification_report(y_te, (proba>=0.5).astype(int)))
-print("ROC AUC:", roc_auc_score(y_te, proba))
-print("PR AUC :", average_precision_score(y_te, proba))
+
+with open(os.path.join("RF.PTB_metrics.txt"), "w") as f:
+    f.write("Best params:", rf_cv.best_params_
+    f.write(classification_report(y_te, (proba>=0.5).astype(int)))
+    f.write("ROC AUC:", roc_auc_score(y_te, proba))
+    f.write("PR AUC :", average_precision_score(y_te, proba))
+            
 RocCurveDisplay.from_predictions(y_te, proba)
 plt.savefig("roc_auc.png", dpi=200); plt.clf()
 PrecisionRecallDisplay.from_predictions(y_te, proba)
 plt.savefig("pr_auc.png", dpi=200); plt.clf()
+
+
 
 
 
