@@ -182,7 +182,7 @@ plot_feat(ridge_coefs,"Ridge")
 # Use LinearExplainer (fast, exact for linear models)
 feature_names = preprocessor.get_feature_names_out()
 
-# SHAP for Ridge
+
 explainer = shap.LinearExplainer(ridge, X_train_preprocessed)
 shap_values = explainer.shap_values(X_test_preprocessed)
 
