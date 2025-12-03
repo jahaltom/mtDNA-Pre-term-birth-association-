@@ -73,10 +73,8 @@ if ("site" in df.columns) and (n_sites >= 3):
     groups_all = df["site"].values
     gss = GroupShuffleSplit(n_splits=1, test_size=0.3, random_state=42)
     train_idx, test_idx = next(gss.split(X, y, groups=groups_all))
-
     X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
     y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
-
 elif ("site" in df.columns) and (n_sites == 2):
     # With only 2 sites, prefer site-aware CV elsewhere and
     # just do a standard row-wise split here
