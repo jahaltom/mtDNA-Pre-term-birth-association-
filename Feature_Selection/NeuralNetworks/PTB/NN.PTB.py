@@ -1,4 +1,3 @@
-import os
 import sys
 import random
 import numpy as np
@@ -15,21 +14,22 @@ from sklearn.compose import ColumnTransformer
 from sklearn.metrics import ( classification_report, roc_auc_score,average_precision_score,  roc_curve, precision_recall_curve)
 from keras_tuner import RandomSearch, HyperModel, Objective
 import shap
-
+import os
 
 
 SEED = 42
 random.seed(SEED)
 np.random.seed(SEED)
 tf.random.set_seed(SEED)
-os.environ["PYTHONHASHSEED"] = str(SEED)
+
 
 
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
 
-categorical_columns = [c for c in sys.argv[1].split(',') if c != "site"]
-continuous_columns = sys.argv[2].split(',')
-binary_columns = sys.argv[3].split(',')
+categorical_columns=['FUEL_FOR_COOK']
+continuous_columns=['PW_AGE','PW_EDUCATION','BMI','TOILET','WEALTH_INDEX','DRINKING_SOURCE']
+binary_columns=['BABY_SEX','CHRON_HTN','DIABETES','HH_ELECTRICITY','TB','THYROID','TYP_HOUSE']
+
 
 
 
@@ -52,18 +52,15 @@ if "site" in df.columns:
     n_sites = df["site"].nunique()
 else:
     n_sites = 0
-
 if ("site" in df.columns) and (n_sites >= 3):
     groups_all = df["site"].values
     gss_outer = GroupShuffleSplit(n_splits=1, test_size=0.30, random_state=SEED)
     train_idx, test_idx = next(gss_outer.split(X, y, groups=groups_all))
-
     X_train_full = X.iloc[train_idx]
     y_train_full = y.iloc[train_idx]
     X_test       = X.iloc[test_idx]
     y_test       = y.iloc[test_idx]
     groups_train = groups_all[train_idx]
-
 elif ("site" in df.columns) and (n_sites == 2):
     # Prefer site-aware inner tuning over a strict unseen-site test
     X_train_full, X_test, y_train_full, y_test = train_test_split(
@@ -73,7 +70,6 @@ elif ("site" in df.columns) and (n_sites == 2):
         random_state=SEED
     )
     groups_train = df.loc[X_train_full.index, "site"].values
-
 else:
     # No usable site structure
     X_train_full, X_test, y_train_full, y_test = train_test_split(
@@ -83,7 +79,6 @@ else:
         random_state=SEED
     )
     groups_train = None
-
 # -----------------------------
 # Inner split: train vs val
 #   - GroupShuffleSplit if we still have ≥2 training sites
@@ -130,6 +125,10 @@ X_train_preprocessed = preprocessor.fit_transform(X_train)
 X_val_preprocessed   = preprocessor.transform(X_val)
 X_test_preprocessed  = preprocessor.transform(X_test)
 
+
+# Transform the full dataset (train + val + test) with the same preprocessor
+X_all_preprocessed = preprocessor.transform(X)
+# Feature names for SHAP / plotting
 feature_names = preprocessor.get_feature_names_out()
 
 
@@ -197,15 +196,14 @@ tuner = RandomSearch(
     max_trials=12,
     executions_per_trial=1,
     overwrite=True,
-    directory=os.path.join(OUTDIR, "my_dir"),
-    project_name="ptb_hyperopt",
+    directory=os.path.join("tuning"),
 )
 
 callbacks = [
     EarlyStopping(monitor="val_AUPRC", mode="max", patience=10, restore_best_weights=True),
     ReduceLROnPlateau(monitor="val_AUPRC", mode="max", patience=5, factor=0.5, min_lr=1e-5),
     ModelCheckpoint(
-        filepath=os.path.join(OUTDIR, "checkpoint.best.keras"),
+        filepath=os.path.join("checkpoint.best.keras"),
         monitor="val_AUPRC",
         mode="max",
         save_best_only=True,
@@ -228,12 +226,7 @@ tuner.search(
 )
 
 best_model = tuner.get_best_models(1)[0]
-
 best_hps = tuner.get_best_hyperparameters(1)[0]
-print("Best hyperparameters:")
-for k, v in best_hps.values.items():
-    print(f"  {k}: {v}")
-
 
 # -----------------------------
 # Final evaluation on untouched test set
@@ -241,10 +234,15 @@ for k, v in best_hps.values.items():
 y_prob = best_model.predict(X_test_preprocessed).ravel()
 y_pred = (y_prob >= 0.5).astype(int)
 
-print("\nClassification report @0.5 threshold:")
-print(classification_report(y_test, y_pred, digits=3))
-print(f"ROC AUC: {roc_auc_score(y_test, y_prob):.4f}")
-print(f"PR  AUC: {average_precision_score(y_test, y_prob):.4f}")
+with open(os.path.join("NN.PTB_metrics.txt"), "w") as f:
+    f.write("Best hyperparameters:")
+    for k, v in best_hps.values.items():
+        f.write(f"  {k}: {v}")
+    f.write(f"ROC AUC: {roc_auc_score(y_test, y_prob):.4f}\n")
+    f.write(f"PR  AUC: {average_precision_score(y_test, y_prob):.4f}\n")
+    f.write("\nClassification report @0.5:\n")
+    f.write(classification_report(y_test, y_pred, digits=3))
+
 
 # -----------------------------
 # Curves: ROC + PR
@@ -259,7 +257,7 @@ plt.ylabel("True Positive Rate")
 plt.title("ROC - PTB")
 plt.legend()
 plt.tight_layout()
-plt.savefig(os.path.join(OUTDIR, "ROC_AUC_plot.NN.PTB.png"), dpi=150)
+plt.savefig(os.path.join("ROC_AUC_plot.NN.PTB.png"), dpi=150)
 plt.close()
 
 # PR
@@ -271,7 +269,103 @@ plt.ylabel("Precision")
 plt.title("Precision-Recall - PTB")
 plt.legend()
 plt.tight_layout()
-plt.savefig(os.path.join(OUTDIR, "PR_AUC_plot.NN.PTB.png"), dpi=150)
+plt.savefig(os.path.join("PR_AUC_plot.NN.PTB.png"), dpi=150)
 plt.close()
 
 # ---------
+
+
+
+
+# -----------------------------
+# SHAP DeepExplainer on FULL DATA (train + val + test)
+# -----------------------------
+import shap
+import matplotlib.pyplot as plt
+
+
+
+
+# 2) Data to explain: entire dataset
+X_for_shap = np.asarray(X_all_preprocessed)
+
+# 3) Build DeepExplainer
+explainer = shap.DeepExplainer(best_model, X_all_preprocessed)
+
+# 4) Compute SHAP values on FULL DATA
+shap_raw = explainer.shap_values(X_for_shap)
+
+# Handle SHAP API variants
+vals = getattr(shap_raw, "values", shap_raw)
+if isinstance(vals, list):
+    # For binary sigmoid TF/Keras, DeepExplainer often returns [array]
+    vals = vals[0]
+
+vals = np.asarray(vals)
+
+
+# 5) Fix shape so it's (n_samples, n_features)
+n_samples, n_features_expected = X_for_shap.shape
+
+if vals.ndim == 1:
+    # (n_samples,) -> (n_samples, 1)
+    vals = vals.reshape(-1, 1)
+elif vals.ndim == 2:
+    # (n_samples, n_features?) or (n_features, n_samples?)
+    if vals.shape[0] == n_features_expected and vals.shape[1] == n_samples:
+        # Looks transposed -> fix
+        vals = vals.T
+elif vals.ndim == 3:
+    # Common weird case: (n_samples, n_features, 1) or (1, n_samples, n_features)
+    if vals.shape[-1] == 1:
+        vals = np.squeeze(vals, axis=-1)
+    elif vals.shape[0] == 1 and vals.shape[2] == n_features_expected:
+        vals = vals[0, :, :]  # (1, n_samples, n_features) -> (n_samples, n_features)
+
+
+
+# 6) SHAP summary plot (top 20 features, full data)
+plt.figure()
+shap.summary_plot(
+    vals,
+    X_for_shap,
+    feature_names=feature_names,
+    max_display=20,
+    show=False,
+)
+plt.tight_layout()
+
+summary_name = "SHAP_summary_top20.NN.PTB.png"  # or .GA for the GA script
+plt.savefig(summary_name, dpi=150)
+plt.close()
+
+
+
+# 6) Top 20 features by mean |SHAP| over ALL rows
+mean_abs_shap = np.mean(np.abs(vals), axis=0)
+top20_idx = np.argsort(mean_abs_shap)[::-1][:20]
+top20_features = [feature_names[i] for i in top20_idx]
+top20_values = mean_abs_shap[top20_idx]
+
+
+with open(os.path.join("Top20SHAPfeatures.txt"), "w") as ff:
+    ff.write("\nTop 20 features by mean |SHAP| over full dataset:")
+    for rank, (fname, val) in enumerate(zip(top20_features, top20_values), start=1):
+        ff.write(f"{rank:2d}. {fname:40s}  mean|SHAP| = {val:.6f}")
+
+
+
+
+# Dependence plots for top 5 features
+for fname in top20_features[:5]:
+    plt.figure()
+    shap.dependence_plot(
+        fname,
+        vals,
+        X_for_shap,
+        feature_names=feature_names,
+        show=False,
+    )
+    plt.tight_layout()
+    plt.savefig(f"SHAP_dependence_{fname.replace(os.sep, '_')}.NN.PTB.png", dpi=150)
+    plt.close()
