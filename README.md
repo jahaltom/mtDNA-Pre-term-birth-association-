@@ -88,6 +88,7 @@ sbatch workflow2.sh
 ##### featureSelection.sh
 - Remove weight and heigth if using BMI (columnCont).
 - Look at PCA plots and make sure they look good.
+- Carry same continuous features down from input into workflow.sh.
 - See out.txt for;
 	- Categorical variables with exactly two classes.  Will be used as binary variables for Feature selection. Place in columnBin
 	- Categorical variables for Feature selection. Place in columnCat
