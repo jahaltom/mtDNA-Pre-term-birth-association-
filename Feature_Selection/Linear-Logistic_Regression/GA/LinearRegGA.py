@@ -33,8 +33,8 @@ def plot_feat(coefMat, model_name):
 def evaluate_model_regression(model, X_test, y_test, model_name):
     y_pred = model.predict(X_test)
     with open(os.path.join("LinGA._metrics.{model_name}.txt"), "w") as f:
-        f.write(f"\n{model_name} Evaluation:")
-        f.write(f"Mean Squared Error (MSE): {mean_squared_error(y_test, y_pred):.4f}")
+        f.write(f"\n{model_name} Evaluation:\n")
+        f.write(f"Mean Squared Error (MSE): {mean_squared_error(y_test, y_pred):.4f}\n")
         f.write(f"R-squared: {r2_score(y_test, y_pred):.4f}")
 
 
@@ -189,9 +189,9 @@ plt.close()
 
 
 with open(os.path.join("ElasticNetSHAP.txt"), "w") as s:
-    s.write("\nTop 20 features by mean |SHAP| (ElasticNet):")
+    s.write("\nTop 20 features by mean |SHAP| (ElasticNet):\n")
     for name, val in zip(top_feature_names[:20], mean_abs_shap[top_idx][:20]):
-        s.write(f"{name}: {val:.6f}")
+        s.write(f"{name}: {val:.6f}\n")
 
 # Optional: SHAP dependence plots for the top numeric features
 num_prefixes = ("num__", "bin__")
