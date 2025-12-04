@@ -1,8 +1,7 @@
 import pandas as pd 
 import numpy as np
 from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score, GroupShuffleSplit
-
-from sklearn.linear_model import ElasticNetCV, LassoCV, Ridge
+from sklearn.linear_model import ElasticNetCV, LassoCV, RidgeCV
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
@@ -11,11 +10,6 @@ import shap
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
-
-# Set to display all columns
-pd.set_option('display.max_columns', None)
-# Set to display all rows
-pd.set_option('display.max_rows', None)
 
 ##For LASSO, Ridge and ElasticNet
 def plot_feat(coefMat, model_name):
@@ -31,7 +25,6 @@ def plot_feat(coefMat, model_name):
     plt.title('Top Significant Features by Coefficients')
     plt.gca().invert_yaxis()
     plt.tight_layout()
-    plt.show()
     plt.savefig(model_name+"_TopFeature.LinReg.GA.png", bbox_inches="tight")
     plt.clf()
 
@@ -39,9 +32,10 @@ def plot_feat(coefMat, model_name):
 # Helper function for evaluation
 def evaluate_model_regression(model, X_test, y_test, model_name):
     y_pred = model.predict(X_test)
-    print(f"\n{model_name} Evaluation:")
-    print(f"Mean Squared Error (MSE): {mean_squared_error(y_test, y_pred):.4f}")
-    print(f"R-squared: {r2_score(y_test, y_pred):.4f}")
+    with open(os.path.join("LinGA._metrics.{model_name}.txt"), "w") as f:
+        f.write(f"\n{model_name} Evaluation:")
+        f.write(f"Mean Squared Error (MSE): {mean_squared_error(y_test, y_pred):.4f}")
+        f.write(f"R-squared: {r2_score(y_test, y_pred):.4f}")
 
 
 
@@ -103,10 +97,10 @@ X_test_preprocessed = preprocessor.transform(X_test)
 
 
 # Step 1: Ridge Regression
-ridge = Ridge(alpha=1.0)
+ridge = RidgeCV(alphas=np.logspace(-3, 3, 13), cv=5)
 ridge.fit(X_train_preprocessed, y_train)
 
-evaluate_model_regression(ridge, X_test_preprocessed, y_test, "Ridge Regression")
+evaluate_model_regression(ridge, X_test_preprocessed, y_test, "RidgeRegression")
 
 # Plot Ridge feature importance
 ridge_importance = pd.DataFrame({
@@ -114,7 +108,8 @@ ridge_importance = pd.DataFrame({
     'Coefficient': ridge.coef_
 }).sort_values(by='Coefficient', key=abs, ascending=False)
 plot_feat(ridge_importance, "Ridge")
-print(ridge_importance)
+with open(os.path.join("RidgeImportancee.txt"), "w") as r
+    r.write(ridge_importance)
 
 
 
@@ -122,7 +117,7 @@ print(ridge_importance)
 # Lasso Regression for continuous prediction
 lasso = LassoCV(cv=5, max_iter=5000, random_state=42)
 lasso.fit(X_train_preprocessed, y_train)  # y_train should be continuous, not binary
-evaluate_model_regression(lasso, X_test_preprocessed, y_test, "Lasso Regression")
+evaluate_model_regression(lasso, X_test_preprocessed, y_test, "LassoRegression")
 
 # Lasso Feature Importance
 lasso_importance = pd.DataFrame({
@@ -130,7 +125,9 @@ lasso_importance = pd.DataFrame({
     'Coefficient': lasso.coef_
 }).sort_values(by='Coefficient', key=abs, ascending=False)
 plot_feat(lasso_importance, "Lasso")
-print(lasso_importance)
+with open(os.path.join("LassoImportancee.txt"), "w") as l
+    l.write(lasso_importance)
+            
 
 
 # Step 3: ElasticNet Regression
@@ -143,7 +140,7 @@ elasticnet = ElasticNetCV(
 
 elasticnet.fit(X_train_preprocessed, y_train)
 
-evaluate_model_regression(elasticnet, X_test_preprocessed, y_test, "ElasticNet Regression")
+evaluate_model_regression(elasticnet, X_test_preprocessed, y_test, "ElasticNetRegression")
 
 # Plot ElasticNet feature importance
 elasticnet_importance = pd.DataFrame({
@@ -151,7 +148,9 @@ elasticnet_importance = pd.DataFrame({
     'Coefficient': elasticnet.coef_
 }).sort_values(by='Coefficient', key=abs, ascending=False)
 plot_feat(elasticnet_importance, "ElasticNet")
-print(elasticnet_importance)
+with open(os.path.join("ElacticImportancee.txt"), "w") as e
+    e.write(elasticnet_importance)
+
 
 # -----------------------------
 # SHAP analysis for ElasticNet (linear model)
@@ -188,9 +187,11 @@ plt.tight_layout()
 plt.savefig("shap_summary_top30.ElasticNet.GA.png", dpi=300, bbox_inches="tight")
 plt.close()
 
-print("\nTop 20 features by mean |SHAP| (ElasticNet):")
-for name, val in zip(top_feature_names[:20], mean_abs_shap[top_idx][:20]):
-    print(f"{name}: {val:.6f}")
+
+with open(os.path.join("ElasticNetSHAP.txt"), "w") as s
+    s.write("\nTop 20 features by mean |SHAP| (ElasticNet):")
+    for name, val in zip(top_feature_names[:20], mean_abs_shap[top_idx][:20]):
+        s.write(f"{name}: {val:.6f}")
 
 # Optional: SHAP dependence plots for the top numeric features
 num_prefixes = ("num__", "bin__")
