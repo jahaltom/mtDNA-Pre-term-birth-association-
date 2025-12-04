@@ -17,7 +17,7 @@ file="Metadata.M.tsv"
 # Define Categorical features
 columnsCat=('MainHap')
 # Define Continuous  features
-columnsCont=CONT
+columnsCont=('BMI','PW_AGE')
 
 # Convert the array to a comma-separated string
 columnCat_string=$( echo "${columnsCat[*]}")
