@@ -109,7 +109,7 @@ ridge_importance = pd.DataFrame({
 }).sort_values(by='Coefficient', key=abs, ascending=False)
 plot_feat(ridge_importance, "Ridge")
 with open(os.path.join("RidgeImportancee.txt"), "w") as r:
-    r.write(ridge_importance)
+    r.write(ridge_importance.to_string())
 
 
 
@@ -126,7 +126,7 @@ lasso_importance = pd.DataFrame({
 }).sort_values(by='Coefficient', key=abs, ascending=False)
 plot_feat(lasso_importance, "Lasso")
 with open(os.path.join("LassoImportancee.txt"), "w") as l:
-    l.write(lasso_importance)
+    l.write(lasso_importance.to_string())
             
 
 
@@ -149,7 +149,7 @@ elasticnet_importance = pd.DataFrame({
 }).sort_values(by='Coefficient', key=abs, ascending=False)
 plot_feat(elasticnet_importance, "ElasticNet")
 with open(os.path.join("ElacticImportancee.txt"), "w") as e:
-    e.write(elasticnet_importance)
+    e.write(elasticnet_importance.to_string())
 
 
 # -----------------------------
