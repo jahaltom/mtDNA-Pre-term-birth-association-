@@ -15,9 +15,9 @@ conda activate ML
 file="Metadata.M.tsv"
 
 # Define Categorical features
-columnsCat=('MainHap')
+columnsCat=CAT
 # Define Continuous  features
-columnsCont=('BMI','PW_AGE')
+columnsCont=CONT
 
 # Convert the array to a comma-separated string
 columnCat_string=$( echo "${columnsCat[*]}")
