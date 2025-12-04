@@ -43,7 +43,7 @@ def evaluate_model(model, X_test, y_test, model_name):
     y_pred = model.predict(X_test)
     y_prob = model.predict_proba(X_test)[:, 1] if hasattr(model, 'predict_proba') else None
     with open(os.path.join("LogitPTB._metrics.{model_name}.txt"), "w") as f:
-        f.write(f"\nClassification Report for {model_name}:")
+        f.write(f"\nClassification Report for {model_name}:\n")
         f.write(classification_report(y_test, y_pred))
     if y_prob is not None:
         auc_score = roc_auc_score(y_test, y_prob)
@@ -136,7 +136,7 @@ lasso_coefs = pd.DataFrame({
 }).query("Coefficient != 0").sort_values(by='Coefficient', key=abs, ascending=False)
 
 with open(os.path.join("LassoSigFeat.txt"), "w") as l:
-    l.write("\nLasso Significant Features:")
+    l.write("\nLasso Significant Features:\n")
     l.write(lasso_coefs)
 plot_feat(lasso_coefs,"LASSO")
 
@@ -158,7 +158,7 @@ ridge_coefs = pd.DataFrame({
     'Coefficient': ridge.coef_[0]
 }).query("Coefficient != 0").sort_values(by='Coefficient', key=abs, ascending=False)
 with open(os.path.join("RidgeSigFeat.txt"), "w") as r:
-    r.write("\nRidge Significant Features:")
+    r.write("\nRidge Significant Features:\n")
     r.write(ridge_coefs)
 plot_feat(ridge_coefs,"Ridge")
 
@@ -217,9 +217,9 @@ plt.savefig("shap_summary_top30.LogReg.Ridge.PTB.png", dpi=300, bbox_inches="tig
 plt.close()
 
 with open(os.path.join("RidgeSHAP.txt"), "w") as s:
-    s.write("\nTop 20 features by mean |SHAP| (Ridge Logistic - PTB):")
+    s.write("\nTop 20 features by mean |SHAP| (Ridge Logistic - PTB):\n")
     for name, val in zip(top_feature_names[:20], mean_abs_shap[top_idx][:20]):
-        s.write(f"{name}: {val:.6f}")
+        s.write(f"{name}: {val:.6f}\n")
 
 # Optional: SHAP dependence plots for the top numeric / binary features
 num_prefixes = ("num__", "bin__")
