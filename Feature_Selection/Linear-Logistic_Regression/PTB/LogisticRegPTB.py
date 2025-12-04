@@ -137,7 +137,7 @@ lasso_coefs = pd.DataFrame({
 
 with open(os.path.join("LassoSigFeat.txt"), "w") as l:
     l.write("\nLasso Significant Features:\n")
-    l.write(lasso_coefs)
+    l.write(lasso_coefs.to_string())
 plot_feat(lasso_coefs,"LASSO")
 
 
@@ -159,7 +159,7 @@ ridge_coefs = pd.DataFrame({
 }).query("Coefficient != 0").sort_values(by='Coefficient', key=abs, ascending=False)
 with open(os.path.join("RidgeSigFeat.txt"), "w") as r:
     r.write("\nRidge Significant Features:\n")
-    r.write(ridge_coefs)
+    r.write(ridge_coefs.to_string())
 plot_feat(ridge_coefs,"Ridge")
 
 
