@@ -108,7 +108,7 @@ ridge_importance = pd.DataFrame({
     'Coefficient': ridge.coef_
 }).sort_values(by='Coefficient', key=abs, ascending=False)
 plot_feat(ridge_importance, "Ridge")
-with open(os.path.join("RidgeImportancee.txt"), "w") as r
+with open(os.path.join("RidgeImportancee.txt"), "w") as r:
     r.write(ridge_importance)
 
 
@@ -125,7 +125,7 @@ lasso_importance = pd.DataFrame({
     'Coefficient': lasso.coef_
 }).sort_values(by='Coefficient', key=abs, ascending=False)
 plot_feat(lasso_importance, "Lasso")
-with open(os.path.join("LassoImportancee.txt"), "w") as l
+with open(os.path.join("LassoImportancee.txt"), "w") as l:
     l.write(lasso_importance)
             
 
@@ -148,7 +148,7 @@ elasticnet_importance = pd.DataFrame({
     'Coefficient': elasticnet.coef_
 }).sort_values(by='Coefficient', key=abs, ascending=False)
 plot_feat(elasticnet_importance, "ElasticNet")
-with open(os.path.join("ElacticImportancee.txt"), "w") as e
+with open(os.path.join("ElacticImportancee.txt"), "w") as e:
     e.write(elasticnet_importance)
 
 
@@ -188,7 +188,7 @@ plt.savefig("shap_summary_top30.ElasticNet.GA.png", dpi=300, bbox_inches="tight"
 plt.close()
 
 
-with open(os.path.join("ElasticNetSHAP.txt"), "w") as s
+with open(os.path.join("ElasticNetSHAP.txt"), "w") as s:
     s.write("\nTop 20 features by mean |SHAP| (ElasticNet):")
     for name, val in zip(top_feature_names[:20], mean_abs_shap[top_idx][:20]):
         s.write(f"{name}: {val:.6f}")
