@@ -106,4 +106,32 @@ sbatch featureSelection.sh
 ```
 
 
+#### Final Model
 
+##### finalModel.sh
+
+
+```
+columnCat="('MainHap')"
+columnCont="('PW_AGE','BMI')"
+
+
+sed -i "s/CAT/$columnCat/g" finalModel.sh
+sed -i "s/CONT/$columnCont/g" finalModel.sh
+
+sbatch finalModel.sh
+```
+
+##### FinalModel.ML.sh
+
+
+```
+columnCat="('MainHap')"
+columnCont="('PW_AGE','BMI')"
+
+
+sed -i "s/CAT/$columnCat/g" FinalModel.ML.sh
+sed -i "s/CONT/$columnCont/g" FinalModel.ML.sh
+
+sbatch FinalModel.ML.sh
+```
