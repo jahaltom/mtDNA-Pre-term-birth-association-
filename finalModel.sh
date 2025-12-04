@@ -98,5 +98,6 @@ python  ../scripts/CombinePCA.py
 
 
 
-
+module load R
+Rscript finalModel_freq_vs_bayesian.r
 
