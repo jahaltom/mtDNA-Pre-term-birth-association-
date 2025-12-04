@@ -133,7 +133,7 @@ best = rf_cv.best_estimator_
 proba = best.predict_proba(X_te)[:,1]
 
 with open(os.path.join("RF.PTB_metrics.txt"), "w") as f:
-    f.write("Best params:", rf_cv.best_params_
+    f.write("Best params:", rf_cv.best_params_)
     f.write(classification_report(y_te, (proba>=0.5).astype(int)))
     f.write("ROC AUC:", roc_auc_score(y_te, proba))
     f.write("PR AUC :", average_precision_score(y_te, proba))
