@@ -26,9 +26,9 @@ tf.random.set_seed(SEED)
 
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
 
-categorical_columns=['FUEL_FOR_COOK']
-continuous_columns=['PW_AGE','PW_EDUCATION','BMI','TOILET','WEALTH_INDEX','DRINKING_SOURCE']
-binary_columns=['BABY_SEX','CHRON_HTN','DIABETES','HH_ELECTRICITY','TB','THYROID','TYP_HOUSE']
+categorical_columns = [c for c in sys.argv[1].split(',') if c != "site"]
+continuous_columns = sys.argv[2].split(',')
+binary_columns = sys.argv[3].split(',')
 
 
 
