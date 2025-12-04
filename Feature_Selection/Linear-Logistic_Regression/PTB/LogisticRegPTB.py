@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score, GroupShuffleSplit
 from sklearn.linear_model import LogisticRegressionCV
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import ElasticNetCV
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
@@ -14,15 +13,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
 
-# Set to display all columns
-pd.set_option('display.max_columns', None)
-# Set to display all rows
-pd.set_option('display.max_rows', None)
+
 
 ##For LASSO, Ridge and Elactic
 def plot_feat(coefMat, model_name):
     # Plot top 10 significant features
-    top_features = coefMat#.head(10)
+    top_features = coefMat.copy()
     # Rename 'cat__MainHap' to 'Haplogroup'
     top_features['Feature'] = top_features['Feature'].str.replace('^cat__MainHap', 'Haplogroup', regex=True)###########################################################
     # Remove 'cat__' and 'num__' prefixes
@@ -38,7 +34,6 @@ def plot_feat(coefMat, model_name):
     plt.title('Top Significant Features by Coefficients')
     plt.gca().invert_yaxis()  # Invert y-axis for better readability
     plt.tight_layout()
-    plt.show()
     plt.savefig(model_name+"_TopFeature.LogReg.PTB.png", bbox_inches="tight")
     plt.clf()
 
@@ -47,8 +42,9 @@ def plot_feat(coefMat, model_name):
 def evaluate_model(model, X_test, y_test, model_name):
     y_pred = model.predict(X_test)
     y_prob = model.predict_proba(X_test)[:, 1] if hasattr(model, 'predict_proba') else None
-    print(f"\nClassification Report for {model_name}:")
-    print(classification_report(y_test, y_pred))
+    with open(os.path.join("LogitPTB._metrics.{model_name}.txt"), "w") as f:
+        f.write(f"\nClassification Report for {model_name}:")
+        f.write(classification_report(y_test, y_pred))
     if y_prob is not None:
         auc_score = roc_auc_score(y_test, y_prob)
         print(f"ROC AUC Score for {model_name}: {auc_score:.4f}")
@@ -60,8 +56,7 @@ def evaluate_model(model, X_test, y_test, model_name):
         plt.ylabel('True Positive Rate')
         plt.title(f'ROC Curve - {model_name}')
         plt.legend()
-        plt.show()
-        plt.savefig("ROC_AUC_plot.LogReg.PTB.png")
+        plt.savefig("ROC_AUC.LogReg.{model_name}.PTB.png")
         plt.clf()
 
 
@@ -132,15 +127,17 @@ X_test_preprocessed  = preprocessor.transform(X_test)
 lasso = LogisticRegressionCV(penalty='l1', solver='saga', cv=5, max_iter=5000, class_weight='balanced', random_state=42)
 lasso.fit(X_train_preprocessed, y_train)
 
-evaluate_model(lasso, X_test_preprocessed, y_test, "Lasso Regression")
+evaluate_model(lasso, X_test_preprocessed, y_test, "LassoRegression")
 
 # Extract non-zero coefficients
 lasso_coefs = pd.DataFrame({
     'Feature': preprocessor.get_feature_names_out(),
     'Coefficient': lasso.coef_[0]
 }).query("Coefficient != 0").sort_values(by='Coefficient', key=abs, ascending=False)
-print("\nLasso Significant Features:")
-print(lasso_coefs)
+
+with open(os.path.join("LassoSigFeat.txt"), "w") as l:
+    l.write("\nLasso Significant Features:")
+    l.write(lasso_coefs)
 plot_feat(lasso_coefs,"LASSO")
 
 
@@ -153,15 +150,16 @@ plot_feat(lasso_coefs,"LASSO")
 ridge = LogisticRegressionCV(penalty='l2', solver='saga', cv=5, max_iter=5000, class_weight='balanced', random_state=42)
 ridge.fit(X_train_preprocessed, y_train)
 
-evaluate_model(ridge, X_test_preprocessed, y_test, "Ridge Regression")
+evaluate_model(ridge, X_test_preprocessed, y_test, "RidgeRegression")
 
 # Extract non-zero coefficients
 ridge_coefs = pd.DataFrame({
     'Feature': preprocessor.get_feature_names_out(),
     'Coefficient': ridge.coef_[0]
 }).query("Coefficient != 0").sort_values(by='Coefficient', key=abs, ascending=False)
-print("\nRidge Significant Features:")
-print(ridge_coefs)
+with open(os.path.join("RidgeSigFeat.txt"), "w") as r:
+    r.write("\nRidge Significant Features:")
+    r.write(ridge_coefs)
 plot_feat(ridge_coefs,"Ridge")
 
 
@@ -215,12 +213,13 @@ shap.summary_plot(
     max_display=top_k,
 )
 plt.tight_layout()
-plt.savefig("shap_summary_top30.LogReg.PTB.png", dpi=300, bbox_inches="tight")
+plt.savefig("shap_summary_top30.LogReg.Ridge.PTB.png", dpi=300, bbox_inches="tight")
 plt.close()
 
-print("\nTop 20 features by mean |SHAP| (L1 Logistic - PTB):")
-for name, val in zip(top_feature_names[:20], mean_abs_shap[top_idx][:20]):
-    print(f"{name}: {val:.6f}")
+with open(os.path.join("RidgeSHAP.txt"), "w") as s:
+    s.write("\nTop 20 features by mean |SHAP| (Ridge Logistic - PTB):")
+    for name, val in zip(top_feature_names[:20], mean_abs_shap[top_idx][:20]):
+        s.write(f"{name}: {val:.6f}")
 
 # Optional: SHAP dependence plots for the top numeric / binary features
 num_prefixes = ("num__", "bin__")
@@ -236,7 +235,7 @@ for fname in top_numeric_feats[:10]:  # limit to first 10 numeric/bin features
     )
     safe = "".join(c if c.isalnum() or c in "-._" else "_" for c in fname)
     plt.tight_layout()
-    plt.savefig(f"shap_dependence.LogReg.PTB.{safe}.png", dpi=300, bbox_inches="tight")
+    plt.savefig(f"shap_dependence.LogReg.Ridge.PTB.{safe}.png", dpi=300, bbox_inches="tight")
     plt.close()
 
 
