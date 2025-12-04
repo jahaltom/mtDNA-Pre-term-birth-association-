@@ -1,0 +1,252 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score, GroupShuffleSplit
+from sklearn.linear_model import LogisticRegressionCV
+from sklearn.linear_model import ElasticNetCV
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import classification_report, roc_auc_score, roc_curve
+from sklearn.neural_network import MLPClassifier
+import shap
+import matplotlib.pyplot as plt
+import seaborn as sns
+import sys, os
+
+
+
+##For LASSO, Ridge and Elactic
+def plot_feat(coefMat, model_name):
+    # Plot top 10 significant features
+    top_features = coefMat.copy()
+    # Rename 'cat__MainHap' to 'Haplogroup'
+    top_features['Feature'] = top_features['Feature'].str.replace('^cat__MainHap', 'Haplogroup', regex=True)###########################################################
+    # Remove 'cat__' and 'num__' prefixes
+    top_features['Feature'] = top_features['Feature'].str.replace('^cat__|^num__', '', regex=True)
+    plt.figure(figsize=(12, 6))
+    # Scatter plot with color coding for positive/negative coefficients
+    colors = np.where(top_features['Coefficient'] > 0, 'blue', 'red')
+    plt.scatter(top_features['Feature'], top_features['Coefficient'], color=colors, s=100, edgecolor='black')
+    # Add labels and title
+    plt.axhline(0, color='black', linestyle='--', linewidth=0.8)  # Add a horizontal line at 0
+    plt.xticks(rotation=45, ha='right', fontsize=10)  # Rotate feature names
+    plt.ylabel('Coefficient')
+    plt.title('Top Significant Features by Coefficients')
+    plt.gca().invert_yaxis()  # Invert y-axis for better readability
+    plt.tight_layout()
+    plt.savefig(model_name+"_TopFeature.LogReg.PTB.png", bbox_inches="tight")
+    plt.clf()
+
+
+# Helper function for evaluation
+def evaluate_model(model, X_test, y_test, model_name):
+    y_pred = model.predict(X_test)
+    y_prob = model.predict_proba(X_test)[:, 1] if hasattr(model, 'predict_proba') else None
+    with open(os.path.join("LogitPTB._metrics.{model_name}.txt"), "w") as f:
+        f.write(f"\nClassification Report for {model_name}:\n")
+        f.write(classification_report(y_test, y_pred))
+    if y_prob is not None:
+        auc_score = roc_auc_score(y_test, y_prob)
+        print(f"ROC AUC Score for {model_name}: {auc_score:.4f}")
+        fpr, tpr, _ = roc_curve(y_test, y_prob)
+        plt.figure()
+        plt.plot(fpr, tpr, label=f'{model_name} (AUC = {auc_score:.4f})')
+        plt.plot([0, 1], [0, 1], 'k--', label='Random Chance')
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title(f'ROC Curve - {model_name}')
+        plt.legend()
+        plt.savefig("ROC_AUC.LogReg.{model_name}.PTB.png")
+        plt.clf()
+
+
+
+# Load the dataset
+df = pd.read_csv("Metadata.Final.tsv", sep='\t')
+
+
+# Define features
+categorical_columns = [c for c in sys.argv[1].split(',') if c != "site"]
+continuous_columns = sys.argv[2].split(',')
+if len(sys.argv) > 3 and sys.argv[3].strip():
+    binary_columns = sys.argv[3].split(',')
+else:
+    binary_columns = []   # <- default when no 3rd arg
+
+X = df[categorical_columns + continuous_columns + binary_columns]
+y = df["PTB"]
+
+# -----------------------------
+# Site-aware train/test split
+# -----------------------------
+if "site" in df.columns:
+    n_sites = df["site"].nunique()
+else:
+    n_sites = 0
+
+if ("site" in df.columns) and (n_sites >= 3):
+    # With 3+ sites, a true unseen-site test is meaningful
+    groups_all = df["site"].values
+    gss = GroupShuffleSplit(n_splits=1, test_size=0.3, random_state=42)
+    train_idx, test_idx = next(gss.split(X, y, groups=groups_all))
+    X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
+    y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+elif ("site" in df.columns) and (n_sites == 2):
+    # With only 2 sites, we just do a stratified row-wise split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, random_state=42, stratify=y
+    )
+else:
+    # No / insufficient site info → standard stratified split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, random_state=42, stratify=y
+    )
+
+# -----------------------------
+# Preprocessing pipeline
+# -----------------------------
+preprocessor = ColumnTransformer(
+    transformers=[
+        ("num", StandardScaler(), continuous_columns),
+        ("bin", "passthrough", binary_columns),
+        ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_columns),
+    ]
+)
+
+# Preprocess the data (no SMOTE, keep as sparse/dense as returned)
+X_train_preprocessed = preprocessor.fit_transform(X_train)
+X_test_preprocessed  = preprocessor.transform(X_test)
+
+
+
+
+
+
+
+
+
+
+# Step 2a: Penalized Logistic Regression (Lasso)
+lasso = LogisticRegressionCV(penalty='l1', solver='saga', cv=5, max_iter=5000, class_weight='balanced', random_state=42)
+lasso.fit(X_train_preprocessed, y_train)
+
+evaluate_model(lasso, X_test_preprocessed, y_test, "LassoRegression")
+
+# Extract non-zero coefficients
+lasso_coefs = pd.DataFrame({
+    'Feature': preprocessor.get_feature_names_out(),
+    'Coefficient': lasso.coef_[0]
+}).query("Coefficient != 0").sort_values(by='Coefficient', key=abs, ascending=False)
+
+with open(os.path.join("LassoSigFeat.txt"), "w") as l:
+    l.write("\nLasso Significant Features:\n")
+    l.write(lasso_coefs.to_string())
+plot_feat(lasso_coefs,"LASSO")
+
+
+
+
+
+
+
+# Step 2a: Ridge Regression (Ridge)
+ridge = LogisticRegressionCV(penalty='l2', solver='saga', cv=5, max_iter=5000, class_weight='balanced', random_state=42)
+ridge.fit(X_train_preprocessed, y_train)
+
+evaluate_model(ridge, X_test_preprocessed, y_test, "RidgeRegression")
+
+# Extract non-zero coefficients
+ridge_coefs = pd.DataFrame({
+    'Feature': preprocessor.get_feature_names_out(),
+    'Coefficient': ridge.coef_[0]
+}).query("Coefficient != 0").sort_values(by='Coefficient', key=abs, ascending=False)
+with open(os.path.join("RidgeSigFeat.txt"), "w") as r:
+    r.write("\nRidge Significant Features:\n")
+    r.write(ridge_coefs.to_string())
+plot_feat(ridge_coefs,"Ridge")
+
+
+
+
+
+
+
+
+
+
+
+
+
+# -----------------------------
+# SHAP analysis for Ridge model
+# -----------------------------
+# Use LinearExplainer (fast, exact for linear models)
+feature_names = preprocessor.get_feature_names_out()
+
+
+explainer = shap.LinearExplainer(ridge, X_train_preprocessed)
+shap_values = explainer.shap_values(X_test_preprocessed)
+
+# Some SHAP versions return a list for classification; normalize to (N, F)
+if isinstance(shap_values, list):
+    # For binary logistic with LinearExplainer we usually get a single array,
+    # but if a list is returned, use the first element.
+    shap_values = shap_values[0]
+
+shap_values = np.asarray(shap_values)
+assert shap_values.ndim == 2 and shap_values.shape[1] == len(feature_names), \
+    f"Expected (N,F) SHAP matrix, got {shap_values.shape}"
+
+# Global importance: mean |SHAP| across samples
+mean_abs_shap = np.abs(shap_values).mean(axis=0)
+order = np.argsort(mean_abs_shap)[::-1]
+top_k = min(30, len(feature_names))
+top_idx = order[:top_k]
+
+top_feature_names = feature_names[top_idx]
+top_shap_values = shap_values[:, top_idx]
+
+# Summary plot for top-K features
+plt.figure(figsize=(10, 6))
+shap.summary_plot(
+    top_shap_values,
+    X_test_preprocessed[:, top_idx],
+    feature_names=top_feature_names,
+    show=False,
+    max_display=top_k,
+)
+plt.tight_layout()
+plt.savefig("shap_summary_top30.LogReg.Ridge.PTB.png", dpi=300, bbox_inches="tight")
+plt.close()
+
+with open(os.path.join("RidgeSHAP.txt"), "w") as s:
+    s.write("\nTop 20 features by mean |SHAP| (Ridge Logistic - PTB):\n")
+    for name, val in zip(top_feature_names[:20], mean_abs_shap[top_idx][:20]):
+        s.write(f"{name}: {val:.6f}\n")
+
+# Optional: SHAP dependence plots for the top numeric / binary features
+num_prefixes = ("num__", "bin__")
+top_numeric_feats = [f for f in top_feature_names if f.startswith(num_prefixes)]
+
+for fname in top_numeric_feats[:10]:  # limit to first 10 numeric/bin features
+    shap.dependence_plot(
+        fname,
+        shap_values,
+        X_test_preprocessed,
+        feature_names=feature_names,
+        show=False,
+    )
+    safe = "".join(c if c.isalnum() or c in "-._" else "_" for c in fname)
+    plt.tight_layout()
+    plt.savefig(f"shap_dependence.LogReg.Ridge.PTB.{safe}.png", dpi=300, bbox_inches="tight")
+    plt.close()
+
+
+
+
+
+
+
+
+
+
