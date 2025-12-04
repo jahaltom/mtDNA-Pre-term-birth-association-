@@ -21,7 +21,7 @@ conda activate ML
 function run_analysis {
     local script_name=$1
     local dir_name=$2
-    cp Metadata.Final.tsv "$dir_name"
+    cp Final_Model/Metadata.Final.tsv "$dir_name"
     cd "$dir_name"
     sbatch --ntasks=1 --cpus-per-task=4 --time=20:00:00  --wrap="python $script_name '$columnCat_string' '$columnCont_string' > out.$script_name.txt"
     
