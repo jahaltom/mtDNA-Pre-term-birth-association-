@@ -394,9 +394,9 @@ top20_values = mean_abs_shap[top20_idx]
 
 
 with open(os.path.join("Top20SHAPfeatures.txt"), "w") as ff:
-    ff.write("\nTop 20 features by mean |SHAP| over full dataset:")
+    ff.write("\nTop 20 features by mean |SHAP| over full dataset:\n")
     for rank, (fname, val) in enumerate(zip(top20_features, top20_values), start=1):
-        ff.write(f"{rank:2d}. {fname:40s}  mean|SHAP| = {val:.6f}")
+        ff.write(f"{rank:2d}. {fname:40s}  mean|SHAP| = {val:.6f}\n")
 
 
 
