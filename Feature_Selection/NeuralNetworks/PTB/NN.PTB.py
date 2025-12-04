@@ -235,9 +235,9 @@ y_prob = best_model.predict(X_test_preprocessed).ravel()
 y_pred = (y_prob >= 0.5).astype(int)
 
 with open(os.path.join("NN.PTB_metrics.txt"), "w") as f:
-    f.write("Best hyperparameters:")
+    f.write("Best hyperparameters:\n")
     for k, v in best_hps.values.items():
-        f.write(f"  {k}: {v}")
+        f.write(f"  {k}: {v}\n")
     f.write(f"ROC AUC: {roc_auc_score(y_test, y_prob):.4f}\n")
     f.write(f"PR  AUC: {average_precision_score(y_test, y_prob):.4f}\n")
     f.write("\nClassification report @0.5:\n")
