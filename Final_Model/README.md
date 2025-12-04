@@ -78,7 +78,7 @@ PC5 ~ site: p-value = 2.317e-24
 ```
 
 
-# Joint Cohort (All Sites) — GA & PTB Modeling Pipeline
+# GA & PTB Modeling Pipeline
 
 This pipeline models **Gestational Age (GA)** and **Preterm Birth (PTB)** across all cohorts (sites pooled).  
 It includes **frequentist GLMMs** (`glmmTMB`) and **Bayesian models** (`brms`), with diagnostics, posterior probabilities, and prior sensitivity analyses.
