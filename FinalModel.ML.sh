@@ -4,8 +4,8 @@
 source /home/haltomj/miniconda3/etc/profile.d/conda.sh
 
 # Define Categorical and Continuous features
-columnsCat=('MainHap')
-columnsCont=('PW_AGE','BMI')
+columnsCat=CAT
+columnsCont=CONT
 
 
 
