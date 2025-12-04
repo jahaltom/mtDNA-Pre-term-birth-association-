@@ -34,8 +34,8 @@ run_analysis "NN.GA.py" "Feature_Selection/NeuralNetworks/GA"
 run_analysis "NN.PTB.py" "Feature_Selection/NeuralNetworks/PTB"
 run_analysis "RF.GA.py" "Feature_Selection/Random_Forest/GA"
 run_analysis "RF.PTB.py" "Feature_Selection/Random_Forest/PTB"
-run_analysis "LinearRegGA.py" "Feature_Selection/Linear-Logistic_Regression"
-run_analysis "LogisticRegPTB.py" "Feature_Selection/Linear-Logistic_Regression"
+run_analysis "LinearRegGA.py" "Feature_Selection/Linear-Logistic_Regression/GA"
+run_analysis "LogisticRegPTB.py" "Feature_Selection/Linear-Logistic_Regression/PTB"
 
 # Wait for all SLURM jobs to finish
 wait
