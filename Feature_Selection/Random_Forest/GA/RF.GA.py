@@ -131,7 +131,7 @@ best_pipe = model_cv.best_estimator_
 
 
 with open(os.path.join("RF.GA_metrics.txt"), "w") as f:
-    f.write("\nBest Parameters for Random Forest:", model_cv.best_params_)
+    f.write("\nBest Parameters for Random Forest: {model_cv.best_params_}\n")
     y_pred = best_pipe.predict(X_test)
     f.write(f"\n{"Random Forest"} Evaluation:")
     f.write(f"Mean Squared Error (MSE): {mean_squared_error(y_test, y_pred):.4f}")
