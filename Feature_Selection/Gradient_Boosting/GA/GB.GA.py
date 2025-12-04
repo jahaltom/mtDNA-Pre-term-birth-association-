@@ -132,10 +132,10 @@ else:
 best_pipe = model_cv.best_estimator_
 
 with open(os.path.join("GB.GA_metrics.txt"), "w") as f:
-    f.write("\nBest Parameters for Gradient Boosting:", model_cv.best_params_)
+    f.write("\nBest Parameters for Gradient Boosting: {model_cv.best_params_}\n")
     y_pred = best_pipe.predict(X_test)
-    f.write(f"\n{"Gradient Boosting"} Evaluation:")
-    f.write(f"Mean Squared Error (MSE): {mean_squared_error(y_test, y_pred):.4f}")
+    f.write(f"\n Gradient Boosting Evaluation:\n")
+    f.write(f"Mean Squared Error (MSE): {mean_squared_error(y_test, y_pred):.4f}\n")
     f.write(f"R-squared: {r2_score(y_test, y_pred):.4f}")
 
 
