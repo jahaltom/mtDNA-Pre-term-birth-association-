@@ -16,8 +16,10 @@ from common_reports import run_common_reports
 
 categorical_columns = [c for c in sys.argv[1].split(',') if c != "site"]
 continuous_columns  = sys.argv[2].split(',')
-binary_columns      = sys.argv[3].split(',')
-
+if len(sys.argv) > 3 and sys.argv[3].strip():
+    binary_columns = sys.argv[3].split(',')
+else:
+    binary_columns = []   # <- default when no 3rd arg
 
 df = pd.read_csv("Metadata.Final.tsv", sep="\t")
 
