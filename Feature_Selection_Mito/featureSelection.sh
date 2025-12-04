@@ -29,14 +29,14 @@ function run_analysis {
 }
 
 # Testing different configurations
-run_analysis "GB.GA.py" "Feature_Selection/Gradient_Boosting/GA"
-run_analysis "GB.PTB.py" "Feature_Selection/Gradient_Boosting/PTB"
-run_analysis "NN.GA.py" "Feature_Selection/NeuralNetworks/GA"
-run_analysis "NN.PTB.py" "Feature_Selection/NeuralNetworks/PTB"
-run_analysis "RF.GA.py" "Feature_Selection/Random_Forest/GA"
-run_analysis "RF.PTB.py" "Feature_Selection/Random_Forest/PTB"
-run_analysis "LinearRegGA.py" "Feature_Selection/Linear-Logistic_Regression/GA"
-run_analysis "LogisticRegPTB.py" "Feature_Selection/Linear-Logistic_Regression/PTB"
+run_analysis "GB.GA.py" "Feature_Selection_Mito/Feature_Selection/Gradient_Boosting/GA"
+run_analysis "GB.PTB.py" "Feature_Selection_Mito/Feature_Selection/Gradient_Boosting/PTB"
+run_analysis "NN.GA.py" "Feature_Selection_Mito/Feature_Selection/NeuralNetworks/GA"
+run_analysis "NN.PTB.py" "Feature_Selection_Mito/Feature_Selection/NeuralNetworks/PTB"
+run_analysis "RF.GA.py" "Feature_Selection_Mito/Feature_Selection/Random_Forest/GA"
+run_analysis "RF.PTB.py" "Feature_Selection_Mito/Feature_Selection/Random_Forest/PTB"
+run_analysis "LinearRegGA.py" "Feature_Selection_Mito/Feature_Selection/Linear-Logistic_Regression/GA"
+run_analysis "LogisticRegPTB.py" "Feature_Selection_Mito/Feature_Selection/Linear-Logistic_Regression/PTB"
 
 # Wait for all SLURM jobs to finish
 wait
