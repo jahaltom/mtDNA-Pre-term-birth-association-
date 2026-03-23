@@ -58,8 +58,8 @@ find "${BAMDIR}" -maxdepth 1 -type f -name '*chrM.bam' -print \
   # Keep chrM header line plus standard SAM headers and all alignments.
   # This assumes the input BAM is already chrM-focused.
   samtools view -h "${bam}" \
-    | grep -E "^@HD|^@PG|^@RG|^@CO|^@SQ.*SN:chrM|^[^@]" \
-    | samtools view -bo "${workbam}" -
+   | grep -E "^@HD|^@PG|^@RG|^@CO|^@SQ.*SN:chrM|^[^@]" \
+   | samtools view -F 3844 -q 30 -bo "${workbam}" -
 
   samtools sort -o "${sortbam}" "${workbam}"
   samtools index "${sortbam}"
