@@ -14,7 +14,7 @@ This pipeline performs **end-to-end mtDNA heteroplasmy analysis**, from BAM file
 
 ## Key Concepts
 
-Depth from BAM captures the total read coverage at each mtDNA position, reflecting both variant and wild-type (reference) alleles. This is critical because the wild-type signal is not explicitly reported by variant callers like Mutect2, but is implicitly contained in the total depth. By comparing allele fraction (AF) to total depth, we infer the proportion of wild-type reads (≈ 1 − AF), ensuring accurate interpretation of heteroplasmy. Without sufficient depth, absence of a variant cannot be distinguished from lack of power, making depth essential for defining evaluable sites and avoiding false negatives.
+Depth from BAM captures the total read coverage at each mtDNA position, reflecting both variant and wild-type (reference) alleles. This is critical because the wild-type signal is not explicitly reported by variant callers like Mutect2 when the variant is absent, but is implicitly contained in the total depth. By comparing allele fraction (AF) to total depth, we infer the proportion of wild-type reads (≈ 1 − AF), ensuring accurate interpretation of heteroplasmy. Without sufficient depth, absence of a variant cannot be distinguished from lack of power, making depth essential for defining evaluable sites and avoiding false negatives.
 
 ### Depth (from BAM)
 - Derived using `samtools depth`
