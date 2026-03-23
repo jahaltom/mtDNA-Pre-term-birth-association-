@@ -1,3 +1,51 @@
+# mtDNA Heteroplasmy Pipeline (Summary)
+
+## Overview
+
+This pipeline performs **end-to-end mtDNA heteroplasmy analysis**, from BAM files to variant-level association testing.
+
+### Stages
+1. Variant calling (Mutect2, mitochondria mode)
+2. TXT → Parquet conversion
+3. QC + matrix construction (presence & dose)
+4. Association modeling (presence + dose regression)
+
+---
+
+## Key Concepts
+
+Depth from BAM captures the total read coverage at each mtDNA position, reflecting both variant and wild-type (reference) alleles. This is critical because the wild-type signal is not explicitly reported by variant callers like Mutect2, but is implicitly contained in the total depth. By comparing allele fraction (AF) to total depth, we infer the proportion of wild-type reads (≈ 1 − AF), ensuring accurate interpretation of heteroplasmy. Without sufficient depth, absence of a variant cannot be distinguished from lack of power, making depth essential for defining evaluable sites and avoiding false negatives.
+
+### Depth (from BAM)
+- Derived using `samtools depth`
+- Defines whether a site is **evaluable**
+- Critical for avoiding false negatives
+- Low depth → treated as missing (not absence)
+
+### Allele Fraction (AF from Mutect2)
+- Represents **heteroplasmy level**
+- Calculated from variant reads / total reads
+- Used for:
+  - Presence (AF ≥ threshold)
+  - Dose (continuous signal)
+
+👉 **Depth + AF together are essential:**
+- Depth ensures reliability
+- AF quantifies biological signal
+
+---
+
+## Installation
+
+Create the conda environment:
+
+```
+conda env create -f mtDNA_heteroplasmy_env.yml
+conda activate mtDNA_heteroplasmy
+```
+
+---
+
 
 
 # 01_mtDNA_call_and_sites.sh: Stage 1–3 (Variant Calling + Site Aggregation + Depth Extraction)
