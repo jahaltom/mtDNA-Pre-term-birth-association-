@@ -143,5 +143,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+    print(f"[summary] malformed multiallelic rows dropped: {total_bad_rows}")
     
     
