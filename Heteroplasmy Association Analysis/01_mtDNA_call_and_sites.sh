@@ -86,7 +86,7 @@ find "${BAMDIR}" -maxdepth 1 -type f -name '*chrM.bam' -print \
   snpsvcf="${VCFDIR}/${base}.filtered.snps.vcf"
 
   bcftools view -v snps "${filtvcf}" | \
-  bcftools view -i 'strlen(REF)=1 && strlen(ALT)=1' -o "${snpsvcf}"
+  bcftools view -i "strlen(REF)=1 && strlen(ALT)=1" -o "${snpsvcf}"
 
   bcftools query -f "%CHROM\t%POS\t%REF\t%ALT\t[%AF]\t[%DP]\n" \
     "${snpsvcf}" > "${hettxt}"
