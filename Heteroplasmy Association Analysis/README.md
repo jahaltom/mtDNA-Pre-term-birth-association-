@@ -105,6 +105,19 @@ Outputs:
 
 ---
 
+-F 3844 removes:
+- 1024 → duplicates 
+- 256 → secondary alignments 
+- 2048 → supplementary alignments 
+- 512 → QC fail 
+- 4 → unmapped 
+- 8 → mate unmapped 
+
+This ensures:
+- No double counting
+- No split reads
+- No garbage alignments
+
 ## Stage 2: Union Site List
 
 Steps:
