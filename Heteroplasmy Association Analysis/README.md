@@ -1,3 +1,5 @@
+
+
 # mtDNA Heteroplasmy Pipeline – Stage 1–3 (Variant Calling + Site Aggregation + Depth Extraction)
 
 ## Overview
@@ -22,9 +24,6 @@ The output supports downstream heteroplasmy matrix construction and regression a
 - gatk (≥4.x)
 - GNU parallel
 
-### Environment
-- SLURM-based HPC system
-- High parallel job capacity
 
 ---
 
@@ -38,17 +37,7 @@ The output supports downstream heteroplasmy matrix construction and regression a
 
 ---
 
-## Directory Structure
 
-ROOT/
-├── bam/
-├── vcf/
-├── out/
-├── tmp/
-├── sites.pos
-├── sites.bed
-
----
 
 ## Stage 1: Variant Calling
 
@@ -108,15 +97,7 @@ Outputs:
 
 ---
 
-## Known Issue
 
-In Stage 2, replace:
-bcftools view -v snps "${filtvcf}"
-
-with:
-bcftools view -v snps "${vcf}"
-
----
 
 ## Outputs Summary
 
@@ -126,7 +107,4 @@ bcftools view -v snps "${vcf}"
 
 ---
 
-## Next Steps
 
-- Build heteroplasmy matrix
-- Perform regression modeling
