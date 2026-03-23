@@ -59,7 +59,7 @@ find "${BAMDIR}" -maxdepth 1 -type f -name '*chrM.bam' -print \
   # This assumes the input BAM is already chrM-focused.
   samtools view -h "${bam}" \
    | grep -E "^@HD|^@PG|^@RG|^@CO|^@SQ.*SN:chrM|^[^@]" \
-   | samtools view -F 3844 -q 30 -bo "${workbam}" -
+   | samtools view -F 3844 -bo "${workbam}" -
 
   samtools sort -o "${sortbam}" "${workbam}"
   samtools index "${sortbam}"
