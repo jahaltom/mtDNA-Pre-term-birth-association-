@@ -112,7 +112,7 @@ SITES_BED="${ROOT}/sites.bed"
 : > "${SITES_POS}"
 
 for vcf in "${filtered_vcfs[@]}"; do
-    bcftools view -v snps "${filtvcf}" | \
+    bcftools view -v snps "${vcf}" | \
     bcftools view -i 'strlen(REF)=1 && strlen(ALT)=1' | \
     bcftools query -f "%CHROM\t%POS\n"
 done \
@@ -168,7 +168,7 @@ find "${BAMDIR}" -maxdepth 1 -type f -name '*chrM.bam' -print \
   fi
 
   echo "[${base}] Extracting depth"
-  samtools depth -a -d 0 -b "${SITES_BED}" "${sortbam}" > "${depthtxt}"
+  samtools depth -a -d 0 -Q 20 -q 20 -b "${SITES_BED}" "${sortbam}" > "${depthtxt}"
 
   echo "[${base}] Done stage 3"
 '
