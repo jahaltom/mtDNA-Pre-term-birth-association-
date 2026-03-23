@@ -1,6 +1,6 @@
 
 
-# mtDNA Heteroplasmy Pipeline – Stage 1–3 (Variant Calling + Site Aggregation + Depth Extraction): 01_mtDNA_call_and_sites.sh
+# 01_mtDNA_call_and_sites.sh: mtDNA Heteroplasmy Pipeline – Stage 1–3 (Variant Calling + Site Aggregation + Depth Extraction)
 
 ## Overview
 
