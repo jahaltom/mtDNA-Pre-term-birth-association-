@@ -474,7 +474,7 @@ python 03_qc_build_matrices_from_two_parquets.py \
 
 This script performs **variant-level association testing** between mtDNA heteroplasmy and a phenotype (e.g., gestational age).
 
-It implements a **two-part (hurdle-style) modeling approach**:
+It implements a **two-part modeling approach**:
 
 1. Presence model (carrier vs non-carrier)
 2. Dose model (heteroplasmy level among carriers)
