@@ -53,16 +53,7 @@ def read_calls(path: str, sample: str) -> pd.DataFrame:
     out = df[["sample","POS","REF","ALT","AF","DP_VCF"]].dropna(subset=["POS","ALT","AF"])
     return out
 
-def append_parquet(path: str, pdf: pd.DataFrame):
-    table = pa.Table.from_pandas(pdf, preserve_index=False)
-    if not os.path.exists(path):
-        pq.write_table(table, path, compression="zstd")
-    else:
-        # append by writing a new row group
-        with pq.ParquetWriter(path, table.schema, compression="zstd", use_dictionary=True) as writer:
-            # If file exists we cannot reopen-and-append easily with ParquetWriter.
-            # So we instead write separate part files in the same folder.
-            raise RuntimeError("append_parquet called on existing path; use part files instead.")
+
 
 def main():
     args = parse_args()
