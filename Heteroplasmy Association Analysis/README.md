@@ -147,9 +147,10 @@ Outputs:
 ## Key Parameters
 
 - Jobs: 70
-- Min AF: 0.01
-- Min alt reads: 3
-- MQ ≥ 30
+- FilterMutectCalls 
+  - Min AF: 0.01
+  - Min alt reads: 3
+  - MQ ≥ 30
 
 ---
 
