@@ -253,3 +253,158 @@ python 02_txt_to_two_parquets.py \
 
 
 
+
+# 03_qc_build_matrices_from_two_parquets.py: (QC + Matrix Construction)
+
+## Overview
+
+This script performs **variant-level quality control (QC)** and constructs analysis-ready matrices from Parquet datasets:
+
+- Presence matrix (binary carrier status)
+- Dose matrix (heteroplasmy levels)
+
+It integrates:
+- Depth data
+- Variant calls
+- Covariates (including site)
+
+---
+
+## Purpose
+
+- Apply rigorous QC filters to mtDNA variants
+- Ensure cross-site robustness
+- Generate matrices for regression / ML models
+
+---
+
+## Inputs
+
+### Parquet Data (from Stage 2)
+- `parquet_depth/`
+- `parquet_calls/`
+
+### Covariates File
+- CSV/TSV containing:
+  - Sample IDs
+  - Site information
+  - Age, BMI
+
+---
+
+## Outputs
+
+### Main Outputs
+- `*.variant_qc.csv` → QC metrics per variant
+- `*.presence_matrix.parquet` → binary matrix
+- `*.dose_matrix.<transform>.parquet` → continuous matrix
+
+### Optional Outputs (if enabled)
+- Sparse NPZ matrices:
+  - evaluable mask
+  - carrier mask
+  - dose values
+- Sample and variant labels
+
+---
+
+## QC Metrics
+
+Each variant is evaluated using:
+
+| Metric | Description |
+|------|------------|
+| n_used | Samples with sufficient depth |
+| n_carriers | Number of carriers |
+| prevalence | Carrier frequency |
+| sites_with_carriers | Sites with ≥1 carrier |
+| min_per_site_among_carrier_sites | Minimum carriers per site |
+| dose_sd_carriers | AF variability |
+
+---
+
+## QC Filters
+
+Variants must pass:
+
+- Minimum evaluable samples (`--min_n_used`)
+- Minimum carriers (`--min_carriers`)
+- Multi-site support (`--min_sites_with_carriers`)
+- Per-site carrier threshold
+- Dose variability threshold
+
+---
+
+## Matrix Definitions
+
+### Presence Matrix
+- 1 = carrier
+- 0 = non-carrier (if evaluable)
+- NaN = not evaluable (low depth)
+
+---
+
+### Dose Matrix
+Depends on `--dose_transform`:
+
+| Option | Description |
+|-------|------------|
+| raw_af | Raw allele fraction |
+| logit_af | Logit-transformed AF |
+| rel_to_low_logit | Relative to threshold |
+
+---
+
+## Usage
+
+```
+python 03_qc_build_matrices_from_two_parquets.py \
+  --depth_parquet_dir /scr1/users/haltomj/PTB/heteroplasmy/parquet_depth \
+  --calls_parquet_dir /scr1/users/haltomj/PTB/heteroplasmy/parquet_calls \
+  --covariates_csv /scr1/users/haltomj/PTB/heteroplasmy/covariates.csv \
+  --cov_sep $'\t' \
+  --sample_col Sample_ID \
+  --site_col site \
+  --low 0.03 \
+  --high 0.95 \
+  --min_dp 50 \
+  --min_n_used 5000 \
+  --min_carriers 20 \
+  --min_sites_with_carriers 2 \
+  --min_per_site_among_carrier_sites 2 \
+  --min_dose_sd 0.05 \
+  --dose_transform raw_af \
+  --out_prefix /scr1/users/haltomj/PTB/heteroplasmy/matrices/mtDNA \
+  --write_sparse_npz
+```
+
+---
+
+## Key Features
+
+- Site-aware QC (critical for multi-cohort data)
+- Handles allele-specific variants
+- Supports multiple dose encodings
+- Efficient large-scale processing
+- Optional sparse matrix export
+
+---
+
+## Notes
+
+- Depth threshold (`min_dp`) defines evaluable samples
+- Presence matrix distinguishes missing vs true absence
+- Sparse export recommended for large datasets
+
+---
+
+## Next Steps
+
+- Regression modeling (logit / linear)
+- ML approaches (RF, NN)
+- Variant-level association testing
+
+---
+
+
+
