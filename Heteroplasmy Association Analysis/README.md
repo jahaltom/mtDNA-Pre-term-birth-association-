@@ -133,6 +133,9 @@ Outputs:
 
 ## Stage 3: Depth Extraction
 
+- Q 20 requires base quality ≥ 20
+- q 20 requires mapping quality ≥ 20
+
 Steps:
 - samtools depth at union sites
 
