@@ -37,9 +37,6 @@ def main():
 
     for c in covars + pcs:
         cov[c] = pd.to_numeric(cov[c], errors="coerce")
-        cov[c + "_c"] = cov[c] - cov[c].mean()
-
-    centered_covars = [c + "_c" for c in covars + pcs]
 
     cov = cov.set_index(args.sample_col)
 
@@ -51,8 +48,13 @@ def main():
 
     common = pres.index.intersection(cov.index)
     pres = pres.loc[common]
-    dose = dose.loc[common]
-    cov = cov.loc[common]
+    dose = dose.loc[dose.index.intersection(common)]
+    cov = cov.loc[common].copy()
+
+    for c in covars + pcs:
+        cov[c + "_c"] = cov[c] - cov[c].mean()
+
+    centered_covars = [c + "_c" for c in covars + pcs]
 
     rows = []
 
@@ -68,9 +70,15 @@ def main():
             rows.append({
                 "variant": v,
                 "coef_present": np.nan,
+                "se_present": np.nan,
                 "p_present": np.nan,
+                "ci_present_low": np.nan,
+                "ci_present_high": np.nan,
                 "coef_dose": np.nan,
+                "se_dose": np.nan,
                 "p_dose": np.nan,
+                "ci_dose_low": np.nan,
+                "ci_dose_high": np.nan,
                 "n_used": int(mask.sum()),
                 "n_carriers": int((p == 1).sum()),
                 "status": "skip_presence_low_n_or_no_variation"
@@ -88,22 +96,27 @@ def main():
         valid = X.notna().all(axis=1) & y[mask].notna()
         Xv = X.loc[valid]
         yv = y.loc[mask].loc[valid]
-        groups = cov.loc[mask].loc[valid, args.site_col]
+
 
         try:
-            if groups.nunique() > 1:
-                res_p = sm.OLS(yv, Xv).fit(cov_type="cluster", cov_kwds={"groups": groups})
-            else:
-                res_p = sm.OLS(yv, Xv).fit()
+            res_p = sm.OLS(yv, Xv).fit(cov_type="HC3")
             coef_present = float(res_p.params.get("present", np.nan))
+            se_present = float(res_p.bse.get("present", np.nan))
             p_present = float(res_p.pvalues.get("present", np.nan))
+            ci_present_low, ci_present_high = res_p.conf_int().loc["present"].tolist() if "present" in res_p.params.index else (np.nan, np.nan)
         except Exception as e:
             rows.append({
                 "variant": v,
                 "coef_present": np.nan,
+                "se_present": np.nan,
                 "p_present": np.nan,
+                "ci_present_low": np.nan,
+                "ci_present_high": np.nan,
                 "coef_dose": np.nan,
+                "se_dose": np.nan,
                 "p_dose": np.nan,
+                "ci_dose_low": np.nan,
+                "ci_dose_high": np.nan,
                 "n_used": int(len(yv)),
                 "n_carriers": int((p == 1).sum()),
                 "status": f"error_presence_{type(e).__name__}"
@@ -113,6 +126,25 @@ def main():
         # ---------------------------
         # Dose model
         # ---------------------------
+        if v not in dose.columns:
+            rows.append({
+                "variant": v,
+                "coef_present": coef_present,
+                "se_present": se_present,
+                "p_present": p_present,
+                "ci_present_low": ci_present_low,
+                "ci_present_high": ci_present_high,
+                "coef_dose": np.nan,
+                "se_dose": np.nan,
+                "p_dose": np.nan,
+                "ci_dose_low": np.nan,
+                "ci_dose_high": np.nan,
+                "n_used": int(mask.sum()),
+                "n_carriers": int((p == 1).sum()),
+                "status": "ok_presence_only_not_in_dose_matrix"
+            })
+            continue
+
         d = pd.to_numeric(dose[v], errors="coerce")
         mask2 = y.notna() & d.notna()
         n_car = int(mask2.sum())
@@ -121,9 +153,15 @@ def main():
             rows.append({
                 "variant": v,
                 "coef_present": coef_present,
+                "se_present": se_present,
                 "p_present": p_present,
+                "ci_present_low": ci_present_low,
+                "ci_present_high": ci_present_high,
                 "coef_dose": np.nan,
+                "se_dose": np.nan,
                 "p_dose": np.nan,
+                "ci_dose_low": np.nan,
+                "ci_dose_high": np.nan,
                 "n_used": int(mask.sum()),
                 "n_carriers": n_car,
                 "status": "ok_presence_only_dose_low_n_or_no_variation"
@@ -144,22 +182,27 @@ def main():
         valid2 = X2.notna().all(axis=1) & y[mask2].notna()
         X2v = X2.loc[valid2]
         y2v = y.loc[mask2].loc[valid2]
-        groups2 = cov.loc[mask2].loc[valid2, args.site_col]
+
 
         try:
-            if groups2.nunique() > 1:
-                res_d = sm.OLS(y2v, X2v).fit(cov_type="cluster", cov_kwds={"groups": groups2})
-            else:
-                res_d = sm.OLS(y2v, X2v).fit()
+            res_d = sm.OLS(y2v, X2v).fit(cov_type="HC3")
             coef_dose = float(res_d.params.get("dose", np.nan))
+            se_dose = float(res_d.bse.get("dose", np.nan))
             p_dose = float(res_d.pvalues.get("dose", np.nan))
+            ci_dose_low, ci_dose_high = res_d.conf_int().loc["dose"].tolist() if "dose" in res_d.params.index else (np.nan, np.nan)
         except Exception as e:
             rows.append({
                 "variant": v,
                 "coef_present": coef_present,
+                "se_present": se_present,
                 "p_present": p_present,
+                "ci_present_low": ci_present_low,
+                "ci_present_high": ci_present_high,
                 "coef_dose": np.nan,
+                "se_dose": np.nan,
                 "p_dose": np.nan,
+                "ci_dose_low": np.nan,
+                "ci_dose_high": np.nan,
                 "n_used": int(mask.sum()),
                 "n_carriers": n_car,
                 "status": f"error_dose_{type(e).__name__}"
@@ -169,9 +212,15 @@ def main():
         rows.append({
             "variant": v,
             "coef_present": coef_present,
+            "se_present": se_present,
             "p_present": p_present,
+            "ci_present_low": ci_present_low,
+            "ci_present_high": ci_present_high,
             "coef_dose": coef_dose,
+            "se_dose": se_dose,
             "p_dose": p_dose,
+            "ci_dose_low": ci_dose_low,
+            "ci_dose_high": ci_dose_high,
             "n_used": int(mask.sum()),
             "n_carriers": n_car,
             "status": "ok"
