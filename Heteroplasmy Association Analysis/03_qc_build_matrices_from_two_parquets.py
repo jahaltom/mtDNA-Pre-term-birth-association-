@@ -127,51 +127,80 @@ def main():
     if qc.empty:
         raise SystemExit("No variants found in calls parquet after filtering.")
 
-    qc["pass_qc"] = (
-        (qc["n_used"] >= args.min_n_used) &
-        (qc["n_carriers"] >= args.min_carriers) &
-        (qc["sites_with_carriers"] >= args.min_sites_with_carriers) &
-        (qc["min_per_site_among_carrier_sites"] >= args.min_per_site_among_carrier_sites) &
+    qc["pass_presence_qc"] = (
+    (qc["n_used"] >= args.min_n_used) &
+    (qc["n_carriers"] >= args.min_carriers) &
+    (qc["sites_with_carriers"] >= args.min_sites_with_carriers) &
+    (qc["min_per_site_among_carrier_sites"] >= args.min_per_site_among_carrier_sites)
+)
+
+    qc["pass_dose_qc"] = (
+        qc["pass_presence_qc"] &
         (qc["dose_sd_carriers"] >= args.min_dose_sd)
     )
-    passing = qc.loc[qc["pass_qc"], "variant"].tolist()
-    print(f"Passing QC: {len(passing):,}")
-    if not passing:
-        raise SystemExit("No variants passed QC. Loosen thresholds and re-run.")
 
-    qc_pass = qc[qc["pass_qc"]][["variant","POS"]].copy()
-    pos_set = sorted(qc_pass["POS"].unique().tolist())
+    passing_presence = qc.loc[qc["pass_presence_qc"], "variant"].tolist()
+    passing_dose = qc.loc[qc["pass_dose_qc"], "variant"].tolist()
 
-    depth_sub = depth[depth["POS"].isin(pos_set)].copy()
-    depth_sub = depth_sub.merge(qc_pass, on="POS", how="left")
+    print(f"Passing presence QC: {len(passing_presence):,}")
+    print(f"Passing dose QC: {len(passing_dose):,}")
 
+    if not passing_presence:
+        raise SystemExit("No variants passed presence QC. Loosen thresholds and re-run.")
+
+    qc_pass_presence = qc.loc[qc["pass_presence_qc"], ["variant","POS"]].copy()
+    qc_pass_dose = qc.loc[qc["pass_dose_qc"], ["variant","POS"]].copy()
+
+    pos_set_presence = sorted(qc_pass_presence["POS"].unique().tolist())
+
+    # ---------------------------
+    # Presence matrix inputs
+    # ---------------------------
+    depth_sub_presence = depth[depth["POS"].isin(pos_set_presence)].copy()
+    depth_sub_presence = depth_sub_presence.merge(qc_pass_presence, on="POS", how="left")
+    
     # base presence = 0 if evaluable else NaN
-    depth_sub["presence"] = np.where(depth_sub["evaluable"].to_numpy(), 0.0, np.nan)
-
-    calls2 = calls[calls["variant"].isin(passing)].drop_duplicates(["sample","variant"]).copy()
-
-    # presence overwrite for carriers
-    carriers = calls2[["sample","variant","AF"]].copy()
-    carriers["presence_car"] = 1.0
-
-    pres_long = depth_sub[["sample","variant","presence"]].merge(
-        carriers[["sample","variant","presence_car"]],
+    depth_sub_presence["presence"] = np.where(depth_sub_presence["evaluable"].to_numpy(), 0.0, np.nan)
+    
+    # ---------------------------
+    # Calls: collapse duplicate sample/variant rows first
+    # ---------------------------
+    calls2 = calls.groupby(["sample", "variant"], as_index=False).agg({
+        "AF": "max",
+        "POS": "first",
+        "REF": "first",
+        "ALT": "first",
+        "site": "first"
+    })
+    
+    # ---------------------------
+    # Presence carriers
+    # ---------------------------
+    carriers_presence = calls2[calls2["variant"].isin(passing_presence)][["sample","variant","AF"]].copy()
+    carriers_presence["presence_car"] = 1.0
+    
+    pres_long = depth_sub_presence[["sample","variant","presence"]].merge(
+        carriers_presence[["sample","variant","presence_car"]],
         on=["sample","variant"],
         how="left"
     )
     pres_long["presence"] = np.where(pres_long["presence_car"].notna(), 1.0, pres_long["presence"])
     pres_long = pres_long[["sample","variant","presence"]]
-
-    # dose for carriers
-    af = carriers["AF"].to_numpy(dtype=float)
+    
+    # ---------------------------
+    # Dose carriers
+    # ---------------------------
+    carriers_dose = calls2[calls2["variant"].isin(passing_dose)][["sample","variant","AF"]].copy()
+    
+    af = carriers_dose["AF"].to_numpy(dtype=float)
     if args.dose_transform == "raw_af":
         dose_x = af
     elif args.dose_transform == "logit_af":
         dose_x = logit(af)
     else:
         dose_x = logit(af) - logit(args.low)
-
-    dose_long = carriers[["sample","variant"]].copy()
+    
+    dose_long = carriers_dose[["sample","variant"]].copy()
     dose_long["dose"] = dose_x
 
     pres = pres_long.pivot_table(index="sample", columns="variant", values="presence", aggfunc="max").reindex(sample_index)
