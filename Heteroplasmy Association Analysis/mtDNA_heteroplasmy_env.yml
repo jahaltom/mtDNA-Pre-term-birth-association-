@@ -1,0 +1,16 @@
+name: mtDNA_heteroplasmy
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - python=3.10
+  - samtools=1.21
+  - bcftools=1.21
+  - gatk4=4.5.0.0
+  - openjdk=17
+  - parallel
+  - coreutils
+  - grep
+  - gawk
