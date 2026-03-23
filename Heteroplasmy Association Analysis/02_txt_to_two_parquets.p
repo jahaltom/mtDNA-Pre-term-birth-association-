@@ -45,6 +45,22 @@ def read_calls(path: str, sample: str) -> pd.DataFrame:
     # split multiallelic ALT/AF
     df["ALT_list"] = df["ALT"].astype(str).str.split(",")
     df["AF_list"]  = df["AF"].astype(str).str.split(",")
+
+    # validate ALT/AF list lengths match
+    df["n_alt"] = df["ALT_list"].str.len()
+    df["n_af"] = df["AF_list"].str.len()
+
+    bad = df["n_alt"] != df["n_af"]
+    n_bad = int(bad.sum())
+
+    if n_bad > 0:
+        print(f"[warn] {sample}: dropping {n_bad} malformed call rows with ALT/AF length mismatch from {path}")
+
+    df = df.loc[~bad].copy()
+
+    if df.empty:
+        return pd.DataFrame(columns=["sample","POS","REF","ALT","AF","DP_VCF"])
+
     df = df.explode(["ALT_list","AF_list"], ignore_index=True)
 
     df["ALT"] = df["ALT_list"].astype(str)
