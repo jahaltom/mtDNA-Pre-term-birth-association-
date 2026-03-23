@@ -407,4 +407,166 @@ python 03_qc_build_matrices_from_two_parquets.py \
 ---
 
 
+# 04_models_from_matrices.py: (Association Modeling)
+
+## Overview
+
+This script performs **variant-level association testing** between mtDNA heteroplasmy and a phenotype (e.g., gestational age).
+
+It implements a **two-part (hurdle-style) modeling approach**:
+
+1. Presence model (carrier vs non-carrier)
+2. Dose model (heteroplasmy level among carriers)
+
+Both models use **linear regression (OLS)** with optional **cluster-robust standard errors by site**.
+
+---
+
+## Purpose
+
+- Test association of individual mtDNA variants with phenotype
+- Separate biological effects:
+  - Presence (mutation exists)
+  - Dose (mutation level)
+
+---
+
+## Inputs
+
+### Required
+
+- Covariates file (CSV/TSV)
+- Presence matrix (Parquet)
+- Dose matrix (Parquet)
+
+### Covariates must include:
+- Sample ID
+- Site
+- Outcome variable
+- Additional covariates (e.g., BMI, age)
+
+---
+
+## Outputs
+
+- `results.csv` containing:
+
+| Column | Description |
+|------|------------|
+| variant | mtDNA variant ID |
+| coef_present | Effect of presence |
+| p_present | P-value (presence) |
+| coef_dose | Effect of dose |
+| p_dose | P-value (dose) |
+| n_used | Samples used |
+| n_carriers | Number of carriers |
+| fdr_present | FDR-adjusted p-value |
+| fdr_dose | FDR-adjusted p-value |
+| status | Model status |
+
+---
+
+## Model Details
+
+### Presence Model
+- Outcome ~ carrier status + covariates + site
+- Includes all evaluable samples
+
+---
+
+### Dose Model
+- Outcome ~ heteroplasmy level + covariates + site
+- Restricted to carriers
+- Dose is mean-centered
+
+---
+
+### Covariate Handling
+- Covariates are mean-centered
+- Site included as dummy variables
+- Optional PCs can be added
+
+---
+
+### Robustness
+- Uses cluster-robust SE by site (if multiple sites)
+- Skips variants with:
+  - Low sample size
+  - No variation
+  - Low carrier counts
+
+---
+
+## Multiple Testing
+
+- Benjamini-Hochberg FDR correction applied separately for:
+  - Presence p-values
+  - Dose p-values
+
+---
+
+## Usage
+
+```
+python 04_models_from_matrices.py \
+  --covariates_csv /scr1/users/haltomj/PTB/heteroplasmy/covariates.csv \
+  --cov_sep $'\t' \
+  --presence_matrix /scr1/users/haltomj/PTB/heteroplasmy/matrices/mtDNA.presence_matrix.parquet \
+  --dose_matrix /scr1/users/haltomj/PTB/heteroplasmy/matrices/mtDNA.dose_matrix.raw_af.parquet \
+  --sample_col Sample_ID \
+  --site_col site \
+  --outcome GAGEBRTH \
+  --covars BMI,PW_AGE \
+  --min_n_used 50 \
+  --min_carriers_dose 15 \
+  --results_csv /scr1/users/haltomj/PTB/heteroplasmy/matrices/hurdle_results.csv
+```
+
+---
+
+## Key Parameters
+
+| Parameter | Description |
+|----------|------------|
+| outcome | Dependent variable |
+| covars | Comma-separated covariates |
+| pcs | Optional principal components |
+| min_n_used | Min samples for presence model |
+| min_carriers_dose | Min carriers for dose model |
+
+---
+
+## Key Features
+
+- Variant-level regression (rare in mtDNA literature)
+- Separates presence vs dose effects
+- Handles multi-site cohorts properly
+- Scales to thousands of variants
+
+---
+
+## Notes
+
+- Presence = binary (0/1)
+- Dose = continuous (AF or transformed)
+- Missing values handled per-variant
+- Models skipped gracefully when invalid
+
+---
+
+## Example Output Summary
+
+Script prints:
+- Number of variants tested
+- Number of models run
+- Significant hits (FDR < 0.05)
+
+---
+
+## Interpretation
+
+- **Presence effect** → mutation existence matters
+- **Dose effect** → heteroplasmy level matters
+
+---
 
