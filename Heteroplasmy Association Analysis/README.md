@@ -635,3 +635,22 @@ Script prints:
 
 ---
 
+
+```
+python 05_models_from_matrices_PTB.py \
+  --covariates_csv /scr1/users/haltomj/PTB/heteroplasmy/covariates.csv \
+  --cov_sep $'\t' \
+  --presence_matrix /scr1/users/haltomj/PTB/heteroplasmy/matrices/mtDNA.presence_matrix.parquet \
+  --dose_matrix /scr1/users/haltomj/PTB/heteroplasmy/matrices/mtDNA.dose_matrix.raw_af.parquet \
+  --sample_col Sample_ID \
+  --site_col site \
+  --outcome PTB \
+  --covars BMI,PW_AGE \
+  --pcs PC2,PC3,PC4,PC5 \
+  --min_n_used 50 \
+  --min_carriers_dose 15 \
+  --min_cases 10 \
+  --min_controls 10 \
+  --results_csv /scr1/users/haltomj/PTB/heteroplasmy/matrices/ptb_results.csv
+```
+
