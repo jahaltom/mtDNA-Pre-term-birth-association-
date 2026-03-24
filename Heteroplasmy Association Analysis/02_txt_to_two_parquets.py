@@ -140,7 +140,7 @@ def main():
         print(f"[write] {calls_out} rows={len(calls_df):,}")
 
     print(f"Done. Parts written to:\n  depth: {depth_part_dir}\n  calls: {calls_part_dir}")
-    print(f"[summary] malformed multiallelic rows dropped: {total_bad_rows}")
+
 
 if __name__ == "__main__":
     main()
