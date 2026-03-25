@@ -573,7 +573,7 @@ Both models use **linear regression (OLS)** with optional **cluster-robust stand
 ## Usage
 
 ```
-python 04_models_from_matrices.py \
+python 04_models_from_matrices_GA.py \
   --covariates_csv /scr1/users/haltomj/PTB/heteroplasmy/covariates.csv \
   --cov_sep $'\t' \
   --presence_matrix /scr1/users/haltomj/PTB/heteroplasmy/matrices/mtDNA.presence_matrix.parquet \
