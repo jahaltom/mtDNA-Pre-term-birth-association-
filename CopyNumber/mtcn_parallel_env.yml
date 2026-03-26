@@ -1,4 +1,4 @@
-name: gatk-mito-pipeline
+name: mtcn-parallel
 channels:
   - conda-forge
   - bioconda
@@ -7,15 +7,17 @@ channels:
 dependencies:
   - python=3.10
   - openjdk=17
-  - gatk4=4.6.2.0
-  - picard=3.4.0
   - samtools=1.22
+  - picard=3.4.0
+  - gatk4=4.6.2.0
+  - parallel=20250222
   - bwa=0.7.19
   - bcftools=1.22
   - htslib=1.22
-  - tabix
   - coreutils
-  - grep
+  - findutils
   - gawk
+  - grep
   - sed
+  - xz
   - pigz
