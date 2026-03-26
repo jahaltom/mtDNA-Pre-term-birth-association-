@@ -1,5 +1,5 @@
 
 ```
-conda env create -f gatk-mito-pipeline.yml
-conda activate gatk-mito-pipeline
+conda env create -f mtcn_parallel_env.yml
+conda activate mtcn-parallel
 ```
