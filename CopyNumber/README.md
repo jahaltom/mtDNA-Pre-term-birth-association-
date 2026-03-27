@@ -1,4 +1,32 @@
 
+# This workflow computes mitochondrial DNA copy number (mtCN) from whole-genome sequencing (WGS) BAM files.
+
+## mtCN = 2 × mean_mtDNA_coverage / median_autosomal_coverage
+
+Key Features:
+- Slurm array-based parallelization (1 BAM per job)
+- Autosomal-only normalization (chr1–22)
+- Robust handling of BAM indexing and mtDNA contig detection
+- Safe parallel output handling
+
+
+Notes:
+- Input BAMs must be WGS (RNA-seq will fail due to zero autosomal coverage)
+- Reference FASTA must match BAM alignment
+- Autosomal coverage uses chromosomes 1–22 only
+
+  
+Output Columns:
+- sample
+- bam
+- mt_contig
+- mean_mt_cov
+- median_autosomal_cov
+- mtcn
+
+
+
+  
 ```
 conda env create -f mtcn_slurm_env.yml
 conda activate mtcn-parallel
