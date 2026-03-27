@@ -92,21 +92,21 @@ This represents:
 This value is used as the denominator in the mtCN calculation.
 
 
-### Parametersv:  
-#### INTERVALS
+#### Parameters:  
+##### INTERVALS
 - Interval list specifying genomic regions to analyze
 - In this workflow: autosomes only (chromosomes 1–22)
 - Prevents bias from sex chromosomes, mitochondrial DNA, and contigs
 
-#### MINIMUM_MAPPING_QUALITY=20
+##### MINIMUM_MAPPING_QUALITY=20
 - Excludes reads with mapping quality < 20
 - Removes poorly aligned or ambiguous reads
 
-#### MINIMUM_BASE_QUALITY=20
+##### MINIMUM_BASE_QUALITY=20
 - Excludes bases with base quality < 20
 - Ensures only high-confidence bases are used
 
-#### COVERAGE_CAP=100000
+##### COVERAGE_CAP=100000
 - Caps extremely high coverage values
 - Prevents repetitive regions or artifacts from skewing results
 
