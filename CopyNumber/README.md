@@ -11,7 +11,6 @@ Key Features:
 
 
 Notes:
-- Input BAMs must be WGS (RNA-seq will fail due to zero autosomal coverage)
 - Reference FASTA must match BAM alignment
 - Autosomal coverage uses chromosomes 1–22 only
 
@@ -26,7 +25,8 @@ Output Columns:
 
 
 
-  
+
+# Prepare the environment 
 ```
 conda env create -f mtcn_slurm_env.yml
 conda activate mtcn-parallel
@@ -37,7 +37,7 @@ conda activate mtcn-parallel
 ```
 ls path/to/bam/dir/* | cat | grep -v "bai" >  bam_list.txt
 ```
-bam_list.txt
+bam_list.txt:
 ```
 output_dir/NA12718.final.sorted.bam
 output_dir/test_sample.sorted.bam
@@ -68,7 +68,10 @@ mtcn_results/rows/sample2.tsv
 ```
 bash merge_mtcn_rows.sh mtcn_results/rows mtcn_results/output.tsv
 ```
+output.tsv:
+```
 
+```
 
 Look at logs:
 ```
