@@ -50,7 +50,7 @@ Suppose it says:
 ```
 127 bam_list.txt
 ```
-Then submit: (%25 means there is a max 25 jobs running at once, adjust to your HPCs limits)
+Then submit: (%25 means there is a max of 25 jobs running at once, adjust to your HPCs limits)
 ```
 sbatch --array=1-127%25 mtcn_array.sh \
   bam_list.txt \
