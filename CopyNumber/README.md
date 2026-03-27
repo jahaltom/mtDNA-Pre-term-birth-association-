@@ -64,6 +64,32 @@ mtcn_results/rows/sample1.tsv
 mtcn_results/rows/sample2.tsv
 ...
 ```
+### INTERVALS
+- Interval list specifying genomic regions to analyze
+- In this workflow: autosomes only (chromosomes 1–22)
+- Prevents bias from sex chromosomes, mitochondrial DNA, and contigs
+
+### MINIMUM_MAPPING_QUALITY=20
+- Excludes reads with mapping quality < 20
+- Removes poorly aligned or ambiguous reads
+
+### MINIMUM_MAPPING_QUALITY=20
+- Excludes reads with mapping quality < 20
+- Removes poorly aligned or ambiguous reads
+### MINIMUM_BASE_QUALITY=20
+- Excludes bases with base quality < 20
+- Ensures only high-confidence bases are used
+
+### COVERAGE_CAP=100000
+- Caps extremely high coverage values
+- Prevents repetitive regions or artifacts from skewing results
+### STOP_AFTER=0
+- Processes the entire BAM file
+- (Non-zero values can be used for testing subsets)
+### VALIDATION_STRINGENCY=SILENT
+- Suppresses minor format warnings
+- Prevents pipeline interruptions due to non-critical issues
+
 # Step C: after jobs finish, merge
 ```
 bash merge_mtcn_rows.sh mtcn_results/rows mtcn_results/output.tsv
