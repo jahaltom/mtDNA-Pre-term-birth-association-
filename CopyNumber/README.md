@@ -70,7 +70,9 @@ bash merge_mtcn_rows.sh mtcn_results/rows mtcn_results/output.tsv
 ```
 output.tsv:
 ```
-
+sample  bam     mt_contig       mean_mt_cov     median_autosomal_cov    mtcn
+NA12718.final.sorted    output_dir/NA12718.final.sorted.bam     chrM    15950.172974    31      1029.043418
+test_sample.sorted      output_dir/test_sample.sorted.bam       chrM    70.709578       1       141.419156
 ```
 
 Look at logs:
