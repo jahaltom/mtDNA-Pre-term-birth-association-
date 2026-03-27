@@ -7,8 +7,9 @@ conda activate mtcn-parallel
 
 
 ```
-bash calc_mtcn_picard_parallel.sh \
+sbatch calc_mtcn_picard_parallel.sh \
   /path/to/full_bams \
   /path/to/Homo_sapiens_assembly38.fasta \
   output.tsv \
+  6
   ```
