@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #SBATCH -N 1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=24
 #SBATCH -t 48:00:00
 #SBATCH --mem=48G
 #SBATCH --job-name=mtcn_picard_parallel
