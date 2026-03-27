@@ -3,7 +3,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=24G
-#SBATCH -t 24:00:00
+#SBATCH -t 6:00:00
 #SBATCH --job-name=mtcn_array
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=your_email@domain.com
