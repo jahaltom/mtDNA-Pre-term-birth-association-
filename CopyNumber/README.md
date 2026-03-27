@@ -7,9 +7,13 @@ conda activate mtcn-parallel
 
 # Step A: build BAM list
 ```
-bash make_bam_list.sh /path/to/full_bams bam_list.txt
+ls path/to/bam/dir/* | cat | grep -v "bai" >  bam_list.txt
 ```
-
+bam_list.txt
+```
+output_dir/NA12718.final.sorted.bam
+output_dir/test_sample.sorted.bam
+```
 # Step B: count BAMs
 ```
 wc -l bam_list.txt
