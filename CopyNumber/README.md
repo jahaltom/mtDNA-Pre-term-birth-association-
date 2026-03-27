@@ -33,7 +33,8 @@ mtcn_results/rows/sample2.tsv
 ...
 ```
 # Step C: after jobs finish, merge
-```bash merge_mtcn_rows.sh mtcn_results/rows mtcn_results/output.tsv
+```
+bash merge_mtcn_rows.sh mtcn_results/rows mtcn_results/output.tsv
 ```
 
 
