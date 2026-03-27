@@ -65,6 +65,34 @@ mtcn_results/rows/sample2.tsv
 ...
 ```
 ### CollectWgsMetrics explained
+
+#### What CollectWgsMetrics Does in This Workflow
+
+Picard `CollectWgsMetrics` is used to estimate **nuclear (autosomal) sequencing depth**, which is required to normalize mitochondrial coverage into copy number.
+
+#### Purpose in this pipeline
+
+- Computes coverage statistics across the genome
+- Restricted to **autosomes (chromosomes 1–22)** using an interval list
+- Applies quality filters to remove low-confidence reads and bases
+- Produces a robust estimate of typical nuclear depth
+
+#### Key output used
+
+The workflow extracts:
+
+MEDIAN_COVERAGE
+
+This represents:
+- The median per-base sequencing depth across autosomes
+- A stable estimate of diploid nuclear coverage
+
+#### Role in mtDNA copy number
+
+This value is used as the denominator in the mtCN calculation.
+
+
+### Parametersv:  
 #### INTERVALS
 - Interval list specifying genomic regions to analyze
 - In this workflow: autosomes only (chromosomes 1–22)
