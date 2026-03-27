@@ -18,13 +18,14 @@ Suppose it says:
 ```
 127 bam_list.txt
 ```
-Then submit:
+Then submit: (%25 means there is a max 25 jobs running at once, adjust to your HPCs limits)
 ```
-sbatch --array=1-127 mtcn_array.sh \
+sbatch --array=1-127%25 mtcn_array.sh \
   bam_list.txt \
   /path/to/Homo_sapiens_assembly38.fasta \
   mtcn_results
 ```
+
 That will create:
 ```
 mtcn_results/rows/sample1.tsv
