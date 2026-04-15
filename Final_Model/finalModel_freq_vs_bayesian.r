@@ -334,14 +334,7 @@ readr::write_csv(results, file.path(OUTDIR, "ptb_brm_prior_sensitivity_haps.csv"
 
 hap_prior_mild <- make_hap_priors(hap_names, sd_hap = 1.0)
 
-ptb_FE <- brm(PTB ~ MainHap + BMI_s + AGE_s + site,
-              data=df, family=bernoulli(),
-              prior=hap_prior_mild,
-              chains=2, iter=3000, warmup=1000,
-              control=list(adapt_delta=0.995), init=0, seed=2025)
 
-fx_FE <- as.data.frame(summary(ptb_FE)$fixed)
-write_csv(fx_FE, file.path(OUTDIR, "ptb_brm_sensitivity_SiteFixed.csv"))
 
 ptb_RE <- brm(PTB ~ MainHap + BMI_s + AGE_s + (1|site),
               data=df, family=bernoulli(),
