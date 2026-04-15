@@ -15,6 +15,66 @@ suppressPackageStartupMessages({
 
 set.seed(2025)
 
+
+# ---- brms convergence diagnostics helper ----
+save_brms_diagnostics <- function(fit, prefix, outdir) {
+  # Summary table
+  summ <- as.data.frame(summary(fit)$fixed)
+  summ$term <- rownames(summ)
+  write_csv(summ, file.path(outdir, paste0(prefix, "_fixed_effects_summary.csv")))
+
+  # Full posterior summary with Rhat and ESS
+  draw_summ <- posterior::summarise_draws(
+    posterior::as_draws_df(fit),
+    "mean", "sd", "median", "mad", "q5", "q95", "rhat", "ess_bulk", "ess_tail"
+  )
+  write_csv(draw_summ, file.path(outdir, paste0(prefix, "_draws_summary.csv")))
+
+  # NUTS diagnostics
+  np <- nuts_params(fit)
+  write_csv(np, file.path(outdir, paste0(prefix, "_nuts_params.csv")))
+
+  # Divergences
+  n_div <- sum(np$Parameter == "divergent__" & np$Value == 1, na.rm = TRUE)
+
+  # Max treedepth hits
+  n_treedepth <- sum(np$Parameter == "treedepth__" & np$Value >= max(np$Value, na.rm = TRUE), na.rm = TRUE)
+
+  # BFMI
+  bfmi_vals <- bayesplot::nuts_energy(fit)
+  bfmi_text <- capture.output(print(bfmi_vals))
+
+  # Rhat / ESS flags
+  bad_rhat <- draw_summ %>% filter(!is.na(rhat) & rhat > 1.01)
+  low_ess_bulk <- draw_summ %>% filter(!is.na(ess_bulk) & ess_bulk < 400)
+  low_ess_tail <- draw_summ %>% filter(!is.na(ess_tail) & ess_tail < 400)
+
+  write_csv(bad_rhat, file.path(outdir, paste0(prefix, "_bad_rhat.csv")))
+  write_csv(low_ess_bulk, file.path(outdir, paste0(prefix, "_low_ess_bulk.csv")))
+  write_csv(low_ess_tail, file.path(outdir, paste0(prefix, "_low_ess_tail.csv")))
+
+  diag_lines <- c(
+    paste("Model:", prefix),
+    paste("Divergences:", n_div),
+    paste("Treedepth hits:", n_treedepth),
+    "",
+    "BFMI output:",
+    bfmi_text
+  )
+
+  writeLines(diag_lines, file.path(outdir, paste0(prefix, "_diagnostics.txt")))
+
+  # Trace / mixing plots
+  png(file.path(outdir, paste0(prefix, "_traceplot.png")), width = 1600, height = 1200)
+  plot(fit)
+  dev.off()
+
+  # Posterior predictive check
+  png(file.path(outdir, paste0(prefix, "_pp_check.png")), width = 1200, height = 900)
+  pp_check(fit, ndraws = 200)
+  dev.off()
+}
+
 # ==== CONFIG ====
 INFILE <- "Metadata.Final.tsv"
 OUTDIR <- file.path("model_outputs", "All")
@@ -36,6 +96,27 @@ df <- read_tsv(INFILE, show_col_types = FALSE) %>%
     AGE_s       = as.numeric(scale(PW_AGE)),
     GAGEBRTH_s  = as.numeric(scale(GAGEBRTH))
   )
+
+check_brms_fit <- function(fit, model_name = "model") {
+  ds <- posterior::summarise_draws(
+    posterior::as_draws_df(fit),
+    "rhat", "ess_bulk", "ess_tail"
+  )
+  np <- nuts_params(fit)
+
+  n_div <- sum(np$Parameter == "divergent__" & np$Value == 1, na.rm = TRUE)
+  n_bad_rhat <- sum(ds$rhat > 1.01, na.rm = TRUE)
+  n_low_ess_bulk <- sum(ds$ess_bulk < 400, na.rm = TRUE)
+  n_low_ess_tail <- sum(ds$ess_tail < 400, na.rm = TRUE)
+
+  cat("\n============================\n")
+  cat("Convergence check:", model_name, "\n")
+  cat("Divergences:", n_div, "\n")
+  cat("Rhat > 1.01:", n_bad_rhat, "\n")
+  cat("ESS bulk < 400:", n_low_ess_bulk, "\n")
+  cat("ESS tail < 400:", n_low_ess_tail, "\n")
+  cat("============================\n")
+}
 
 # Ensure reference haplogroup is present; otherwise pick the most frequent
 if (!(DEFAULT_REF %in% levels(df$MainHap))) {
@@ -344,4 +425,24 @@ ptb_RE <- brm(PTB ~ MainHap + BMI_s + AGE_s + (1|site),
 
 fx_RE <- as.data.frame(summary(ptb_RE)$fixed)
 write_csv(fx_RE, file.path(OUTDIR, "ptb_brm_sensitivity_SiteRandom.csv"))
+
+sink(file.path(OUTDIR, "ptb_brm_summary.txt"))
+print(summary(ptb_RE))   # or your final PTB brms object name
+sink()
+
+
+#Diagnostics:
+save_brms_diagnostics(brm_ga, "ga_brm", OUTDIR)
+save_brms_diagnostics(ptb_RE, "ptb_brm_re", OUTDIR)
+
+check_brms_fit(brm_ga, "GA brms")
+check_brms_fit(ptb_RE, "PTB brms RE")
+
+###What to do if convergence is bad? 
+##Increase adapt_delta control = list(adapt_delta = 0.999, max_treedepth = 15)
+# Increase iterations chains = 4, iter = 6000, warmup = 2000
+# Use slightly stronger priors
+
+
+
 
