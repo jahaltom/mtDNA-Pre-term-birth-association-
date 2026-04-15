@@ -51,8 +51,19 @@ Suppose it says:
 127 bam_list.txt
 ```
 Then submit: (%25 means there is a max of 25 jobs running at once, adjust to your HPCs limits)
+
+SLURM
 ```
 sbatch --array=1-127%25 mtcn_array.PBS.sh \
+  bam_list.txt \
+  /path/to/Homo_sapiens_assembly38.fasta \
+  mtcn_results
+```
+
+LSF
+
+```
+bsub -J "mtcn_array[1-127]%25" < mtcn_array_lsf.sh \
   bam_list.txt \
   /path/to/Homo_sapiens_assembly38.fasta \
   mtcn_results
