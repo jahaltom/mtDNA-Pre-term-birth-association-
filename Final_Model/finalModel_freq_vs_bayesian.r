@@ -446,3 +446,111 @@ check_brms_fit(ptb_RE, "PTB brms RE")
 
 
 
+#Save PTB sparsity counts by haplogroup
+# ---- PTB counts by haplogroup ----
+hap_ptb_counts <- df %>%
+  group_by(MainHap) %>%
+  summarise(
+    n_total = n(),
+    n_ptb   = sum(PTB == 1, na.rm = TRUE),
+    n_term  = sum(PTB == 0, na.rm = TRUE),
+    n_sites = n_distinct(site),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(n_total))
+
+write_csv(hap_ptb_counts, file.path(OUTDIR, "hap_ptb_counts.csv"))
+print(hap_ptb_counts)
+#Check for sparse cells by haplogroup × site × PTB
+# ---- PTB by haplogroup within site ----
+hap_site_ptb_counts <- df %>%
+  group_by(MainHap, site) %>%
+  summarise(
+    n_total = n(),
+    n_ptb   = sum(PTB == 1, na.rm = TRUE),
+    n_term  = sum(PTB == 0, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(MainHap, site)
+
+write_csv(hap_site_ptb_counts, file.path(OUTDIR, "hap_site_ptb_counts.csv"))
+print(hap_site_ptb_counts)
+
+
+# ---- Flag sparse/problematic hap-site cells ----
+hap_site_ptb_flags <- hap_site_ptb_counts %>%
+  mutate(
+    zero_ptb  = n_ptb == 0,
+    zero_term = n_term == 0,
+    sparse_cell = n_total < 5
+  )
+
+write_csv(hap_site_ptb_flags, file.path(OUTDIR, "hap_site_ptb_flags.csv"))
+
+problem_cells <- hap_site_ptb_flags %>%
+  filter(zero_ptb | zero_term | sparse_cell)
+
+write_csv(problem_cells, file.path(OUTDIR, "hap_site_ptb_problem_cells.csv"))
+print(problem_cells)
+
+
+
+#Save basic site-level descriptive summaries
+# ---- Site-level summaries ----
+site_summary <- df %>%
+  group_by(site) %>%
+  summarise(
+    n_total   = n(),
+    n_ptb     = sum(PTB == 1, na.rm = TRUE),
+    ptb_rate  = mean(PTB == 1, na.rm = TRUE),
+    mean_ga   = mean(GAGEBRTH, na.rm = TRUE),
+    sd_ga     = sd(GAGEBRTH, na.rm = TRUE),
+    mean_age  = mean(PW_AGE, na.rm = TRUE),
+    sd_age    = sd(PW_AGE, na.rm = TRUE),
+    mean_bmi  = mean(BMI, na.rm = TRUE),
+    sd_bmi    = sd(BMI, na.rm = TRUE),
+    .groups   = "drop"
+  )
+
+write_csv(site_summary, file.path(OUTDIR, "site_summary.csv"))
+print(site_summary)
+
+# ============================
+# PTB sparsity / site structure table
+# ============================
+
+hap_site_ptb_table <- df %>%
+  group_by(MainHap, site) %>%
+  summarise(
+    n_total  = n(),
+    n_ptb    = sum(PTB == 1, na.rm = TRUE),
+    n_term   = sum(PTB == 0, na.rm = TRUE),
+    ptb_rate = mean(PTB == 1, na.rm = TRUE),
+    .groups  = "drop"
+  ) %>%
+  arrange(MainHap, site)
+
+write_csv(hap_site_ptb_table,
+          file.path(OUTDIR, "hap_site_ptb_table.csv"))
+
+print(hap_site_ptb_table)
+
+# ---- Flag sparse / problematic cells ----
+hap_site_ptb_flags <- hap_site_ptb_table %>%
+  mutate(
+    zero_ptb    = n_ptb == 0,
+    zero_term   = n_term == 0,
+    sparse_cell = n_total < 5,
+    low_events  = n_ptb < 2
+  )
+
+write_csv(hap_site_ptb_flags,
+          file.path(OUTDIR, "hap_site_ptb_flags.csv"))
+
+problem_cells <- hap_site_ptb_flags %>%
+  filter(zero_ptb | zero_term | sparse_cell | low_events)
+
+write_csv(problem_cells,
+          file.path(OUTDIR, "hap_site_ptb_problem_cells.csv"))
+
+print(problem_cells)
