@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#BSUB -J mtcn_array[1-127]%25
+
 #BSUB -n 4
 #BSUB -M 24000
 #BSUB -W 6:00
