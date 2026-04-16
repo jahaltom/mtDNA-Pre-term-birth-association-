@@ -441,11 +441,12 @@ hap_prior_mild <- make_hap_priors(hap_names, sd_hap = 1.0)
 
 
 
-ptb_RE <- brm(PTB ~ MainHap + BMI_s + AGE_s + (1|site),
+ptb_RE <- brm(as.formula(paste("PTB ~ MainHap +", covariates)), 
               data=df, family=bernoulli(),
               prior=hap_prior_mild,
               chains=2, iter=3000, warmup=1000,
               control=list(adapt_delta=0.995), init=0, seed=2025)
+
 
 fx_RE <- as.data.frame(summary(ptb_RE)$fixed)
 write_csv(fx_RE, file.path(OUTDIR, "ptb_brm_sensitivity_SiteRandom.csv"))
