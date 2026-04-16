@@ -36,6 +36,12 @@ save_brms_diagnostics <- function(fit, prefix, outdir) {
     posterior::ess_bulk,
     posterior::ess_tail
   )
+  draw_summ <- as.data.frame(draw_summ)
+
+  names(draw_summ)[names(draw_summ) == "posterior::rhat"] <- "rhat"
+  names(draw_summ)[names(draw_summ) == "posterior::ess_bulk"] <- "ess_bulk"
+  names(draw_summ)[names(draw_summ) == "posterior::ess_tail"] <- "ess_tail"
+    
   write_csv(draw_summ, file.path(outdir, paste0(prefix, "_draws_summary.csv")))
 
   # NUTS diagnostics
@@ -49,9 +55,19 @@ save_brms_diagnostics <- function(fit, prefix, outdir) {
   n_treedepth <- sum(np$Parameter == "treedepth__" & np$Value >= max(np$Value, na.rm = TRUE), na.rm = TRUE)
 
   # BFMI
-  bfmi_vals <- bayesplot::nuts_energy(fit)
-  bfmi_text <- capture.output(print(bfmi_vals))
+  # BFMI / energy diagnostic (version-safe)
+  bfmi_text <- tryCatch({
+    if ("nuts_energy" %in% getNamespaceExports("bayesplot")) {
+      capture.output(print(bayesplot::nuts_energy(fit)))
+    } else {
+      "BFMI check not available in this bayesplot version."
+    }
+  }, error = function(e) {
+    paste("BFMI check failed:", e$message)
+  })
 
+  print(names(draw_summ))
+  str(draw_summ)
   # Rhat / ESS flags
   bad_rhat <- draw_summ %>% filter(!is.na(rhat) & rhat > 1.01)
   low_ess_bulk <- draw_summ %>% filter(!is.na(ess_bulk) & ess_bulk < 400)
