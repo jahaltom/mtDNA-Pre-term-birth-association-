@@ -26,7 +26,15 @@ save_brms_diagnostics <- function(fit, prefix, outdir) {
   # Full posterior summary with Rhat and ESS
   draw_summ <- posterior::summarise_draws(
     posterior::as_draws_df(fit),
-    "mean", "sd", "median", "mad", "q5", "q95", "rhat", "ess_bulk", "ess_tail"
+    mean,
+    sd,
+    median,
+    mad,
+    ~posterior::quantile2(.x, probs = 0.05),
+    ~posterior::quantile2(.x, probs = 0.95),
+    posterior::rhat,
+    posterior::ess_bulk,
+    posterior::ess_tail
   )
   write_csv(draw_summ, file.path(outdir, paste0(prefix, "_draws_summary.csv")))
 
