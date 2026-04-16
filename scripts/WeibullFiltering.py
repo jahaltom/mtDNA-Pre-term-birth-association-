@@ -145,7 +145,7 @@ counts = (
 
 # present in ≥2 sites, unless single site analysis.
 site_support = counts[counts["n"] > 0].groupby("MainHap")["site"].nunique()
-if site_support  == 1:
+if filtered_data["site"].nunique()  == 1:
     min_sites == 1
 haps_multi_site = set(site_support[site_support >= min_sites].index)
 
