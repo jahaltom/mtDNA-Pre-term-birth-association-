@@ -134,7 +134,7 @@ print("Categorical variables for Feature selection:", str(columns_with_moreThant
 # --- RULES ---
 min_sites   = 2
 min_n       = 20
-min_events  = 4
+min_events  = 3
 
 # hap × site counts within the CURRENT dataset (works for joint or any subset)
 counts = (
@@ -143,9 +143,16 @@ counts = (
       .reset_index()
 )
 
-# present in ≥2 sites
+# present in ≥2 sites, unless single site analysis.
 site_support = counts[counts["n"] > 0].groupby("MainHap")["site"].nunique()
+if site_support  == 1:
+    min_sites == 1
 haps_multi_site = set(site_support[site_support >= min_sites].index)
+
+
+
+
+
 
 # total N ≥ 20 and PTB ≥ 5
 totals = filtered_data.groupby("MainHap")["PTB"].agg(n="size", ptb=lambda s: (s == 1).sum())
