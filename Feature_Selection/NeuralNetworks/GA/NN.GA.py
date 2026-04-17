@@ -26,7 +26,7 @@ tf.random.set_seed(SEED)
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
 # Define features
-categorical_columns = [sys.argv[1].split(',')]
+categorical_columns = sys.argv[1].split(',')
 continuous_columns = sys.argv[2].split(',')
 if len(sys.argv) > 3 and sys.argv[3].strip():
     binary_columns = sys.argv[3].split(',')
