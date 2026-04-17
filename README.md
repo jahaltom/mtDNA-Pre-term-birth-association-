@@ -86,7 +86,6 @@ sbatch workflow2.sh
 
 #### Feature Selection 
 ##### featureSelection.sh
-- Remove weight and heigth if using BMI (columnCont).
 - Look at PCA plots and make sure they look good.
 - Carry same continuous features down from input into workflow.sh.
 - See out.txt for;
