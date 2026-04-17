@@ -52,8 +52,8 @@ pipe = Pipeline([
 # --- RF grid (mirrors your style, but with RF params) ---
 param_grid = {
     "clf__n_estimators": [300, 600, 900],
-    "clf__max_depth": [None, 10, 20],
-    "clf__min_samples_leaf": [1, 2, 5],
+    "clf__max_depth": [5, 10, 15],
+    "clf__min_samples_leaf": [2, 5, 10],
     "clf__max_features": ["sqrt", 0.5],
 }
 
