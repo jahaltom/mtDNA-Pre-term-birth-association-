@@ -17,7 +17,7 @@ from sklearn.model_selection import GroupKFold
 
 
 # Define features
-categorical_columns = [sys.argv[1].split(',')]
+categorical_columns = sys.argv[1].split(',')
 continuous_columns = sys.argv[2].split(',')
 if len(sys.argv) > 3 and sys.argv[3].strip():
     binary_columns = sys.argv[3].split(',')
