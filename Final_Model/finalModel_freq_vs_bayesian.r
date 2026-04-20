@@ -99,15 +99,16 @@ save_brms_diagnostics <- function(fit, prefix, outdir) {
   dev.off()
 }
 
+
+
+# ---------------------------------
+# USER SETTING: only edit these lines
+# ---------------------------------
 # ==== CONFIG ====
 INFILE <- "Metadata.Final.tsv"
 OUTDIR <- file.path("model_outputs", "All")
 if (!dir.exists(OUTDIR)) dir.create(OUTDIR, recursive = TRUE)
 
-
-# ---------------------------------
-# USER SETTING: only edit this line
-# ---------------------------------
 covariates <- "BMI_s + AGE_s + (1|site)"
 # covariates <- "BMI_s + AGE_s + site"
 # covariates <- "BMI_s + AGE_s"
@@ -115,6 +116,10 @@ covariates <- "BMI_s + AGE_s + (1|site)"
 
 # Choose a default reference for the Joint cohort
 DEFAULT_REF <- "R"  # set to "M" if you prefer; script will fall back if absent
+
+
+
+
 
 # ---- Load & preprocess ----
 df <- read_tsv(INFILE, show_col_types = FALSE) %>%
