@@ -105,8 +105,13 @@ OUTDIR <- file.path("model_outputs", "All")
 if (!dir.exists(OUTDIR)) dir.create(OUTDIR, recursive = TRUE)
 
 
+# ---------------------------------
+# USER SETTING: only edit this line
+# ---------------------------------
 covariates <- "BMI_s + AGE_s + (1|site)"
-#covariates <- "BMI_s + AGE_s + PC1 + PC2 + PC3 + PC4 +PC5"
+# covariates <- "BMI_s + AGE_s + site"
+# covariates <- "BMI_s + AGE_s"
+# covariates <- "BMI_s + AGE_s + PC1 + PC2 + PC3 + PC4 +PC5"
 
 # Choose a default reference for the Joint cohort
 DEFAULT_REF <- "R"  # set to "M" if you prefer; script will fall back if absent
@@ -204,18 +209,24 @@ save_forest_ptb <- function(tbl, title, file, label_col = "term", or = "OR", lo 
 }
 
 
-n_sites <- dplyr::n_distinct(df$site)
+# ---- Detect whether formula includes a site random effect ----
+has_site_re <- grepl("\\(1\\s*\\|\\s*site\\)", covariates)
+has_site_fe <- grepl("(^|\\+)\\s*site\\s*($|\\+)", covariates) && !has_site_re
 
-if (n_sites > 1) {
+message("covariates = ", covariates)
+message("has_site_re = ", has_site_re)
+message("has_site_fe = ", has_site_fe)
+
+# ---- Priors for GA model ----
+pri_ga <- c(
+  prior(normal(0, 0.5), class = "b"),
+  prior(student_t(3, 0, 2.5), class = "sigma")
+)
+
+if (has_site_re) {
   pri_ga <- c(
-    prior(normal(0, 0.5), class = "b"),
-    prior(student_t(3, 0, 2.5), class = "sd"),
-    prior(student_t(3, 0, 2.5), class = "sigma")
-  )
-} else {
-  pri_ga <- c(
-    prior(normal(0, 0.5), class = "b"),
-    prior(student_t(3, 0, 2.5), class = "sigma")
+    pri_ga,
+    prior(student_t(3, 0, 2.5), class = "sd")
   )
 }
 
