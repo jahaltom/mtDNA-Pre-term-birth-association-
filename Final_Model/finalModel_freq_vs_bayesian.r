@@ -204,11 +204,20 @@ save_forest_ptb <- function(tbl, title, file, label_col = "term", or = "OR", lo 
 }
 
 
-pri_ga <- c(
-  prior(normal(0, 0.5), class = "b"),
-  prior(student_t(3, 0, 2.5), class = "sd"),
-  prior(student_t(3, 0, 2.5), class = "sigma")
-)
+n_sites <- dplyr::n_distinct(df$site)
+
+if (n_sites > 1) {
+  pri_ga <- c(
+    prior(normal(0, 0.5), class = "b"),
+    prior(student_t(3, 0, 2.5), class = "sd"),
+    prior(student_t(3, 0, 2.5), class = "sigma")
+  )
+} else {
+  pri_ga <- c(
+    prior(normal(0, 0.5), class = "b"),
+    prior(student_t(3, 0, 2.5), class = "sigma")
+  )
+}
 
 ctrl_ga  <- list(adapt_delta = 0.999, max_treedepth = 15)
 ctrl_ptb <- list(adapt_delta = 0.99,  max_treedepth = 13)
