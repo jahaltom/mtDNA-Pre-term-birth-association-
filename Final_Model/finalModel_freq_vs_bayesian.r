@@ -159,6 +159,8 @@ ref_name <- levels(df$MainHap)[1]
 n_ref <- sum(df$MainHap == ref_name, na.rm = TRUE)
 if (n_ref < 100) message(sprintf("Warning: reference '%s' has n=%d", ref_name, n_ref))
 
+hap_names <- paste0("MainHap", levels(df$MainHap)[-1])
+
 # ---- Helpers ----
 hap_mask <- function(terms, var = "MainHap") grepl(paste0("^", var), terms)
 
@@ -217,18 +219,52 @@ message("covariates = ", covariates)
 message("has_site_re = ", has_site_re)
 message("has_site_fe = ", has_site_fe)
 
-# ---- Priors for GA model ----
-pri_ga <- c(
-  prior(normal(0, 0.5), class = "b"),
-  prior(student_t(3, 0, 2.5), class = "sigma")
-)
-
-if (has_site_re) {
-  pri_ga <- c(
-    pri_ga,
-    prior(student_t(3, 0, 2.5), class = "sd")
+# ---- Helper to build hap-only priors ----
+make_hap_priors <- function(hap_names, sd_hap = 0.5) {
+  pri_list <- lapply(hap_names, function(nm)
+    prior_string(sprintf("normal(0, %g)", sd_hap), class = "b", coef = nm)
   )
+  do.call(c, pri_list)
 }
+
+# ---- GA priors ----
+make_pri_ga <- function(covariates, hap_names, sd_hap = 0.5) {
+  has_site_re <- grepl("\\(1\\s*\\|\\s*site\\)", covariates)
+
+  pri <- make_hap_priors(hap_names, sd_hap = sd_hap)
+
+  pri <- c(
+    pri,
+    prior(student_t(3, 0, 2.5), class = "sigma")
+  )
+
+  if (has_site_re) {
+    pri <- c(
+      pri,
+      prior(student_t(3, 0, 2.5), class = "sd")
+    )
+  }
+
+  pri
+}
+
+# ---- PTB priors ----
+make_pri_ptb <- function(covariates, hap_names, sd_hap = 1.0) {
+  has_site_re <- grepl("\\(1\\s*\\|\\s*site\\)", covariates)
+
+  pri <- make_hap_priors(hap_names, sd_hap = sd_hap)
+
+  if (has_site_re) {
+    pri <- c(
+      pri,
+      prior(student_t(3, 0, 2.5), class = "sd")
+    )
+  }
+
+  pri
+}
+
+pri_ga <- make_pri_ga(covariates, hap_names, sd_hap = 0.5)
 
 ctrl_ga  <- list(adapt_delta = 0.999, max_treedepth = 15)
 ctrl_ptb <- list(adapt_delta = 0.99,  max_treedepth = 13)
@@ -382,25 +418,18 @@ readr::write_csv(fx_brm_ga, file.path(OUTDIR, "ga_brm_posterior_probs.csv"))
 
 library(dplyr); library(tibble); library(posterior)
 
-# 0) From your earlier step:
-tmp_ptb <- brm(as.formula(paste("PTB ~ MainHap +", covariates)), data=df, family=bernoulli(),  prior=NULL, chains=1, iter=1000, warmup=500, control=ctrl_ptb, init=0, seed=2025)  
-coef_names <- rownames(as.data.frame(summary(tmp_ptb)$fixed))
-hap_names  <- coef_names[grepl("^MainHap", coef_names)]
 
-# 1) Helper to build hap-only priors with a given SD (use prior_string to avoid NSE)
-make_hap_priors <- function(hap_names, sd_hap = 0.5) {
-  pri_list <- lapply(hap_names, function(nm)
-    prior_string(sprintf("normal(0, %g)", sd_hap), class = "b", coef = nm)
-  )
-  do.call(c, pri_list)
-}
 
 # 2) Define prior settings to try
 prior_grid <- list(
-  shrink_05 = make_hap_priors(hap_names, sd_hap = 0.5),   # your current skeptical prior
-  shrink_10 = make_hap_priors(hap_names, sd_hap = 1.0),   # milder
-  wide_25   = make_hap_priors(hap_names, sd_hap = 2.5),   # weakly-informative
-  flat      = NULL                                        # no hap prior (brms default for b’s)
+  shrink_05 = make_pri_ptb(covariates, hap_names, sd_hap = 0.5),
+  shrink_10 = make_pri_ptb(covariates, hap_names, sd_hap = 1.0),
+  wide_25   = make_pri_ptb(covariates, hap_names, sd_hap = 2.5),
+  flat      = if (has_site_re) {
+    c(prior(student_t(3, 0, 2.5), class = "sd"))
+  } else {
+    NULL
+  }
 )
 
 # 3) Fit under each prior (same model structure)
@@ -457,7 +486,7 @@ results <- results %>%
 
 readr::write_csv(results, file.path(OUTDIR, "ptb_brm_prior_sensitivity_haps.csv"))
 
-hap_prior_mild <- make_hap_priors(hap_names, sd_hap = 1.0)
+hap_prior_mild <- make_pri_ptb(covariates, hap_names, sd_hap = 1.0)
 
 
 
