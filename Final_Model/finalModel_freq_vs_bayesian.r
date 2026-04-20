@@ -283,7 +283,7 @@ brm_ga <- brm(
   data = df, family = student(),
   prior = pri_ga,
   chains = 4, iter = 4000, cores = 4,
-  control = ctrl_ga, inits = 0, seed = 2025
+  control = ctrl_ga, init = 0, seed = 2025
 )
 sink(file.path(OUTDIR, "ga_brm_summary.txt")); print(summary(brm_ga)); sink()
 
