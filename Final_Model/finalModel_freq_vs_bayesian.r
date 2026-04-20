@@ -159,7 +159,15 @@ ref_name <- levels(df$MainHap)[1]
 n_ref <- sum(df$MainHap == ref_name, na.rm = TRUE)
 if (n_ref < 100) message(sprintf("Warning: reference '%s' has n=%d", ref_name, n_ref))
 
-hap_names <- paste0("MainHap", levels(df$MainHap)[-1])
+tmp_prior_df <- get_prior(
+  as.formula(paste("PTB ~ MainHap +", covariates)),
+  data = df,
+  family = bernoulli()
+)
+
+hap_names <- tmp_prior_df %>%
+  dplyr::filter(class == "b", grepl("^MainHap", coef)) %>%
+  dplyr::pull(coef)
 
 # ---- Helpers ----
 hap_mask <- function(terms, var = "MainHap") grepl(paste0("^", var), terms)
