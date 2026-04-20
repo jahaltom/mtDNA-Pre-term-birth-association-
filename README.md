@@ -127,7 +127,7 @@ sbatch finalModel.sh
 
 
 ```
-columnCat="('MainHap')"
+columnCat="('MainHap','site')"
 columnCont="('PW_AGE','BMI')"
 
 
