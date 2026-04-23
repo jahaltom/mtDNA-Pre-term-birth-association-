@@ -43,7 +43,7 @@ Takes in Metadata.C.tsv or Metadata.M.tsv and analyzes the dataset for missing d
    - overall: >= 20 total, >= 4 PTB
 - Single-site analysis:
    - overall: >= 20 total, >= 4 PTB
-- Unsupported haplogroups are relabeled as Other_<population>.
+- Unsupported haplogroups are relabeled as Other_population.
 
 - Outputs filtered metadata as (Metadata.Weibull.tsv). Also outputs (IDs2.txt) which are only Sample_IDs  from (Metadata.Weibull.tsv) which will be used for sample selection form the nDNA plink data. 
 - Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
