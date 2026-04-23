@@ -88,6 +88,37 @@ df['population'] = df['site'].apply(categorize_population)
 
 
 
+
+
+mapping_dict = {
+    **{k: "L0" for k in ["L0"]},
+    **{k: "L1" for k in ["L1"]},
+    **{k: "L2" for k in ["L2"]},
+    **{k: "L3" for k in ["L3"]},
+    **{k: "L4" for k in ["L4"]},
+    **{k: "L5" for k in ["L5"]},
+    **{k: "L6" for k in ["L6"]},
+    **{k: "M_lineage" for k in ["M", "D", "G","Q","C","Z","E"]},
+    **{k: "N_lineage" for k in ["N","O","S","I","W","Y","A","X"]},
+    **{k: "R_lineage" for k in ["R", "J","T","H", "HV", "V", "P", "F", "B", "K", "U"]}
+}
+
+df["SuperHap"] = df["MainHap"].map(mapping_dict).fillna("Other")
+
+
+print(df["SuperHap"].value_counts())
+
+# Also check mapping coverage
+print(df.groupby(["MainHap", "SuperHap"]).size().reset_index())
+
+
+
+
+
+
+
+
+
 #Sep M and C 
 
 dfM=df[df["M/C"]=="M"]
