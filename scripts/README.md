@@ -38,7 +38,7 @@ Takes in Metadata.C.tsv or Metadata.M.tsv and analyzes the dataset for missing d
 - Reports Weibull parameters (Shape, Scale, and Location) and upper/lower cutoffs in days.
   
 - Multi-site analysis:
-   - must be present in ALL sites
+   - Haplogroup must be present in ALL sites
    - in EACH site: >= 5 total, >= 1 PTB, >= 1 term births
    - overall: >= 20 total, >= 4 PTB
 - Single-site analysis:
