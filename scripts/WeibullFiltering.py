@@ -7,7 +7,11 @@ import os
 import seaborn as sns
 
 
+# Show all rows
+pd.set_option('display.max_rows', None)
 
+# Show all columns
+pd.set_option('display.max_columns', None)
 
 catigoricalFeat= [item for item in sys.argv[1].split(',') if item != '']  #
 contFeat= [item for item in sys.argv[2].split(',') if item != '']  #
