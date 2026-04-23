@@ -36,7 +36,15 @@ Takes in Metadata.C.tsv or Metadata.M.tsv and analyzes the dataset for missing d
 - For each categorical variable class, determine the number of pre-term births and normal births (PTB=1 normal=0) and the % of PTB=1. Remove rows(samples) corresponding to a class from a categorical variable that total counts (PTB=1 normal=0) < 20. If only 1 class would remain after the prior filtering, don't exclude any samples and simply exclude the categorical variable from any future model. Reports categorical variables to keep/exclude for future models (Those kept are in CategoricalVariablesToKeepTable.tsv). Also reports those classes removed due to low counts.
 - Also reports categorical variables with exactly two classes (binary). These will be used as binary variables for Feature selection. Outputs Categorical variables for Feature selection.
 - Reports Weibull parameters (Shape, Scale, and Location) and upper/lower cutoffs in days.
-- It finds haplogroups that appear in at least 2 sites(unless single site analysis), have ≥ 20 total samples and ≥ 3 PTB cases, keeps those unchanged, and relabels all other haplogroups as Other_population.
+  
+- Multi-site analysis:
+   - must be present in ALL sites
+   - in EACH site: >= 5 total, >= 1 PTB, >= 1 term births
+   - overall: >= 20 total, >= 4 PTB
+- Single-site analysis:
+   - overall: >= 20 total, >= 4 PTB
+- Unsupported haplogroups are relabeled as Other_<population>.
+
 - Outputs filtered metadata as (Metadata.Weibull.tsv). Also outputs (IDs2.txt) which are only Sample_IDs  from (Metadata.Weibull.tsv) which will be used for sample selection form the nDNA plink data. 
 - Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
 - All continuous features are ploted against PTB and GAGEBRTH (in plotsAll). 
