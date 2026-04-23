@@ -56,24 +56,21 @@ for col in catigoricalFeat:
         # Ensure there are no missing categories (0 or 1)
         ptb_counts = ptb_counts.reindex([0, 1], fill_value=0)
         total_counts = ptb_counts.sum() 
-        if total_counts < 25:
-            percentage = (ptb_counts[1] / total_counts * 100) 
+        if total_counts < 20:
             troubleClass.append({
                 "Column": col,
                 "Value": value,
                 "PTB_0_Count": ptb_counts[0],
                 "PTB_1_Count": ptb_counts[1],
-                "PTB_1_Percentage": percentage
+                "PTB_1_Percentage": ptb_counts[1] / total_counts * 100
             })
-        # Only add to results if total counts are >= 20
-        if total_counts >= 20:
-            percentage = (ptb_counts[1] / total_counts * 100) 
+        else:
             results.append({
                 "Column": col,
                 "Value": value,
                 "PTB_0_Count": ptb_counts[0],
                 "PTB_1_Count": ptb_counts[1],
-                "PTB_1_Percentage": percentage
+                "PTB_1_Percentage": ptb_counts[1] / total_counts * 100
             })
 #Unfiltered Categorical Variables
 print("Unfiltered Categorical Variables")
@@ -129,48 +126,93 @@ print("Categorical variables for Feature selection:", str(columns_with_moreThant
 
 
 
-#Finds haplogroups that appear in at least 2 sites, have ≥ 20 total samples and ≥ 4 PTB cases, keeps those unchanged, and relabels all other haplogroups as Other_<population>.
+# Finds haplogroups that are well-supported for the CURRENT dataset.
+# Multi-site analysis:
+#   - must be present in ALL sites
+#   - in EACH site: >= min_n_per_site total, >= min_events_per_site PTB, >= min_terms_per_site term births
+#   - overall: >= min_n_total total, >= min_events_total PTB
+# Single-site analysis:
+#   - overall: >= min_n_total total, >= min_events_total PTB
+# Unsupported haplogroups are relabeled as Other_<population>.
 
 # --- RULES ---
-min_sites   = 2
-min_n       = 20
-min_events  = 3
+n_sites = filtered_data["site"].nunique()
+min_n_total = 20
+min_events_total = 4
+# per-site rules for pooled multi-site PTB analyses
+min_n_per_site = 5
+min_events_per_site = 1
+min_terms_per_site = 1
 
-# hap × site counts within the CURRENT dataset (works for joint or any subset)
+# hap × site counts within the CURRENT dataset
 counts = (
     filtered_data.groupby(["MainHap", "site"])["PTB"]
-      .agg(n="size", ptb=lambda x: (x == 1).sum())
-      .reset_index()
+    .agg(
+        n="size",
+        ptb=lambda x: (x == 1).sum(),
+        term=lambda x: (x == 0).sum()
+    )
+    .reset_index()
 )
 
-# present in ≥2 sites, unless single site analysis.
-site_support = counts[counts["n"] > 0].groupby("MainHap")["site"].nunique()
-if filtered_data["site"].nunique()  == 1:
-    min_sites = 1
-haps_multi_site = set(site_support[site_support >= min_sites].index)
+# overall hap counts
+totals = (
+    filtered_data.groupby("MainHap")["PTB"]
+    .agg(
+        n="size",
+        ptb=lambda x: (x == 1).sum(),
+        term=lambda x: (x == 0).sum()
+    )
+    .reset_index()
+)
 
+if n_sites == 1:
+    # single-site: only overall thresholds matter
+    keep_haps = sorted(
+        totals.loc[
+            (totals["n"] >= min_n_total) &
+            (totals["ptb"] >= min_events_total),
+            "MainHap"
+        ].tolist()
+    )
+else:
+    # multi-site: hap must pass thresholds in EVERY site and be present in ALL sites
+    per_site_ok = counts[
+        (counts["n"] >= min_n_per_site) &
+        (counts["ptb"] >= min_events_per_site) &
+        (counts["term"] >= min_terms_per_site)
+    ]
+    # haplogroups that pass per-site rules in all sites
+    haps_all_sites_ok = set(
+        per_site_ok.groupby("MainHap")["site"].nunique()
+        .loc[lambda s: s == n_sites]
+        .index
+    )
+    # haplogroups that pass overall rules
+    haps_good_size = set(
+        totals.loc[
+            (totals["n"] >= min_n_total) &
+            (totals["ptb"] >= min_events_total),
+            "MainHap"
+        ]
+    )
+    keep_haps = sorted(haps_all_sites_ok & haps_good_size)
 
-
-
-
-
-# total N ≥ 20 and PTB ≥ 5
-totals = filtered_data.groupby("MainHap")["PTB"].agg(n="size", ptb=lambda s: (s == 1).sum())
-haps_good_size = set(totals[(totals["n"] >= min_n) & (totals["ptb"] >= min_events)].index)
-
-keep_haps = sorted(haps_multi_site & haps_good_size)
 print("Keeping haplogroups:", keep_haps)
 
-# rebrand unsupported haplogroups to Other_<population>
+# relabel unsupported haplogroups to Other_<population>
 filtered_data["MainHap"] = filtered_data.apply(
     lambda r: r["MainHap"] if r["MainHap"] in keep_haps else f"Other_{r['population']}",
     axis=1
 )
 
-# (optional) quick peek at new label counts
+# optional: quick peek at new label counts
 print("\nCounts after recode:")
 print(filtered_data["MainHap"].value_counts().head(20))
 
+# optional: inspect the hap × site table before/after
+print("\nPer-site counts used for filtering:")
+print(counts.sort_values(["MainHap", "site"]).to_string(index=False))
 
 
 
