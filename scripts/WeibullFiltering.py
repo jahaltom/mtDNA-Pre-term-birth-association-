@@ -200,11 +200,21 @@ else:
 
 print("Keeping haplogroups:", keep_haps)
 
-# relabel unsupported haplogroups to Other_<population>
-filtered_data["MainHap"] = filtered_data.apply(
-    lambda r: r["MainHap"] if r["MainHap"] in keep_haps else f"Other_{r['population']}",
-    axis=1
-)
+# --- DROP unsupported haplogroups entirely (no "Other") ---
+
+print("\nDropping unsupported haplogroups...")
+
+n_before = len(filtered_data)
+
+filtered_data = filtered_data[
+    filtered_data["MainHap"].isin(keep_haps)
+].copy()
+
+n_after = len(filtered_data)
+
+print(f"Rows before: {n_before}")
+print(f"Rows after:  {n_after}")
+print(f"Dropped:     {n_before - n_after}")
 
 # optional: quick peek at new label counts
 print("\nCounts after recode:")
