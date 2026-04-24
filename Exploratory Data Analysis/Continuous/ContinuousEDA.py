@@ -17,8 +17,8 @@ df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 continuous_vars = sys.argv[1].split(',') + ["PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10"]
 
 # Subset  continuous variables. Add in haplogroups (one-hot encoded)
-haplogroups= pd.get_dummies(df["MainHap"], drop_first=False).columns.to_list()
-df = pd.concat([df[continuous_vars + ['PTB', 'GAGEBRTH']], pd.get_dummies(df["MainHap"], drop_first=False).astype(int)],axis=1)
+haplogroups= pd.get_dummies(df[sys.argv[2]], drop_first=False).columns.to_list()
+df = pd.concat([df[continuous_vars + ['PTB', 'GAGEBRTH']], pd.get_dummies(df[sys.argv[2]], drop_first=False).astype(int)],axis=1)
 
 
 
