@@ -75,6 +75,7 @@ target="MainHap"
 
 sed -i "s/CAT/$columnCat/g" workflow2.sh
 sed -i "s/CONT/$columnCont/g" workflow2.sh
+sed -i "s/TARGET/$target/g" workflow2.sh
 
 sbatch workflow2.sh
 ```
