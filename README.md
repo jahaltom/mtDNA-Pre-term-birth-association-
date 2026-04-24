@@ -24,6 +24,7 @@ python scripts/MissingDataHeatmap.py Metadata.M.tsv
 
 #### workflow.sh
 - Use the missing data plot to exclude Categorical/Continuous features from those in workflow.sh (columnCat and columnCont).
+- Specify target (MainHap,SubHap,SuperHap).
 ```
 #Excluded: 'SNIFF_TOBA','PASSIVE_SMOK','ALCOHOL','SMOK_TYP'
 columnCat="('TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX','MainHap','SMOKE_HIST','SMOK_FREQ','population','site')"
@@ -31,8 +32,11 @@ columnCat="('TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOIL
 #Excluded:  'SNIFF_FREQ','ALCOHOL_FREQ','SMOK_YR'
 columnCont="('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI')"
 
+target="MainHap"
+
 sed -i "s/CAT/$columnCat/g" workflow.sh
 sed -i "s/CONT/$columnCont/g" workflow.sh
+sed -i "s/TARGET/$target/g" workflow.sh
 
 sbatch workflow.sh
 ```
@@ -114,15 +118,16 @@ sbatch featureSelection.sh
 #### Final Model
 
 ##### finalModel.sh
-
+- Specify target (MainHap,SubHap,SuperHap).
 
 ```
 columnCat="('MainHap')"
 columnCont="('PW_AGE','BMI')"
-
+target="MainHap"
 
 sed -i "s/CAT/$columnCat/g" finalModel.sh
 sed -i "s/CONT/$columnCont/g" finalModel.sh
+sed -i "s/TARGET/$target/g" finalModel.sh
 
 sbatch finalModel.sh
 ```
