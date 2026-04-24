@@ -18,6 +18,8 @@ file="Metadata.M.tsv"
 columnsCat=CAT
 # Define Continuous  features
 columnsCont=CONT
+target=TARGET
+
 
 # Convert the array to a comma-separated string
 columnCat_string=$( echo "${columnsCat[*]}")
@@ -72,7 +74,7 @@ python ../scripts/outlierPCA.py
 
 
 # Call the Python script with the column string as an argument
-python ../scripts/WeibullFiltering.py "$columnCat_string" "$columnCont_string" > out.txt
+python ../scripts/WeibullFiltering.py "$columnCat_string" "$columnCont_string"  target> out.txt
 
 
 
