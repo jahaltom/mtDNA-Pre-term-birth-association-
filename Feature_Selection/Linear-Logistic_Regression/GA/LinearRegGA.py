@@ -9,14 +9,14 @@ from sklearn.metrics import mean_squared_error, r2_score
 import shap
 import matplotlib.pyplot as plt
 import seaborn as sns
-import sys, os, re
+import sys, os
 
 
-prefix = re.escape(sys.argv[4])
+
 ##For LASSO, Ridge and ElasticNet
 def plot_feat(coefMat, model_name):
     top_features = coefMat.copy()  # Adjusted to show top features
-    top_features['Feature'] = top_features['Feature'].str.replace(f'^cat__{prefix}', 'Haplogroup', regex=True)
+    top_features['Feature'] = top_features['Feature'].str.replace(f'^cat__', '', regex=True)
     top_features['Feature'] = top_features['Feature'].str.replace('^cat__|^num__', '', regex=True)
     plt.figure(figsize=(12, 6))
     colors = np.where(top_features['Coefficient'] > 0, 'blue', 'red')
