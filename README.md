@@ -71,6 +71,7 @@ For the single-site analysis:overall: >= 20 total and >= 4 PTB. Finally, it save
 ```
 columnCat="('TYP_HOUSE','HH_ELECTRICITY','TOILET','WEALTH_INDEX','THYROID','CHRON_HTN','DIABETES','TB','FUEL_FOR_COOK','MainHap','DRINKING_SOURCE','BABY_SEX','population','site')"
 columnCont="('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI')"
+target="MainHap"
 
 sed -i "s/CAT/$columnCat/g" workflow2.sh
 sed -i "s/CONT/$columnCont/g" workflow2.sh
