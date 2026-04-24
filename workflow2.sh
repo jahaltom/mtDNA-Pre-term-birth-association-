@@ -16,6 +16,9 @@ columnsCat=CAT
 # Define Continuous  features
 columnsCont=CONT
 
+#Target
+target=TARGET
+
 # Convert the array to a comma-separated string
 columnCat_string=$( echo "${columnsCat[*]}")
 columnCont_string=$( echo "${columnsCont[*]}")
@@ -51,7 +54,7 @@ python PearsonCorrelationAll.py "$columnCat_string" "$columnCont_string"
 
 mv Metadata.Final.tsv Continuous/
 cd Continuous
-python ContinuousEDA.py "$columnCont_string"
+python ContinuousEDA.py "$columnCont_string" "$target"
 
 mv Metadata.Final.tsv ../Categorical/
 cd ../Categorical
