@@ -68,6 +68,7 @@ For the single-site analysis:overall: >= 20 total and >= 4 PTB. Finally, it save
 - Look for outliers in continuous features in plotsAll. 
 - Carry same continuous features down from input into workflow.sh.
 - Update workflow2.sh and run.
+- Specify target (MainHap,SubHap, SuperHap)
 ```
 columnCat="('TYP_HOUSE','HH_ELECTRICITY','TOILET','WEALTH_INDEX','THYROID','CHRON_HTN','DIABETES','TB','FUEL_FOR_COOK','MainHap','DRINKING_SOURCE','BABY_SEX','population','site')"
 columnCont="('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI')"
