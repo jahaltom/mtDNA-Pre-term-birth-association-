@@ -1,7 +1,7 @@
 # ContinuousEDA.py
 - Takes in Metadata.Final.tsv and continuous columns. Standardize continuous variables with StandardScaler.
 
-- MainHap(Or SuperHap or SubHap) is one hot encoded and and 1st is not dropped.
+- Target MainHap(Or SuperHap or SubHap) is one hot encoded and and 1st is not dropped.
   
 - Compute and visualize correlation matrix for continuous variables (including haplogroup, PTB and GAGEBRTH). (See ContinuousCorrelationHeatmap.png in plots)
 
