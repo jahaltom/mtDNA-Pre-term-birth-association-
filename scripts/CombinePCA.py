@@ -27,7 +27,7 @@ eigenvalues = pd.read_csv("PCA2/cleaned.eigenval", header=None)
 total_variance = eigenvalues.sum().values[0]
 pc_percentage = (eigenvalues / total_variance) * 100
 
-features = ["MainHap", "SubHap", "site"]
+features = ["MainHap", "SubHap", "SuperHap", "site"]
 
 for f in features:
     plt.figure(figsize=(12, 8))  # Adjusted figure size to accommodate legend
