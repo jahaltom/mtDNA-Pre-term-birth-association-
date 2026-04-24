@@ -15,7 +15,7 @@ pd.set_option('display.max_columns', None)
 
 catigoricalFeat= [item for item in sys.argv[1].split(',') if item != '']  #
 contFeat= [item for item in sys.argv[2].split(',') if item != '']  #
-
+target=sys.argv[3]
 
 
 
@@ -94,7 +94,7 @@ final.to_csv('CategoricalVariablesToKeepTable.tsv', index=False, sep="\t")
 
 try: #df of troublesome classes to remove 
     classToRemove = troubleClass[~troubleClass['Column'].isin(featToExclude)]
-    classToRemove=classToRemove[classToRemove["Column"] != "MainHap"]
+    classToRemove=classToRemove[classToRemove["Column"] != target]
     # Remove unwanted class's
     for idx, row in classToRemove.iterrows():
         filtered_data = filtered_data[filtered_data[row['Column']] != row['Value']]
@@ -150,7 +150,7 @@ min_terms_per_site = 1
 
 # hap × site counts within the CURRENT dataset
 counts = (
-    filtered_data.groupby(["MainHap", "site"])["PTB"]
+    filtered_data.groupby([target, "site"])["PTB"]
     .agg(
         n="size",
         ptb=lambda x: (x == 1).sum(),
@@ -161,7 +161,7 @@ counts = (
 
 # overall hap counts
 totals = (
-    filtered_data.groupby("MainHap")["PTB"]
+    filtered_data.groupby(target)["PTB"]
     .agg(
         n="size",
         ptb=lambda x: (x == 1).sum(),
@@ -176,7 +176,7 @@ if n_sites == 1:
         totals.loc[
             (totals["n"] >= min_n_total) &
             (totals["ptb"] >= min_events_total),
-            "MainHap"
+            target
         ].tolist()
     )
 else:
@@ -188,7 +188,7 @@ else:
     ]
     # haplogroups that pass per-site rules in all sites
     haps_all_sites_ok = set(
-        per_site_ok.groupby("MainHap")["site"].nunique()
+        per_site_ok.groupby(target)["site"].nunique()
         .loc[lambda s: s == n_sites]
         .index
     )
@@ -197,7 +197,7 @@ else:
         totals.loc[
             (totals["n"] >= min_n_total) &
             (totals["ptb"] >= min_events_total),
-            "MainHap"
+            target
         ]
     )
     keep_haps = sorted(haps_all_sites_ok & haps_good_size)
@@ -211,7 +211,7 @@ print("\nDropping unsupported haplogroups...")
 n_before = len(filtered_data)
 
 filtered_data = filtered_data[
-    filtered_data["MainHap"].isin(keep_haps)
+    filtered_data[target].isin(keep_haps)
 ].copy()
 
 n_after = len(filtered_data)
@@ -222,11 +222,11 @@ print(f"Dropped:     {n_before - n_after}")
 
 # optional: quick peek at new label counts
 print("\nCounts after recode:")
-print(filtered_data["MainHap"].value_counts().head(20))
+print(filtered_data[target].value_counts().head(20))
 
 # optional: inspect the hap × site table before/after
 print("\nPer-site counts used for filtering:")
-print(counts.sort_values(["MainHap", "site"]).to_string(index=False))
+print(counts.sort_values([target, "site"]).to_string(index=False))
 
 
 
