@@ -11,15 +11,15 @@ from sklearn.neural_network import MLPClassifier
 import shap
 import matplotlib.pyplot as plt
 import seaborn as sns
-import sys, os, re
+import sys, os
 
 
-prefix = re.escape(sys.argv[4])
+
 ##For LASSO, Ridge and Elactic
 def plot_feat(coefMat, model_name):
     # Plot top 10 significant features
     top_features = coefMat.copy()
-    top_features['Feature'] = top_features['Feature'].str.replace(f'^cat__{prefix}', 'Haplogroup', regex=True)##
+    top_features['Feature'] = top_features['Feature'].str.replace(f'^cat__', '', regex=True)##
     # Remove 'cat__' and 'num__' prefixes
     top_features['Feature'] = top_features['Feature'].str.replace('^cat__|^num__', '', regex=True)
     plt.figure(figsize=(12, 6))
