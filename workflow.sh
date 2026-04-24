@@ -83,4 +83,4 @@ python scripts/outlierPCA.py
 
 
 # Call the Python script with the column string as an argument
-python scripts/WeibullFiltering.py "$columnCat_string" "$columnCont_string" target > out.txt
+python scripts/WeibullFiltering.py "$columnCat_string" "$columnCont_string" "$target" > out.txt
