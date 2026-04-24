@@ -90,7 +90,7 @@ sbatch workflow2.sh
 
 #### Feature Selection 
 ##### featureSelection.sh
-- site and MainHap must be in categorical to correctly account for them in the models.
+- site and MainHap (or SuperHap or SubHap) must be in categorical to correctly account for them in the models.
 - If you have site as a categorical variable, you cannot use the population variable, and visa versa. 
 - Look at PCA plots and make sure they look good.
 - Carry same continuous features down from input into workflow.sh.
