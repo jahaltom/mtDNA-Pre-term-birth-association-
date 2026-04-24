@@ -15,7 +15,7 @@ conda activate ML
 file="Metadata.M.tsv"
 
 # Define Categorical features
-#Excluded: 'SNIFF_TOBA','PASSIVE_SMOK','ALCOHOL','SMOK_TYP'
+#Excluded: 'SNIFF_TOBA','PASSIVE_SMOKE','ALCOHOL','SMOK_TYP'
 columnsCat=CAT
 # Define Continuous  features
 #Excluded:  'SNIFF_FREQ','ALCOHOL_FREQ','SMOK_YR'
