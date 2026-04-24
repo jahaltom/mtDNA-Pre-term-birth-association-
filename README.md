@@ -24,7 +24,7 @@ python scripts/MissingDataHeatmap.py Metadata.M.tsv
 
 #### workflow.sh
 - Use the missing data plot to exclude Categorical/Continuous features from those in workflow.sh (columnCat and columnCont).
-- Specify target (MainHap,SubHap,SuperHap).
+- Specify target (MainHap,SubHap,SuperHap). Target must also be in columnCat.
 ```
 #Excluded: 'SNIFF_TOBA','PASSIVE_SMOK','ALCOHOL','SMOK_TYP'
 columnCat="('TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX','MainHap','SMOKE_HIST','SMOK_FREQ','population','site')"
