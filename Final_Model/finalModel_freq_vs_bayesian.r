@@ -106,16 +106,16 @@ save_brms_diagnostics <- function(fit, prefix, outdir) {
 # ---------------------------------
 # ==== CONFIG ====
 INFILE <- "Metadata.Final.tsv"
-OUTDIR <- file.path("model_outputs", "All")
+OUTDIR <- file.path("model_outputs", "All_REF")
 if (!dir.exists(OUTDIR)) dir.create(OUTDIR, recursive = TRUE)
 
-covariates <- "BMI_s + AGE_s + (1|site)"
+covariates <- "BMI_s + AGE_s + SITE"
 # covariates <- "BMI_s + AGE_s + site"
 # covariates <- "BMI_s + AGE_s"
 # covariates <- "BMI_s + AGE_s + PC1 + PC2 + PC3 + PC4 +PC5"
 
 # Choose a default reference for the Joint cohort
-DEFAULT_REF <- "R"  # set to "M" if you prefer; script will fall back if absent
+DEFAULT_Ref <- "REF"  # set to "M" if you prefer; script will fall back if absent
 
 
 
@@ -153,12 +153,12 @@ check_brms_fit <- function(fit, model_name = "model") {
 }
 
 # Ensure reference haplogroup is present; otherwise pick the most frequent
-if (!(DEFAULT_REF %in% levels(df$MainHap))) {
-  message(sprintf("Note: default ref '%s' not found; using most frequent MainHap as ref.", DEFAULT_REF))
+if (!(DEFAULT_Ref %in% levels(df$MainHap))) {
+  message(sprintf("Note: default ref '%s' not found; using most frequent MainHap as ref.", DEFAULT_Ref))
   fallback <- names(sort(table(df$MainHap), decreasing = TRUE))[1]
   df$MainHap <- fct_relevel(df$MainHap, fallback)
 } else {
-  df$MainHap <- fct_relevel(df$MainHap, DEFAULT_REF)
+  df$MainHap <- fct_relevel(df$MainHap, DEFAULT_Ref)
 }
 ref_name <- levels(df$MainHap)[1]
 n_ref <- sum(df$MainHap == ref_name, na.rm = TRUE)
