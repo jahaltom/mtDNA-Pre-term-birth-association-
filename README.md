@@ -121,17 +121,18 @@ sbatch featureSelection.sh
 - Specify target (MainHap,SubHap,SuperHap).
 
 ```
+
 columnCat="('MainHap')"
-columnCont="('PW_AGE','BMI')"
+columnCont="('PW_AGE','MAT_HEIGHT')"
 target="MainHap"
-site="(1 | site)"
-ref="R"
+site=""  # "+ site" or "+ (1 | site)"
+ref="M"
 
 sed -i "s/CAT/$columnCat/g" finalModel.sh
 sed -i "s/CONT/$columnCont/g" finalModel.sh
 sed -i "s/TARGET/$target/g" finalModel.sh
-sed -i "s/SITE/$site/g" finalModel_freq_vs_bayesian.r
-sed -i "s/REF/$ref/g" finalModel_freq_vs_bayesian.r
+sed -i "s/+ SITE/$site/g" Final_Model/finalModel_freq_vs_bayesian.r
+sed -i "s/REF/$ref/g" Final_Model/finalModel_freq_vs_bayesian.r
 
 sbatch finalModel.sh
 ```
