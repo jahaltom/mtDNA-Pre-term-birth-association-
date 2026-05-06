@@ -19,7 +19,8 @@ columnsCat=CAT
 # Define Continuous  features
 columnsCont=CONT
 target=TARGET
-
+site=SITE
+ref=REF
 
 # Convert the array to a comma-separated string
 columnCat_string=$( echo "${columnsCat[*]}")
@@ -102,5 +103,7 @@ python  ../scripts/CombinePCA.py
 
 module load R
 sed -i "s/MainHap/$target/g" finalModel_freq_vs_bayesian.r
+sed -i "s/REF/$ref/g" finalModel_freq_vs_bayesian.r
+sed -i "s/SITE/$site/g" finalModel_freq_vs_bayesian.r
 Rscript finalModel_freq_vs_bayesian.r
 
