@@ -109,7 +109,7 @@ INFILE <- "Metadata.Final.tsv"
 OUTDIR <- file.path("model_outputs", "All_REF")
 if (!dir.exists(OUTDIR)) dir.create(OUTDIR, recursive = TRUE)
 
-covariates <- "BMI_s + AGE_s + SITE"
+covariates <- "MAT_HEIGHT_s + AGE_s + SITE"
 # covariates <- "BMI_s + AGE_s + site"
 # covariates <- "BMI_s + AGE_s"
 # covariates <- "BMI_s + AGE_s + PC1 + PC2 + PC3 + PC4 +PC5"
@@ -126,7 +126,7 @@ df <- read_tsv(INFILE, show_col_types = FALSE) %>%
   mutate(
     MainHap     = factor(MainHap),
     site        = factor(site),
-    BMI_s       = as.numeric(scale(BMI)),
+    MAT_HEIGHT_s       = as.numeric(scale(MAT_HEIGHT)),
     AGE_s       = as.numeric(scale(PW_AGE)),
     GAGEBRTH_s  = as.numeric(scale(GAGEBRTH))
   )
@@ -594,8 +594,8 @@ site_summary <- df %>%
     sd_ga     = sd(GAGEBRTH, na.rm = TRUE),
     mean_age  = mean(PW_AGE, na.rm = TRUE),
     sd_age    = sd(PW_AGE, na.rm = TRUE),
-    mean_bmi  = mean(BMI, na.rm = TRUE),
-    sd_bmi    = sd(BMI, na.rm = TRUE),
+    mean_mat_height  = mean(MAT_HEIGHT, na.rm = TRUE),
+    sd_mat_height    = sd(MAT_HEIGHT, na.rm = TRUE),
     .groups   = "drop"
   )
 
