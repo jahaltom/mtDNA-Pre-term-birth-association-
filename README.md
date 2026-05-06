@@ -124,14 +124,14 @@ sbatch featureSelection.sh
 columnCat="('MainHap')"
 columnCont="('PW_AGE','BMI')"
 target="MainHap"
-site="site" #"(1 | site)"
+site="(1 | site)"
 ref="R"
 
 sed -i "s/CAT/$columnCat/g" finalModel.sh
 sed -i "s/CONT/$columnCont/g" finalModel.sh
 sed -i "s/TARGET/$target/g" finalModel.sh
-sed -i "s/SITE/$site/g" finalModel.sh
-sed -i "s/REF/$ref/g" finalModel.sh
+sed -i "s/SITE/$site/g" finalModel_freq_vs_bayesian.r
+sed -i "s/REF/$ref/g" finalModel_freq_vs_bayesian.r
 
 sbatch finalModel.sh
 ```
