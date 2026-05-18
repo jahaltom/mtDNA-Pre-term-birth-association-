@@ -111,13 +111,36 @@ args <- commandArgs(trailingOnly = TRUE)
 
 # Choose a default reference for the Joint cohort
 DEFAULT_Ref <- args[1]
-
+covariates <- args[2]
 INFILE <- "Metadata.Final.tsv"
-OUTDIR <- file.path("model_outputs",paste0("All_", DEFAULT_Ref))
+# ---------------------------------
+# Build output directory name
+# ---------------------------------
+
+cov_string <- covariates %>%
+  gsub("\\s+", "", .) %>%                  # remove spaces
+  gsub("\\+", "_", .) %>%                 # + -> _
+  gsub("\\(1\\|site\\)", "siteRE", .) %>% # random site effect
+  gsub("site", "siteFE", .) %>%           # fixed site effect
+  gsub("[()|]", "", .)                    # remove remaining symbols
+
+OUTDIR <- file.path(
+  "model_outputs",
+  paste0(
+    "All_",
+    DEFAULT_Ref,
+    "_",
+    cov_string
+  )
+)
+
+if (!dir.exists(OUTDIR)) {
+  dir.create(OUTDIR, recursive = TRUE)
+}
 if (!dir.exists(OUTDIR)) dir.create(OUTDIR, recursive = TRUE)
 
-#covariates <- "MAT_HEIGHT_s + AGE_s + SITE"
-covariates <- args[2]
+
+
 
 
 
