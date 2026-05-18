@@ -125,8 +125,8 @@ sbatch featureSelection.sh
 columnCat="('MainHap')"
 columnCont="('PW_AGE','MAT_HEIGHT')"
 target="MainHap"
-covs=""PW_AGE + MAT_HEIGHT + site""  ### Fixed "site" or random effect "(1 | site)"
-ref=""M""
+covs='"PW_AGE + MAT_HEIGHT + site"'  ### Fixed "site" or random effect "(1 | site)"
+ref='"M"'
 
 sed -i "s/CAT/$columnCat/g" finalModel.sh
 sed -i "s/CONT/$columnCont/g" finalModel.sh
