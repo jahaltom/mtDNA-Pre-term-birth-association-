@@ -418,12 +418,15 @@ dev.off()
 
 
 # ---- Compare GA Gaussian vs Student-t ----
-ga_model_compare <- AIC(
-  Gaussian = ga_tmb_gaussian,
-  StudentT = ga_tmb_student
+ga_model_compare <- tibble::tibble(
+  model = c("Gaussian", "StudentT"),
+  AIC = c(
+    AIC(ga_tmb_gaussian),
+    AIC(ga_tmb_student)
+  )
 )
 
-write.csv(
+write_csv(
   ga_model_compare,
   file.path(OUTDIR, "ga_glmmtmb_gaussian_vs_student_t_AIC.csv")
 )
