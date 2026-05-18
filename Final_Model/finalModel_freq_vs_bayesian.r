@@ -105,31 +105,87 @@ save_brms_diagnostics <- function(fit, prefix, outdir) {
 # USER SETTING: only edit these lines
 # ---------------------------------
 # ==== CONFIG ====
-INFILE <- "Metadata.Final.tsv"
-OUTDIR <- file.path("model_outputs", "All_REF")
-if (!dir.exists(OUTDIR)) dir.create(OUTDIR, recursive = TRUE)
 
-covariates <- "MAT_HEIGHT_s + AGE_s + SITE"
-# covariates <- "BMI_s + AGE_s + site"
-# covariates <- "BMI_s + AGE_s"
-# covariates <- "BMI_s + AGE_s + PC1 + PC2 + PC3 + PC4 +PC5"
+args <- commandArgs(trailingOnly = TRUE)
 
 # Choose a default reference for the Joint cohort
-DEFAULT_Ref <- "REF"  # set to "M" if you prefer; script will fall back if absent
+DEFAULT_Ref <- args[1]
+
+INFILE <- "Metadata.Final.tsv"
+OUTDIR <- file.path("model_outputs",paste0("All_", DEFAULT_Ref))
+if (!dir.exists(OUTDIR)) dir.create(OUTDIR, recursive = TRUE)
+
+#covariates <- "MAT_HEIGHT_s + AGE_s + SITE"
+covariates <- args[2]
 
 
 
 
 
-# ---- Load & preprocess ----
+
+# ---------------------------------
+# CONFIG
+# ---------------------------------
+
+columnCat <- c(
+  "FUEL_FOR_COOK",
+  "site",
+  "MainHap"
+)
+
+columnCont <- c(
+  "PW_AGE",
+  "PW_EDUCATION",
+  "MAT_HEIGHT",
+  "MAT_WEIGHT",
+  "BMI",
+  "TOILET",
+  "WEALTH_INDEX",
+  "DRINKING_SOURCE",
+  "PC1",
+  "PC2",
+  "PC3",
+  "PC4",
+  "PC5"
+)
+
+columnBin <- c(
+  "BABY_SEX",
+  "CHRON_HTN",
+  "DIABETES",
+  "HH_ELECTRICITY",
+  "TB",
+  "THYROID",
+  "TYP_HOUSE"
+)
+
+
+# ---------------------------------
+# LOAD & PREPROCESS
+# ---------------------------------
+
 df <- read_tsv(INFILE, show_col_types = FALSE) %>%
   mutate(
-    MainHap     = factor(MainHap),
-    site        = factor(site),
-    MAT_HEIGHT_s       = as.numeric(scale(MAT_HEIGHT)),
-    AGE_s       = as.numeric(scale(PW_AGE)),
-    GAGEBRTH_s  = as.numeric(scale(GAGEBRTH))
+
+    # categorical
+    across(all_of(columnCat), as.factor),
+
+    # continuous / ordinal scaled IN PLACE
+    across(
+      all_of(columnCont),
+      ~ as.numeric(scale(.x))
+    ),
+
+    # binary
+    across(all_of(columnBin), as.numeric),
+
+    # target scaling if needed
+    GAGEBRTH = as.numeric(scale(GAGEBRTH))
   )
+
+
+
+
 
 check_brms_fit <- function(fit, model_name = "model") {
   ds <- posterior::summarise_draws(
@@ -584,19 +640,37 @@ print(problem_cells)
 
 #Save basic site-level descriptive summaries
 # ---- Site-level summaries ----
-site_summary <- df %>%
+df_raw <- read_tsv(INFILE, show_col_types = FALSE)
+
+site_summary <- df_raw %>%
   group_by(site) %>%
   summarise(
-    n_total   = n(),
-    n_ptb     = sum(PTB == 1, na.rm = TRUE),
-    ptb_rate  = mean(PTB == 1, na.rm = TRUE),
-    mean_ga   = mean(GAGEBRTH, na.rm = TRUE),
-    sd_ga     = sd(GAGEBRTH, na.rm = TRUE),
-    mean_age  = mean(PW_AGE, na.rm = TRUE),
-    sd_age    = sd(PW_AGE, na.rm = TRUE),
-    mean_mat_height  = mean(MAT_HEIGHT, na.rm = TRUE),
-    sd_mat_height    = sd(MAT_HEIGHT, na.rm = TRUE),
-    .groups   = "drop"
+    n_total  = n(),
+    n_ptb    = sum(PTB == 1, na.rm = TRUE),
+    ptb_rate = mean(PTB == 1, na.rm = TRUE),
+
+    mean_ga  = mean(GAGEBRTH, na.rm = TRUE),
+    sd_ga    = sd(GAGEBRTH, na.rm = TRUE),
+
+    across(
+      all_of(columnCont),
+      list(
+        mean = ~ mean(.x, na.rm = TRUE),
+        sd   = ~ sd(.x, na.rm = TRUE)
+      ),
+      .names = "{.col}_{.fn}"
+    ),
+
+    across(
+      all_of(columnBin),
+      list(
+        n_yes = ~ sum(.x == 1, na.rm = TRUE),
+        prop_yes = ~ mean(.x == 1, na.rm = TRUE)
+      ),
+      .names = "{.col}_{.fn}"
+    ),
+
+    .groups = "drop"
   )
 
 write_csv(site_summary, file.path(OUTDIR, "site_summary.csv"))
