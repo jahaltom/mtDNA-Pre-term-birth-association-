@@ -384,7 +384,7 @@ if (!inherits(emm_ptb, "try-error")) {
 
 # GA (Student-t) on standardized outcome, with back-transform to days
 brm_ga <- brm(
-  as.formula(paste("GAGEBRTH_s ~ MainHap +", covariates)), 
+  as.formula(paste("GAGEBRTH ~ MainHap +", covariates)), 
   data = df, family = student(),
   prior = pri_ga,
   chains = 4, iter = 4000, cores = 4,
