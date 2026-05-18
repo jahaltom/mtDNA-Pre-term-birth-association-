@@ -638,9 +638,28 @@ print(problem_cells)
 
 
 
-#Save basic site-level descriptive summaries
-# ---- Site-level summaries ----
+# ---------------------------------
+# Site-level summaries for model covariates only
+# ---------------------------------
+
 df_raw <- read_tsv(INFILE, show_col_types = FALSE)
+
+# Split covariate formula string into individual variable names
+covariate_vars <- covariates %>%
+  strsplit("\\+") %>%
+  unlist() %>%
+  trimws()
+
+# Remove random effect syntax if present, e.g. "(1 | site)"
+covariate_vars <- covariate_vars[!grepl("\\|", covariate_vars)]
+
+# Keep only real column names
+covariate_vars <- covariate_vars[covariate_vars %in% names(df_raw)]
+
+# Identify which selected covariates are continuous/binary/categorical
+summary_cont <- intersect(covariate_vars, columnCont)
+summary_bin  <- intersect(covariate_vars, columnBin)
+summary_cat  <- intersect(covariate_vars, columnCat)
 
 site_summary <- df_raw %>%
   group_by(site) %>%
@@ -653,7 +672,7 @@ site_summary <- df_raw %>%
     sd_ga    = sd(GAGEBRTH, na.rm = TRUE),
 
     across(
-      all_of(columnCont),
+      all_of(summary_cont),
       list(
         mean = ~ mean(.x, na.rm = TRUE),
         sd   = ~ sd(.x, na.rm = TRUE)
@@ -662,7 +681,7 @@ site_summary <- df_raw %>%
     ),
 
     across(
-      all_of(columnBin),
+      all_of(summary_bin),
       list(
         n_yes = ~ sum(.x == 1, na.rm = TRUE),
         prop_yes = ~ mean(.x == 1, na.rm = TRUE)
