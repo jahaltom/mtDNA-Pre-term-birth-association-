@@ -1,7 +1,8 @@
 # ============================
 # Joint Cohort (All sites pooled): GA & PTB models
-# - No PCs (primary)
-# - Random intercept for site: (1 | site)
+# Dynamic covariate PTB/GA pipeline
+# Supports fixed site or random site
+# Supports optional PCs and clinical/environmental covariates
 # - GA: Student-t; back-transform to days
 # - PTB: Binomial; forest plot, EMMs, Pr(OR>1)
 # ============================
@@ -160,11 +161,21 @@ columnBin <- c(
 )
 
 
-# ---------------------------------
-# LOAD & PREPROCESS
+
+# LOAD RAW DATA,PREPROCESS, AND SAVE GA SCALE
 # ---------------------------------
 
-df <- read_tsv(INFILE, show_col_types = FALSE) %>%
+df_raw <- read_tsv(INFILE, show_col_types = FALSE)
+
+ga_mean_raw <- mean(df_raw$GAGEBRTH, na.rm = TRUE)
+ga_sd_raw   <- sd(df_raw$GAGEBRTH, na.rm = TRUE)
+
+
+# ---------------------------------
+# LOAD & PREPROCESS FOR MODELING
+# ---------------------------------
+
+df <- df_raw %>%
   mutate(
 
     # categorical
@@ -179,11 +190,9 @@ df <- read_tsv(INFILE, show_col_types = FALSE) %>%
     # binary
     across(all_of(columnBin), as.numeric),
 
-    # target scaling if needed
+    # GA outcome scaled for modeling
     GAGEBRTH = as.numeric(scale(GAGEBRTH))
   )
-
-
 
 
 
@@ -342,16 +351,82 @@ ctrl_ptb <- list(adapt_delta = 0.99,  max_treedepth = 13)
 # Frequentist: glmmTMB
 # ============================
 
-# GA (Gaussian), site random intercept
-ga_tmb <- glmmTMB(as.formula(paste("GAGEBRTH ~ MainHap +", covariates)),    
-                  data = df, family = gaussian())
-tidy_ga <- broom.mixed::tidy(ga_tmb, effects = "fixed", conf.int = TRUE) %>% bh_on_hap()
-write_csv(tidy_ga, file.path(OUTDIR, "ga_glmmtmb.csv"))
+# ============================
+# GA frequentist models: Gaussian + Student-t
+# ============================
 
-# Diagnostics: DHARMa (GA)
-png(file.path(OUTDIR, "ga_glmmtmb_DHARMa.png"), width=1200, height=900)
-plot(simulateResiduals(ga_tmb))
+ga_formula <- as.formula(paste("GAGEBRTH ~ MainHap +", covariates))
+
+# ---- GA Gaussian ----
+ga_tmb_gaussian <- glmmTMB(
+  ga_formula,
+  data = df,
+  family = gaussian()
+)
+
+tidy_ga_gaussian <- broom.mixed::tidy(
+  ga_tmb_gaussian,
+  effects = "fixed",
+  conf.int = TRUE
+) %>%
+  bh_on_hap() %>%
+  mutate(
+    beta_days = estimate * ga_sd_raw,
+    lo_days   = conf.low * ga_sd_raw,
+    hi_days   = conf.high * ga_sd_raw
+  )
+
+write_csv(
+  tidy_ga_gaussian,
+  file.path(OUTDIR, "ga_glmmtmb_gaussian.csv")
+)
+
+# Diagnostics: DHARMa Gaussian
+png(file.path(OUTDIR, "ga_glmmtmb_gaussian_DHARMa.png"), width = 1200, height = 900)
+plot(simulateResiduals(ga_tmb_gaussian))
 dev.off()
+
+
+# ---- GA Student-t ----
+ga_tmb_student <- glmmTMB(
+  ga_formula,
+  data = df,
+  family = t_family()
+)
+
+tidy_ga_student <- broom.mixed::tidy(
+  ga_tmb_student,
+  effects = "fixed",
+  conf.int = TRUE
+) %>%
+  bh_on_hap() %>%
+  mutate(
+    beta_days = estimate * ga_sd_raw,
+    lo_days   = conf.low * ga_sd_raw,
+    hi_days   = conf.high * ga_sd_raw
+  )
+
+write_csv(
+  tidy_ga_student,
+  file.path(OUTDIR, "ga_glmmtmb_student_t.csv")
+)
+
+# Diagnostics: DHARMa Student-t
+png(file.path(OUTDIR, "ga_glmmtmb_student_t_DHARMa.png"), width = 1200, height = 900)
+plot(simulateResiduals(ga_tmb_student))
+dev.off()
+
+
+# ---- Compare GA Gaussian vs Student-t ----
+ga_model_compare <- AIC(
+  Gaussian = ga_tmb_gaussian,
+  StudentT = ga_tmb_student
+)
+
+write.csv(
+  ga_model_compare,
+  file.path(OUTDIR, "ga_glmmtmb_gaussian_vs_student_t_AIC.csv")
+)
 
 # PTB (Binomial logit), site random intercept
 ptb_tmb <- glmmTMB(as.formula(paste("PTB ~ MainHap +", covariates)),
@@ -392,13 +467,15 @@ brm_ga <- brm(
 )
 sink(file.path(OUTDIR, "ga_brm_summary.txt")); print(summary(brm_ga)); sink()
 
-sd_ga <- sd(df$GAGEBRTH, na.rm = TRUE)
+sd_ga <- ga_sd_raw
+
 fx_brm_ga <- as.data.frame(summary(brm_ga)$fixed) %>%
   tibble::rownames_to_column("term") %>%
- # bh_on_hap_wald(term_col="term", mean_col="Estimate", se_col="Est.Error") %>%
-  mutate(beta_days = Estimate * sd_ga,
-         lo_days   = `l-95% CI` * sd_ga,
-         hi_days   = `u-95% CI` * sd_ga)
+  mutate(
+    beta_days = Estimate * sd_ga,
+    lo_days   = `l-95% CI` * sd_ga,
+    hi_days   = `u-95% CI` * sd_ga
+  )
 write_csv(fx_brm_ga, file.path(OUTDIR, "ga_brm.csv"))
 
 png(file.path(OUTDIR, "ga_brm_pp_check.png"), width=1200, height=900)
@@ -415,7 +492,7 @@ capture.output(bayes_R2(brm_ga), file = file.path(OUTDIR, "ga_brm_bayesR2.txt"))
 
 library(posterior); library(dplyr); library(tibble)
 
-sd_ga <- sd(df$GAGEBRTH, na.rm = TRUE)
+sd_ga <- ga_sd_raw
 
 # 1) Posterior draws for fixed effects (each column is a parameter draw on the standardized scale)
 dr <- posterior::as_draws_df(brm_ga)
@@ -494,11 +571,7 @@ prior_grid <- list(
   shrink_05 = make_pri_ptb(covariates, hap_names, sd_hap = 0.5),
   shrink_10 = make_pri_ptb(covariates, hap_names, sd_hap = 1.0),
   wide_25   = make_pri_ptb(covariates, hap_names, sd_hap = 2.5),
-  flat      = if (has_site_re) {
-    c(prior(student_t(3, 0, 2.5), class = "sd"))
-  } else {
-    NULL
-  }
+  flat      = c()
 )
 
 # 3) Fit under each prior (same model structure)
@@ -567,7 +640,7 @@ ptb_RE <- brm(as.formula(paste("PTB ~ MainHap +", covariates)),
 
 
 fx_RE <- as.data.frame(summary(ptb_RE)$fixed)
-write_csv(fx_RE, file.path(OUTDIR, "ptb_brm_sensitivity_SiteRandom.csv"))
+write_csv(fx_RE, file.path(OUTDIR, "ptb_brm_sensitivity.csv"))
 
 sink(file.path(OUTDIR, "ptb_brm_summary.txt"))
 print(summary(ptb_RE))   # or your final PTB brms object name
@@ -604,37 +677,7 @@ hap_ptb_counts <- df %>%
 
 write_csv(hap_ptb_counts, file.path(OUTDIR, "hap_ptb_counts.csv"))
 print(hap_ptb_counts)
-#Check for sparse cells by haplogroup × site × PTB
-# ---- PTB by haplogroup within site ----
-hap_site_ptb_counts <- df %>%
-  group_by(MainHap, site) %>%
-  summarise(
-    n_total = n(),
-    n_ptb   = sum(PTB == 1, na.rm = TRUE),
-    n_term  = sum(PTB == 0, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  arrange(MainHap, site)
 
-write_csv(hap_site_ptb_counts, file.path(OUTDIR, "hap_site_ptb_counts.csv"))
-print(hap_site_ptb_counts)
-
-
-# ---- Flag sparse/problematic hap-site cells ----
-hap_site_ptb_flags <- hap_site_ptb_counts %>%
-  mutate(
-    zero_ptb  = n_ptb == 0,
-    zero_term = n_term == 0,
-    sparse_cell = n_total < 5
-  )
-
-write_csv(hap_site_ptb_flags, file.path(OUTDIR, "hap_site_ptb_flags.csv"))
-
-problem_cells <- hap_site_ptb_flags %>%
-  filter(zero_ptb | zero_term | sparse_cell)
-
-write_csv(problem_cells, file.path(OUTDIR, "hap_site_ptb_problem_cells.csv"))
-print(problem_cells)
 
 
 
@@ -642,7 +685,7 @@ print(problem_cells)
 # Site-level summaries for model covariates only
 # ---------------------------------
 
-df_raw <- read_tsv(INFILE, show_col_types = FALSE)
+
 
 # Split covariate formula string into individual variable names
 covariate_vars <- covariates %>%
