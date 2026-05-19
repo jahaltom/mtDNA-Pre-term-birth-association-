@@ -4,7 +4,8 @@
 #### MetadataMerge.py: 
 - Takes in Haplogrep3 output and metadata files (MOMI_derived_data.csv and samples.tab) and performs merge. 
 - Filters for only high quality haplogroup calls "Quality">=0.9 and only live births "PREG_OUTCOME"==2. 
-- Identifies main and sub haplogroups. 
+- Identifies main and sub haplogroups.
+- For mitochondrial haplogroup classification, all Z lineages were pooled with M at the main haplogroup level and with M8 at the subhaplogroup level to reflect their phylogenetic relationship.
 - This script also sets (ALCOHOL_FREQ, SMOK_FREQ, and SNIFF_FREQ) to 0 if (ALCOHOL,SMOKE_HIST, and SNIFF_TOBA) = never.
 - Calculates BMI. (df["BMI"] = df["MAT_WEIGHT"]/(df["MAT_HEIGHT"]/100)**2)
 - Categorizes population based on site.
