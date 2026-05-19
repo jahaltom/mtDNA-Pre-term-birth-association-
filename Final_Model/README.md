@@ -309,6 +309,8 @@ Encodes:
 | `*_bad_rhat.csv` | Parameters with Rhat > 1.01 |
 | `*_low_ess_bulk.csv` | Low bulk ESS |
 | `*_low_ess_tail.csv` | Low tail ESS |
+| `*_glmmtmb_DHARMa.png` | residual diagnostics |
+
 
 ### Cohort Summary Outputs
 
@@ -375,6 +377,32 @@ warmup = 2000
 ```
 
 ---
+
+## DHARMa evaluates:
+
+- Residual uniformity
+- Overdispersion
+- Outliers
+- Zero inflation
+- Model misspecification
+- Heteroscedasticity
+
+#### Interpretation Guidelines
+
+**Good model fit:**
+
+- Residuals appear randomly distributed
+- QQ plot approximately follows expected line
+- No strong residual trends
+
+**Potential issues:**
+
+- Systematic residual patterns → model misspecification
+- Strong QQ deviations → poor distributional assumptions
+- Overdispersion → variance not adequately modeled
+- Clustering or structure → missing covariates or interactions
+
+The **Student-t GA model** is often preferred when Gaussian residual assumptions are violated due to heavy tails or outliers.
 
 ## Reproducibility
 
