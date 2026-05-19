@@ -9,7 +9,7 @@
 - This script also sets (ALCOHOL_FREQ, SMOK_FREQ, and SNIFF_FREQ) to 0 if (ALCOHOL,SMOKE_HIST, and SNIFF_TOBA) = never.
 - Calculates BMI. (df["BMI"] = df["MAT_WEIGHT"]/(df["MAT_HEIGHT"]/100)**2)
 - Categorizes population based on site.
-- Makes SuperHap classification based on mtDNA phylogeny.
+- Makes SuperHap and SuperHap2 classification based on mtDNA phylogeny.
 - Seperates mother and child in dataset and writes two tsvs (Metadata.C.tsv and Metadata.M.tsv).
 
 
