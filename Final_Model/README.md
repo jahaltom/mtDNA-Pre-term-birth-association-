@@ -78,217 +78,250 @@ PC5 ~ site: p-value = 2.317e-24
 ```
 
 
-# GA & PTB Modeling Pipeline
+# mtDNA Pre-Term Birth Association Pipeline
 
-This pipeline models **Gestational Age (GA)** and **Preterm Birth (PTB)** across all cohorts (sites pooled).  
-It includes **frequentist GLMMs** (`glmmTMB`) and **Bayesian models** (`brms`), with diagnostics, posterior probabilities, and prior sensitivity analyses.
-
----
+A reproducible statistical framework for modeling associations between mitochondrial DNA (mtDNA) haplogroups and **gestational age (GA)** and **pre-term birth (PTB)** across pooled multi-site cohorts using both **frequentist** and **Bayesian** methods. Supports **dynamic covariate selection**, **fixed or random site effects**, **prior sensitivity analyses**, and **robust convergence diagnostics**.
 
 ## Overview
 
-- **Goal:** Estimate haplogroup associations with GA and PTB.  
-- **Frequentist:** `glmmTMB` for GA (Gaussian) and PTB (logit).  
-- **Bayesian:** `brms` for GA (Student-t) and PTB (Bernoulli), including prior sensitivity and site fixed vs random effects.  
-- **Covariates:** scaled BMI, scaled maternal age; site as random intercept.  
-- **Haplogroup reference:** defaults to `"R"`, falls back to most frequent if absent.
+This pipeline evaluates whether **mtDNA haplogroups** are associated with:
 
----
+- **Gestational age (GA)** — continuous outcome  
+- **Pre-term birth (PTB)** — binary outcome  
 
-## 1. Setup & Configuration
+while adjusting for configurable **clinical**, **environmental**, **socioeconomic**, and **genetic covariates**.
 
-### Libraries
-- `readr`, `dplyr`, `stringr`, `forcats`, `tidyr`  
-- `ggplot2`  
-- `broom`, `broom.mixed`  
-- `glmmTMB`  
-- `emmeans`  
-- `brms`  
-- `DHARMa`, `loo`, `posterior`
+### Features
 
-### Reproducibility
-```r
-set.seed(2025)
+- Dynamic covariate specification at runtime
+- Fixed or random site effects
+- Gaussian and Student-t frequentist GA models
+- Bayesian Student-t GA modeling
+- Bayesian PTB logistic regression
+- Prior sensitivity analyses
+- Multiple-testing correction (Benjamini–Hochberg)
+- Sparse-cell detection
+- Automated convergence diagnostics
+
+## Statistical Framework
+
+### Frequentist Models (`glmmTMB`)
+
+#### Gestational Age (GA)
+
+Two models are fit:
+
+- **Gaussian model**
+- **Student-t model**
+
+Model fit is compared using **AIC**.
+
+#### Pre-Term Birth (PTB)
+
+Binary logistic regression:
+
+`PTB ~ MainHap + covariates`
+
+Outputs include:
+
+- Odds ratios (OR)
+- Confidence intervals
+- Forest plots
+- Estimated marginal means (EMMs)
+- Pairwise haplogroup comparisons
+
+### Bayesian Models (`brms`)
+
+#### Bayesian Gestational Age Model
+
+Family:
+
+`student()`
+
+Posterior probabilities include:
+
+- `Pr(effect > +1 day)`
+- `Pr(effect < -1 day)`
+- `Pr(beta > 0)`
+
+Effects are estimated on a standardized scale and back-transformed into **gestational days**.
+
+#### Bayesian PTB Model
+
+Family:
+
+`bernoulli()`
+
+Posterior probabilities include:
+
+`Pr(OR > 1)`
+
+which directly estimates the probability that a haplogroup increases PTB odds.
+
+## Prior Sensitivity Analysis
+
+PTB models are fit under multiple priors:
+
+| Prior | Description |
+|-------|-------------|
+| Normal(0,0.5) | Strong shrinkage |
+| Normal(0,1.0) | Moderate shrinkage |
+| Normal(0,2.5) | Weakly informative |
+| Flat | Minimal prior structure |
+
+## Input Requirements
+
+Required input file:
+
+`Metadata.Final.tsv`
+
+Expected columns include:
+
+### Outcomes
+
+- `GAGEBRTH`
+- `PTB`
+
+### mtDNA Variables
+
+- `MainHap`
+
+### Site Variable
+
+- `site`
+
+### Continuous / Ordinal Covariates
+
+- `PW_AGE`
+- `PW_EDUCATION`
+- `MAT_HEIGHT`
+- `MAT_WEIGHT`
+- `BMI`
+- `TOILET`
+- `WEALTH_INDEX`
+- `DRINKING_SOURCE`
+- `PC1–PC5`
+
+### Binary Covariates
+
+- `BABY_SEX`
+- `CHRON_HTN`
+- `DIABETES`
+- `HH_ELECTRICITY`
+- `TB`
+- `THYROID`
+- `TYP_HOUSE`
+
+## Running the Pipeline
+
+### Command Line Usage
+
+```bash
+Rscript finalModel.R REF "COVARIATES"
 ```
 
-### Paths
-```r
-INFILE <- "Metadata.Final.tsv"
-OUTDIR <- "model_outputs/All"
+### Example: Fixed Site Effect
+
+```bash
+Rscript finalModel.R M "PW_AGE + MAT_HEIGHT + site"
 ```
 
-### Model covariates
-```r
-BMI_s + AGE_s + (1|site)
-```
-*(Alternative commented version includes PCs 1–5.)*
+### Example: Random Site Effect
 
-### Haplogroup reference
-```r
-DEFAULT_REF <- "R"
-```
-Falls back to modal haplogroup if missing; warns if n < 100.
-
----
-
-## 2. Data Preprocessing
-
-- Load file: `Metadata.Final.tsv`  
-- Convert to factors: `MainHap`, `site`  
-- Standardize covariates:
-  - `BMI_s = scale(BMI)`
-  - `AGE_s = scale(PW_AGE)`
-  - `GAGEBRTH_s = scale(GAGEBRTH)` (used in Bayesian GA)
-
----
-
-## 3. Helper Functions
-
-- `hap_mask()` → flag haplogroup terms  
-- `bh_on_hap()` → BH adjust only hap terms  
-- `bh_on_hap_wald()` → Wald p-values + BH adjust  
-- `to_or()` → log-odds → odds ratio  
-- `robust_hap_label()` → clean hap labels  
-- `save_forest_ptb()` → save PTB forest plot of hap ORs
-
----
-
-## 4. Bayesian Priors & Controls
-
-- **GA priors (`pri_ga`):**
-  - Fixed effects: `Normal(0, 0.5)`
-  - Random SDs & residual: `Student-t(3, 0, 2.5)`
-
-- **Sampler controls:**
-  - GA: `adapt_delta = 0.999`, `max_treedepth = 15`
-  - PTB: `adapt_delta = 0.99`, `max_treedepth = 13`
-
----
-
-## 5. Frequentist Models (`glmmTMB`)
-
-### 5.1 GA (Gaussian)
-```r
-ga_tmb <- glmmTMB(GAGEBRTH ~ MainHap + BMI_s + AGE_s + (1|site),
-                  family = gaussian(), data = df)
-```
-- Output: `ga_glmmtmb.csv`  
-- Diagnostics: `ga_glmmtmb_DHARMa.png`
-
-### 5.2 PTB (Binomial logit)
-```r
-ptb_tmb <- glmmTMB(PTB ~ MainHap + BMI_s + AGE_s + (1|site),
-                   family = binomial(), data = df)
-```
-- Outputs:
-  - `ptb_glmmtmb.csv` (log-odds + ORs)  
-  - `ptb_glmmtmb_site_forest.png` (forest plot)  
-  - `ptb_glmmtmb_DHARMa.png` (residuals)  
-  - `ptb_glmmtmb_emmeans_probs.csv` (predicted PTB probs by hap)  
-  - `ptb_glmmtmb_emmeans_pairs_BH.csv` (pairwise hap tests)
-
----
-
-## 6. Bayesian GA (`brms`, Student-t)
-
-```r
-brm_ga <- brm(
-  GAGEBRTH_s ~ MainHap + BMI_s + AGE_s + (1|site),
-  family  = student(),
-  prior   = pri_ga,
-  chains  = 4, iter = 4000, cores = 4,
-  control = ctrl_ga, inits = 0, seed = 2025,
-  data    = df
-)
+```bash
+Rscript finalModel.R M "PW_AGE + BMI + (1 | site)"
 ```
 
-- Outputs:
-  - `ga_brm_summary.txt`  
-  - `ga_brm.csv` (back-transformed to **days**)  
-  - `ga_brm_pp_check.png`  
-  - `ga_brm_bayesR2.txt`
+### Example with PCs
 
-### Posterior probabilities
-- `Pr_beta_gt0` → probability β > 0  
-- `p_two` → two-sided sign probability  
-- `Pr_days_gt_1` → probability effect > +1 day  
-- `Pr_days_lt_m1` → probability effect < −1 day  
-- Output: `ga_brm_posterior_probs.csv`
+```bash
+Rscript finalModel.R M "PW_AGE + BMI + PC1 + PC2 + PC3 + (1 | site)"
+```
 
----
+## Output Structure
 
-## 7. Bayesian PTB: Prior Sensitivity & Site Spec
+Example:
 
-### 7.1 Hap coefficient names
-- Fit quick model to extract `MainHap[...]` names.
+```text
+model_outputs/
+└── All_M_PW_AGE_BMI_siteRE/
+```
 
-### 7.2 Priors
-- `Normal(0,0.5)` (shrink)  
-- `Normal(0,1.0)` (mild)  
-- `Normal(0,2.5)` (weak)  
-- `flat` (default)
+Folder names automatically encode:
 
-### 7.3 Fit under each prior
-- Extract: ORs, 95% CrIs, `Pr_OR_gt_1`, `p_two`  
-- Output: `ptb_brm_prior_sensitivity_haps.csv`
+- reference haplogroup
+- covariates
+- fixed/random site effect
 
-### 7.4 Site sensitivity
-- Fixed site:  
-  ```r
-  PTB ~ MainHap + BMI_s + AGE_s + site
-  ```
-- Random site:  
-  ```r
-  PTB ~ MainHap + BMI_s + AGE_s + (1|site)
-  ```
+## Key Output Files
 
-⚠️ Bug: script uses `write_csv(ptb_FE, ...)`.  
-Use `saveRDS()` or export `summary(fit)$fixed`.
+### Frequentist Results
 
----
+| File | Description |
+|------|-------------|
+| `ga_glmmtmb_gaussian.csv` | Gaussian GA model |
+| `ga_glmmtmb_student_t.csv` | Student-t GA model |
+| `ga_glmmtmb_gaussian_vs_student_t_AIC.csv` | Model comparison |
+| `ptb_glmmtmb.csv` | PTB logistic model |
+| `ptb_glmmtmb_site_forest.png` | Forest plot |
 
-## 8. Outputs
+### Bayesian Results
 
-### Frequentist
-- `ga_glmmtmb.csv` — GA fixed effects  
-- `ga_glmmtmb_DHARMa.png` — GA diagnostics  
-- `ptb_glmmtmb.csv` — PTB fixed effects + ORs  
-- `ptb_glmmtmb_site_forest.png` — PTB forest plot  
-- `ptb_glmmtmb_DHARMa.png` — PTB diagnostics  
-- `ptb_glmmtmb_emmeans_probs.csv` — predicted PTB probs  
-- `ptb_glmmtmb_emmeans_pairs_BH.csv` — hap comparisons
+| File | Description |
+|------|-------------|
+| `ga_brm.csv` | Bayesian GA model |
+| `ga_brm_posterior_probs.csv` | Posterior probabilities |
+| `ptb_brm_summary.txt` | PTB Bayesian summary |
+| `ptb_brm_prior_sensitivity_haps.csv` | Prior sensitivity |
 
-### Bayesian
-- `ga_brm_summary.txt` — GA Student-t model summary  
-- `ga_brm.csv` — GA back-transformed effects (days)  
-- `ga_brm_pp_check.png` — posterior predictive check  
-- `ga_brm_bayesR2.txt` — Bayes R²  
-- `ga_brm_posterior_probs.csv` — GA posterior sign/threshold probs  
-- `ptb_brm_prior_sensitivity_haps.csv` — PTB prior sensitivity results  
-- *(fix required)* site-spec results: save as `.rds` or CSV summaries
+### Diagnostics
 
----
+| File | Description |
+|------|-------------|
+| `*_traceplot.png` | Chain mixing |
+| `*_pp_check.png` | Posterior predictive checks |
+| `*_diagnostics.txt` | Divergences & treedepth |
+| `*_bad_rhat.csv` | Rhat > 1.01 |
+| `*_low_ess_bulk.csv` | Low ESS |
 
-## Notes
+## Interpretation Guide
 
-- Haplogroup reference (`DEFAULT_REF`) drives all comparisons.  
-- BH correction applies **only across hap terms**.  
-- `emmeans` predictions are **population-level** (random effects set to mean).  
-- Use `inits=0` consistently for `brms`.  
-- Save full `brmsfit` objects with `saveRDS()` for reproducibility.  
-- Conservative sampler settings (`adapt_delta`, `max_treedepth`) are chosen for robustness.
+### Bayesian GA
 
+`Pr(effect > +1 day)`
 
+Probability a haplogroup increases gestational age by **more than one day**.
 
+### Bayesian PTB
 
+`Pr(OR > 1)`
 
+Probability a haplogroup increases PTB risk.
 
+### Multiple Testing
 
+Benjamini–Hochberg (BH) correction is applied across **MainHap effects only**.
 
+## Convergence Diagnostics
 
+Targets:
 
+- **Divergences:** 0
+- **Rhat:** < 1.01
+- **ESS:** > 400
+- **Treedepth hits:** minimal
 
+## Reproducibility
 
+Random seed:
 
+`set.seed(2025)`
 
+Bayesian models use:
 
+`seed = 2025`
+
+## Author
+
+**Jeffrey Haltom, PhD**  
+Bioinformatics / Statistical Genetics / Mitochondrial Genomics
