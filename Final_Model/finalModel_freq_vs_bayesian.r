@@ -137,7 +137,7 @@ OUTDIR <- file.path(
 if (!dir.exists(OUTDIR)) {
   dir.create(OUTDIR, recursive = TRUE)
 }
-if (!dir.exists(OUTDIR)) dir.create(OUTDIR, recursive = TRUE)
+
 
 
 
@@ -251,6 +251,19 @@ if (!(DEFAULT_Ref %in% levels(df$MainHap))) {
 ref_name <- levels(df$MainHap)[1]
 n_ref <- sum(df$MainHap == ref_name, na.rm = TRUE)
 if (n_ref < 100) message(sprintf("Warning: reference '%s' has n=%d", ref_name, n_ref))
+
+writeLines(
+  c(
+    paste("Reference:", ref_name),
+    paste("Original reference requested:", DEFAULT_Ref),
+    paste("Covariates:", covariates),
+    paste("GA formula:", paste("GAGEBRTH ~ MainHap +", covariates)),
+    paste("PTB formula:", paste("PTB ~ MainHap +", covariates)),
+    paste("Raw GA mean:", ga_mean_raw),
+    paste("Raw GA SD:", ga_sd_raw)
+  ),
+  file.path(OUTDIR, "model_formula_used.txt")
+)
 
 tmp_prior_df <- get_prior(
   as.formula(paste("PTB ~ MainHap +", covariates)),
