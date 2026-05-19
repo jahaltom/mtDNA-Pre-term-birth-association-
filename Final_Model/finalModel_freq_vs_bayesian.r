@@ -53,7 +53,7 @@ save_brms_diagnostics <- function(fit, prefix, outdir) {
   n_div <- sum(np$Parameter == "divergent__" & np$Value == 1, na.rm = TRUE)
 
   # Max treedepth hits
-  n_treedepth <- sum(np$Parameter == "treedepth__" & np$Value >= max(np$Value, na.rm = TRUE), na.rm = TRUE)
+  n_treedepth <- sum(np$Parameter == "treedepth__" & np$Value >= 15, na.rm = TRUE)
 
   # BFMI
   # BFMI / energy diagnostic (version-safe)
@@ -118,11 +118,12 @@ INFILE <- "Metadata.Final.tsv"
 # ---------------------------------
 
 cov_string <- covariates %>%
-  gsub("\\s+", "", .) %>%                  # remove spaces
-  gsub("\\+", "_", .) %>%                 # + -> _
-  gsub("\\(1\\|site\\)", "siteRE", .) %>% # random site effect
-  gsub("site", "siteFE", .) %>%           # fixed site effect
-  gsub("[()|]", "", .)                    # remove remaining symbols
+  gsub("\\s+", "", .) %>%
+  gsub("\\(1\\|site\\)", "SITE_RANDOM", .) %>%  # temporary placeholder
+  gsub("\\+", "_", .) %>%
+  gsub("\\bsite\\b", "siteFE", .) %>%           # whole word only
+  gsub("SITE_RANDOM", "siteRE", .) %>%
+  gsub("[()|]", "", .)
 
 OUTDIR <- file.path(
   "model_outputs",
@@ -688,10 +689,10 @@ sink()
 
 #Diagnostics:
 save_brms_diagnostics(brm_ga, "ga_brm", OUTDIR)
-save_brms_diagnostics(ptb_brm_final, "ptb_brm_re", OUTDIR)
+save_brms_diagnostics(ptb_brm_final, "ptb_brm_final", OUTDIR)
 
 check_brms_fit(brm_ga, "GA brms")
-check_brms_fit(ptb_brm_final, "PTB brms RE")
+check_brms_fit(ptb_brm_final, "PTB brms final")
 
 ###What to do if convergence is bad? 
 ##Increase adapt_delta control = list(adapt_delta = 0.999, max_treedepth = 15)
