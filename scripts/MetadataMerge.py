@@ -65,6 +65,13 @@ df['MainHap'] = np.where(df['MainHap'] == 'other', df['Haplogroup'].astype(str).
 speHaps=["L0","L1","L2","L3","L4","L5","HV"]
 df['SubHap'] = np.where(df['MainHap'].isin(speHaps), df['Haplogroup'].astype(str).str[0:3], df['Haplogroup'].astype(str).str[0:2])
 
+# MainHap: pool all Z lineages into M
+df.loc[df["Haplogroup"].astype(str).str.startswith("Z"), "MainHap"] = "M"
+
+# SubHap: pool all Z lineages into M8
+df.loc[df["Haplogroup"].astype(str).str.startswith("Z"), "SubHap"] = "M8"
+
+
 df.loc[df['ALCOHOL'] == 1, 'ALCOHOL_FREQ'] = 0
 df.loc[df['SMOKE_HIST'] == 1, 'SMOK_FREQ'] = 0
 df.loc[df['SNIFF_TOBA'] == 1, 'SNIFF_FREQ'] = 0
