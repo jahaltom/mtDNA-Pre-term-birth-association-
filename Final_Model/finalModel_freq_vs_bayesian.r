@@ -671,27 +671,27 @@ hap_prior_mild <- make_pri_ptb(covariates, hap_names, sd_hap = 1.0)
 
 
 
-ptb_RE <- brm(as.formula(paste("PTB ~ MainHap +", covariates)), 
+ptb_brm_final <- brm(as.formula(paste("PTB ~ MainHap +", covariates)), 
               data=df, family=bernoulli(),
               prior=hap_prior_mild,
               chains=2, iter=3000, warmup=1000,
               control=list(adapt_delta=0.995), init=0, seed=2025)
 
 
-fx_RE <- as.data.frame(summary(ptb_RE)$fixed)
+fx_RE <- as.data.frame(summary(ptb_brm_final)$fixed)
 write_csv(fx_RE, file.path(OUTDIR, "ptb_brm_sensitivity.csv"))
 
 sink(file.path(OUTDIR, "ptb_brm_summary.txt"))
-print(summary(ptb_RE))   # or your final PTB brms object name
+print(summary(ptb_brm_final))   # or your final PTB brms object name
 sink()
 
 
 #Diagnostics:
 save_brms_diagnostics(brm_ga, "ga_brm", OUTDIR)
-save_brms_diagnostics(ptb_RE, "ptb_brm_re", OUTDIR)
+save_brms_diagnostics(ptb_brm_final, "ptb_brm_re", OUTDIR)
 
 check_brms_fit(brm_ga, "GA brms")
-check_brms_fit(ptb_RE, "PTB brms RE")
+check_brms_fit(ptb_brm_final, "PTB brms RE")
 
 ###What to do if convergence is bad? 
 ##Increase adapt_delta control = list(adapt_delta = 0.999, max_treedepth = 15)
