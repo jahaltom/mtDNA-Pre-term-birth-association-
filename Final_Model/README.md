@@ -276,13 +276,51 @@ Folder names automatically encode:
 
 ### Diagnostics
 
+### Draws Summary (`*_draws_summary.csv`)
+
+Comprehensive posterior sampling diagnostics generated from all MCMC draws.
+
+Includes:
+
+| Column | Description |
+|--------|-------------|
+| `variable` | Model parameter name |
+| `mean` | Posterior mean estimate |
+| `sd` | Posterior standard deviation |
+| `median` | Posterior median |
+| `mad` | Median absolute deviation |
+| `q5` | 5% posterior quantile |
+| `q95` | 95% posterior quantile |
+| `rhat` | Convergence statistic (target < 1.01) |
+| `ess_bulk` | Bulk effective sample size |
+| `ess_tail` | Tail effective sample size |
+
+Purpose:
+
+- Diagnose Bayesian convergence
+- Identify unstable parameters
+- Evaluate posterior uncertainty
+- Detect poor mixing or weak sampling efficiency
+
+Interpretation guidelines:
+
+- **Rhat < 1.01** → good convergence  
+- **ESS > 400** → adequate posterior sampling  
+- **Large SD / wide intervals** → uncertain parameter estimates  
+- **Low ESS or elevated Rhat** → consider increasing iterations or `adapt_delta`
+  
+
+
 | File | Description |
 |------|-------------|
-| `*_traceplot.png` | Chain mixing |
+| `*_traceplot.png` | MCMC chain mixing and convergence |
 | `*_pp_check.png` | Posterior predictive checks |
-| `*_diagnostics.txt` | Divergences & treedepth |
-| `*_bad_rhat.csv` | Rhat > 1.01 |
-| `*_low_ess_bulk.csv` | Low ESS |
+| `*_diagnostics.txt` | Divergences, treedepth hits, BFMI |
+| `*_draws_summary.csv` | Full posterior draw statistics (mean, SD, quantiles, Rhat, ESS) |
+| `*_fixed_effects_summary.csv` | Fixed-effect coefficient summaries |
+| `*_bad_rhat.csv` | Parameters with Rhat > 1.01 |
+| `*_low_ess_bulk.csv` | Parameters with poor bulk ESS |
+| `*_low_ess_tail.csv` | Parameters with poor tail ESS |
 
 ## Interpretation Guide
 
