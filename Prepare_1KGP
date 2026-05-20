@@ -1,0 +1,32 @@
+#Make list 1-22
+chr_num=[]
+for x in range(1,23):
+      chr_num.append(str(x))
+
+
+
+
+
+
+
+rule all:
+    input: expand("data/Chr{chr}_SNPs.bed",chr=chr_num)
+
+#Get SNP only vcf's from 1000 Genomes Project for each Chr#, index, make interval list.
+rule Download1KGP:
+    output: "data/Chr{chr}_SNPs.bed"
+    shell:
+        """
+        wget ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/release/20190312_biallelic_SNV_and_INDEL/ALL.chr{wildcards.chr}.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf.gz
+        #Download chr(1-22) level VCF files from 1000 Genomes Project phase 3 on GRCh38 (https://www.internationalgenome.org/data-portal/data-collection/grch38, https://doi.org/10.12688/wellcomeopenres.15126.2). Filter out indels.
+        bcftools view --types snps ALL.chr{wildcards.chr}.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf.gz --output-type z --threads 4 -o data/Chr{wildcards.chr}_SNPs.vcf.gz
+        #Index
+        echo "{wildcards.chr} chr{wildcards.chr}" > data/{wildcards.chr}.txt
+        bcftools annotate --rename-chrs data/{wildcards.chr}.txt data/Chr{wildcards.chr}_SNPs.vcf.gz --output-type z -o data/Chr{wildcards.chr}_temp_SNPs.vcf.gz
+        mv data/Chr{wildcards.chr}_temp_SNPs.vcf.gz data/Chr{wildcards.chr}_SNPs.vcf.gz
+        bcftools index -t data/Chr{wildcards.chr}_SNPs.vcf.gz 
+        rm data/{wildcards.chr}.txt
+        
+        ##Make BED interval list
+        gunzip -c data/Chr{wildcards.chr}_SNPs.vcf.gz | grep -v "#" | awk -F'\t' -v OFS='\t' '{{print $1,($2-1),$2}}' > data/Chr{wildcards.chr}_SNPs.bed
+        """
