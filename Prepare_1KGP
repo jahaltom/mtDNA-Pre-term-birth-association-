@@ -22,7 +22,4 @@ rule Download1KGP:
         bcftools view --types snps ALL.chr{wildcards.chr}.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf.gz --output-type z --threads 4 -o data/Chr{wildcards.chr}_SNPs.vcf.gz
         #Index
         bcftools index -t data/Chr{wildcards.chr}_SNPs.vcf.gz 
-
-        ##Make BED interval list
-        gunzip -c data/Chr{wildcards.chr}_SNPs.vcf.gz | grep -v "#" | awk -F'\t' -v OFS='\t' '{{print $1,($2-1),$2}}' > data/Chr{wildcards.chr}_SNPs.bed
         """
