@@ -1,6 +1,8 @@
 # mtDNA Pre-term birth association
 
-
+```
+snakemake -j 22 -s Prepare_1KGP --cluster "sbatch -t 01:00:00 -c 4 -N 1"
+```
 
 
 ## Run Haplogrep3 to assign haplogroups to samples.
