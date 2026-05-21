@@ -10,11 +10,11 @@ for x in range(1,23):
 
 
 rule all:
-    input: expand("1000G_chr{chr}",chr=chr_num)
+    input: expand("1000G_chr{chr}.pgen",chr=chr_num)
 
 #Get SNP only vcf's from 1000 Genomes Project for each Chr#, index, make interval list.
 rule Download1KGP:
-    output: "1000G_chr{chr}"
+    output: "1000G_chr{chr}.pgen"
     shell:
         """
             #For each chromosome Chr1–22:
