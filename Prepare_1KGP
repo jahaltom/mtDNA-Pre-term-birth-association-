@@ -1,31 +1,30 @@
 #Make list 1-22
-chr_num=[]
-for x in range(1,23):
-      chr_num.append(str(x))
-
-
-
-
-
-
+chr_num = [str(x) for x in range(1, 23)]
 
 rule all:
-    input: expand("1000G_chr{chr}.pgen",chr=chr_num)
+    input:
+        expand("1000G_chr{chr}.pgen", chr=chr_num),
+        expand("1000G_chr{chr}.pvar", chr=chr_num),
+        expand("1000G_chr{chr}.psam", chr=chr_num)
 
-#Get SNP only vcf's from 1000 Genomes Project for each Chr#, index, make interval list.
 rule Download1KGP:
-    output: "1000G_chr{chr}.pgen"
+    input:
+        "ALL.chr{chr}.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf.gz"
+    output:
+        pgen="1000G_chr{chr}.pgen",
+        pvar="1000G_chr{chr}.pvar",
+        psam="1000G_chr{chr}.psam"
     shell:
         """
             #For each chromosome Chr1–22:
             #Download 1000 genomes VCF
             #wget ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/release/20190312_biallelic_SNV_and_INDEL/ALL.chr{wildcards.chr}.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf.gz
-            #1. Convert 1000G VCF to PLINK
+            #Convert 1000G VCF to PLINK
             plink2 \
-              --vcf ALL.chr{wildcards.chr}.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf.gz \
+              --vcf {input} \
               --double-id \
               --max-alleles 2 \
               --snps-only just-acgt \
               --make-pgen \
-              --out 1000G_chr{wildcards.chr} 
+              --out 1000G_chr{wildcards.chr}
         """
