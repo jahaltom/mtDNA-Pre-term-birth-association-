@@ -10,16 +10,22 @@ for x in range(1,23):
 
 
 rule all:
-    input: expand("1000GP_Data/Chr{chr}_SNPs.bed",chr=chr_num)
+    input: expand("1000G_chr${chr}",chr=chr_num)
 
 #Get SNP only vcf's from 1000 Genomes Project for each Chr#, index, make interval list.
 rule Download1KGP:
-    output: "1000GP_Data/Chr{chr}_SNPs.bed"
+    output: "1000G_chr${chr}"
     shell:
         """
-        wget ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/release/20190312_biallelic_SNV_and_INDEL/ALL.chr{wildcards.chr}.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf.gz
-        #Download chr(1-22) level VCF files from 1000 Genomes Project phase 3 on GRCh38 (https://www.internationalgenome.org/data-portal/data-collection/grch38, https://doi.org/10.12688/wellcomeopenres.15126.2). Filter out indels.
-        bcftools view --types snps ALL.chr{wildcards.chr}.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf.gz --output-type z --threads 4 -o 1000GP_Data/Chr{wildcards.chr}_SNPs.vcf.gz
-        #Index
-        bcftools index -t 1000GP_Data/Chr{wildcards.chr}_SNPs.vcf.gz 
+            #For each chromosome Chr1–22:
+            #Download 1000 genomes VCF
+            #wget ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/release/20190312_biallelic_SNV_and_INDEL/ALL.chr{wildcards.chr}.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf.gz
+            #1. Convert 1000G VCF to PLINK
+            plink2 \
+              --vcf ALL.chr{wildcards.chr}.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf.gz \
+              --double-id \
+              --max-alleles 2 \
+              --snps-only just-acgt \
+              --make-pgen \
+              --out 1000G_chr${wildcards.chr} 
         """
