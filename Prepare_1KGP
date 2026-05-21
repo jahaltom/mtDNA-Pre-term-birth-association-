@@ -10,11 +10,11 @@ for x in range(1,23):
 
 
 rule all:
-    input: expand("1000G_chr${chr}",chr=chr_num)
+    input: expand("1000G_chr{chr}",chr=chr_num)
 
 #Get SNP only vcf's from 1000 Genomes Project for each Chr#, index, make interval list.
 rule Download1KGP:
-    output: "1000G_chr${chr}"
+    output: "1000G_chr{chr}"
     shell:
         """
             #For each chromosome Chr1–22:
@@ -27,5 +27,5 @@ rule Download1KGP:
               --max-alleles 2 \
               --snps-only just-acgt \
               --make-pgen \
-              --out 1000G_chr${wildcards.chr} 
+              --out 1000G_chr{wildcards.chr} 
         """
