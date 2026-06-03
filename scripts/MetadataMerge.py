@@ -149,6 +149,49 @@ print(df.groupby(["MainHap", "SuperHap2"]).size().reset_index())
 
 
 
+import pandas as pd
+import numpy as np
+
+# Longest/prefix-specific matches should come before broad matches like M or R
+phylo_map = {
+    "M9": ["M9", "E"],
+    "M8": ["M8", "C", "Z"],
+    "M7": ["M7"],
+    "M6": ["M6"],
+    "M5": ["M5"],
+    "M4": ["M4"],
+    "M3": ["M3"],
+    "M2": ["M2"],
+    "M1": ["M1"],
+    "G": ["G"],
+    "Q": ["Q"],
+    "D": ["D"],
+    "N1": ["N1","I"],
+    "N2": ["N2","W"],
+    "N9": ["N9","Y"],
+    "A": ["A"],
+    "O": ["O"],
+    "S": ["S"],
+    "X": ["X"],
+    "R":  ["R", "B", "F", "J", "T", "H", "V", "U", "K","P"],
+   
+}
+
+def assign_phylohap(hap):
+    if pd.isna(hap):
+        return np.nan
+
+    hap = str(hap).strip().upper()
+
+    for phylohap, prefixes in phylo_map.items():
+        if any(hap.startswith(prefix) for prefix in prefixes):
+            return phylohap
+
+    return "Other"
+
+df["PhyloHap"] = df["Haplogroup"].apply(assign_phylohap)
+
+
 
 
 #Sep M and C 
