@@ -41,7 +41,7 @@ GAGEBRTH ~ MainHap + covariates
 
 #### Pre-Term Birth (PTB)
 
-Logistic regression:
+Logistic regression (family = binomial):
 
 ```r
 PTB ~ MainHap + covariates
@@ -145,6 +145,8 @@ Metadata.Final.tsv
 - `TYP_HOUSE`
 
 ---
+
+Categorical (as.factor), continuous/ordinal scaled, binary as numeric.  GA outcome scaled for modeling.
 
 ## Running the Pipeline
 
@@ -289,7 +291,7 @@ Recommended thresholds:
 | Divergences | 0 |
 | Rhat | < 1.01 |
 | ESS | > 400 |
-| Treedepth hits | Minimal |
+| Treedepth hits (>=15) | Minimal |
 
 If convergence is poor:
 
