@@ -11,7 +11,7 @@ suppressPackageStartupMessages({
   library(readr); library(dplyr); library(stringr); library(forcats)
   library(ggplot2); library(broom); library(broom.mixed)
   library(glmmTMB); library(emmeans); library(brms)
-  library(DHARMa); library(loo); library(posterior); library(tidyr)
+  library(DHARMa); library(loo); library(posterior); library(tidyr); library(tibble)
 })
 
 set.seed(2025)
@@ -67,8 +67,7 @@ save_brms_diagnostics <- function(fit, prefix, outdir) {
     paste("BFMI check failed:", e$message)
   })
 
-  print(names(draw_summ))
-  str(draw_summ)
+
   # Rhat / ESS flags
   bad_rhat <- draw_summ %>% filter(!is.na(rhat) & rhat > 1.01)
   low_ess_bulk <- draw_summ %>% filter(!is.na(ess_bulk) & ess_bulk < 400)
@@ -220,26 +219,7 @@ df <- df_raw %>%
 
 
 
-check_brms_fit <- function(fit, model_name = "model") {
-  ds <- posterior::summarise_draws(
-    posterior::as_draws_df(fit),
-    "rhat", "ess_bulk", "ess_tail"
-  )
-  np <- nuts_params(fit)
 
-  n_div <- sum(np$Parameter == "divergent__" & np$Value == 1, na.rm = TRUE)
-  n_bad_rhat <- sum(ds$rhat > 1.01, na.rm = TRUE)
-  n_low_ess_bulk <- sum(ds$ess_bulk < 400, na.rm = TRUE)
-  n_low_ess_tail <- sum(ds$ess_tail < 400, na.rm = TRUE)
-
-  cat("\n============================\n")
-  cat("Convergence check:", model_name, "\n")
-  cat("Divergences:", n_div, "\n")
-  cat("Rhat > 1.01:", n_bad_rhat, "\n")
-  cat("ESS bulk < 400:", n_low_ess_bulk, "\n")
-  cat("ESS tail < 400:", n_low_ess_tail, "\n")
-  cat("============================\n")
-}
 
 # Ensure reference haplogroup is present; otherwise pick the most frequent
 if (!(DEFAULT_Ref %in% levels(df$MainHap))) {
@@ -266,15 +246,7 @@ writeLines(
   file.path(OUTDIR, "model_formula_used.txt")
 )
 
-tmp_prior_df <- get_prior(
-  as.formula(paste("PTB ~ MainHap +", covariates)),
-  data = df,
-  family = bernoulli()
-)
-
-hap_names <- tmp_prior_df %>%
-  dplyr::filter(class == "b", grepl("^MainHap", coef)) %>%
-  dplyr::pull(coef)
+hap_names <- paste0("MainHap", levels(df$MainHap)[-1])
 
 # ---- Helpers ----
 hap_mask <- function(terms, var = "MainHap") grepl(paste0("^", var), terms)
@@ -344,8 +316,6 @@ make_hap_priors <- function(hap_names, sd_hap = 0.5) {
 
 # ---- GA priors ----
 make_pri_ga <- function(covariates, hap_names, sd_hap = 0.5) {
-  has_site_re <- grepl("\\(1\\s*\\|\\s*site\\)", covariates)
-
   pri <- make_hap_priors(hap_names, sd_hap = sd_hap)
 
   pri <- c(
@@ -365,8 +335,6 @@ make_pri_ga <- function(covariates, hap_names, sd_hap = 0.5) {
 
 # ---- PTB priors ----
 make_pri_ptb <- function(covariates, hap_names, sd_hap = 1.0) {
-  has_site_re <- grepl("\\(1\\s*\\|\\s*site\\)", covariates)
-
   pri <- make_hap_priors(hap_names, sd_hap = sd_hap)
 
   if (has_site_re) {
@@ -474,7 +442,19 @@ ptb_tmb <- glmmTMB(as.formula(paste("PTB ~ MainHap +", covariates)),
 fx_ptb  <- broom.mixed::tidy(ptb_tmb, effects = "fixed", conf.int = TRUE) %>%
   bh_on_hap() %>% to_or()
 write_csv(fx_ptb, file.path(OUTDIR, "ptb_glmmtmb.csv"))
-save_forest_ptb(fx_ptb, "PTB GLMM (glmmTMB, Joint/All)", file.path(OUTDIR, "ptb_glmmtmb_site_forest.png"))
+
+analysis_label <- if ("site" %in% names(df) &&
+                      length(unique(df$site)) == 1) {
+  unique(as.character(df$site))
+} else {
+  "All Sites"
+}
+
+save_forest_ptb(
+  fx_ptb,
+  paste0("PTB GLMM (glmmTMB, ", analysis_label, ")"),
+  file.path(OUTDIR, "ptb_glmmtmb_site_forest.png")
+)
 
 # Diagnostics: DHARMa (PTB)
 png(file.path(OUTDIR, "ptb_glmmtmb_DHARMa.png"), width=1200, height=900)
@@ -530,7 +510,7 @@ capture.output(bayes_R2(brm_ga), file = file.path(OUTDIR, "ga_brm_bayesR2.txt"))
 # --- Posterior probabilities for GA (Student-t model) ---
 # Assumes: brm_ga already fit; df in memory; your robust_hap_label() & hap_mask() exist.
 
-library(posterior); library(dplyr); library(tibble)
+
 
 sd_ga <- ga_sd_raw
 
@@ -602,7 +582,7 @@ readr::write_csv(fx_brm_ga, file.path(OUTDIR, "ga_brm_posterior_probs.csv"))
 
 
 
-library(dplyr); library(tibble); library(posterior)
+
 
 
 
@@ -668,13 +648,11 @@ results <- results %>%
 
 readr::write_csv(results, file.path(OUTDIR, "ptb_brm_prior_sensitivity_haps.csv"))
 
-hap_prior_mild <- make_pri_ptb(covariates, hap_names, sd_hap = 1.0)
-
 
 
 ptb_brm_final <- brm(as.formula(paste("PTB ~ MainHap +", covariates)), 
               data=df, family=bernoulli(),
-              prior=hap_prior_mild,
+              prior=make_pri_ptb(covariates, hap_names, sd_hap = 1.0),
               chains=2, iter=3000, warmup=1000,
               control=list(adapt_delta=0.995), init=0, seed=2025)
 
@@ -691,8 +669,7 @@ sink()
 save_brms_diagnostics(brm_ga, "ga_brm", OUTDIR)
 save_brms_diagnostics(ptb_brm_final, "ptb_brm_final", OUTDIR)
 
-check_brms_fit(brm_ga, "GA brms")
-check_brms_fit(ptb_brm_final, "PTB brms final")
+
 
 ###What to do if convergence is bad? 
 ##Increase adapt_delta control = list(adapt_delta = 0.999, max_treedepth = 15)
@@ -777,6 +754,19 @@ site_summary <- df_raw %>%
 
 write_csv(site_summary, file.path(OUTDIR, "site_summary.csv"))
 print(site_summary)
+
+
+site_cat_summary <- df_raw %>%
+  select(site, all_of(summary_cat)) %>%
+  pivot_longer(-site, names_to = "variable", values_to = "value") %>%
+  group_by(site, variable, value) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  group_by(site, variable) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup()
+
+write_csv(site_cat_summary, file.path(OUTDIR, "site_categorical_summary.csv"))
+
 
 # ============================
 # PTB sparsity / site structure table
