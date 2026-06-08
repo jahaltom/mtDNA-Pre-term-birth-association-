@@ -122,6 +122,8 @@ Metadata.Final.tsv
 #### Site
 - `site`
 
+#### Categorical Covariates
+- `FUEL_FOR_COOK`
 #### Continuous / Ordinal Covariates
 - `PW_AGE`
 - `PW_EDUCATION`
