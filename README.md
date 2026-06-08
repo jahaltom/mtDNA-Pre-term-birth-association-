@@ -152,3 +152,18 @@ sed -i "s/CONT/$columnCont/g" FinalModel.ML.sh
 
 sbatch FinalModel.ML.sh
 ```
+
+
+
+
+##### Site and nDNA PC associated
+```
+python site_pc_structure_tests.py \
+  --input Metadata.Final.tsv \
+  --sep $'\t' \
+  --site-col site \
+  --pc-prefix PC \
+  --n-pcs 5 \
+  --permutations 999 \
+  --out-prefix nDNA_PC_site
+```
