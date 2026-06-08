@@ -156,7 +156,7 @@ sbatch FinalModel.ML.sh
 
 
 
-##### Site and nDNA PC associated
+### Site and nDNA PC associated
 
 This script tests whether nDNA principal components are strongly associated with study site. It performs ANOVA with R² estimation for individual PCs, MANOVA across all PCs, and PERMANOVA to quantify the proportion of overall ancestry structure explained by site. These results help determine whether study site can be used as a proxy for ancestry in downstream association models.
 
