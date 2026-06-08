@@ -6,7 +6,7 @@ This pipeline evaluates associations between **mitochondrial DNA (mtDNA) haplogr
 - **Gestational Age (GA)** — continuous outcome
 - **Pre-Term Birth (PTB)** — binary outcome
 
-using both **frequentist** (`glmmTMB`) and **Bayesian** (`brms`) frameworks across pooled cohorts. The pipeline supports:
+using both **frequentist** (`glmmTMB`) and **Bayesian** (`brms`) frameworks across single and pooled cohorts. The pipeline supports:
 
 - Dynamic covariate selection at runtime
 - Fixed (`site`) or random (`(1 | site)`) site effects
