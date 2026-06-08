@@ -171,9 +171,10 @@ python site_pc_structure_tests.py \
   --out-prefix nDNA_PC_site
 
 ```
-Output Files
-*_anova_r2.csv – Per-PC ANOVA results showing the strength of association between study site and each nDNA principal component, including R² (variance explained by site).
-*_manova.txt – MANOVA results testing whether study site explains overall variation across all included principal components simultaneously.
-*_permanova.csv – PERMANOVA results quantifying the proportion of multivariate ancestry structure explained by study site (R²) and its statistical significance.
-*_site_pc_summary.csv – Summary statistics (mean, standard deviation, sample count) for each principal component stratified by study site.
+Output Files:
+
+- *_anova_r2.csv – Per-PC ANOVA results showing the strength of association between study site and each nDNA principal component, including R² (variance explained by site).
+- *_manova.txt – MANOVA results testing whether study site explains overall variation across all included principal components simultaneously.
+- *_permanova.csv – PERMANOVA results quantifying the proportion of multivariate ancestry structure explained by study site (R²) and its statistical significance.
+- *_site_pc_summary.csv – Summary statistics (mean, standard deviation, sample count) for each principal component stratified by study site.
 
