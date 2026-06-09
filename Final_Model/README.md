@@ -249,7 +249,7 @@ Encodes:
 | `model_formula_used.txt` | Exact formulas and parameters |
 | `site_categorical_summary.csv` | Site-level categorical covariate distributions |
 
-### Cohort Summary Outputs
+### RDS Outputs
 
 | File | Description |
 |---|---|
