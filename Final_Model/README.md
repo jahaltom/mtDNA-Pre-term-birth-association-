@@ -12,7 +12,7 @@ using both **frequentist** (`glmmTMB`) and **Bayesian** (`brms`) frameworks acro
 - Fixed (`site`) or random (`(1 | site)`) site effects
 - Gaussian and Student-t GA models
 - Bayesian posterior probability estimation
-- Prior sensitivity analyses
+- Prior sensitivity analyses for PTB
 - Multiple testing correction (Benjamini–Hochberg)
 - Sparse-cell detection
 - Automated convergence diagnostics
@@ -98,7 +98,7 @@ PTB models are fit under:
 | `Normal(0,0.5)` | Strong shrinkage |
 | `Normal(0,1.0)` | Moderate shrinkage |
 | `Normal(0,2.5)` | Weakly informative |
-| `flat` | Minimal prior assumptions |
+| `brms_default` | Default weakly informative priors |
 
 ---
 
@@ -218,7 +218,7 @@ Encodes:
 | `ga_brm_bayesR2.txt` | Bayesian R² |
 | `ga_brm_posterior_probs.csv` | Posterior probability table |
 | `ptb_brm_summary.txt` | PTB Bayesian model summary |
-| `ptb_brm_sensitivity.csv` | Final PTB coefficient table |
+| `ptb_brm_final_fixed_effects.csv` | Final PTB coefficient table |
 | `ptb_brm_prior_sensitivity_haps.csv` | Prior sensitivity results |
 
 ### Diagnostics
@@ -247,6 +247,15 @@ Encodes:
 | `hap_site_ptb_flags.csv` | Sparse/problematic cell flags |
 | `hap_site_ptb_problem_cells.csv` | Problematic cells only |
 | `model_formula_used.txt` | Exact formulas and parameters |
+| `site_categorical_summary.csv` | Site-level categorical covariate distributions |
+
+### Cohort Summary Outputs
+
+| File | Description |
+|---|---|
+| `ga_brm.rds` | Serialized GA brms model |
+| `ptb_brm_final.rds` | Serialized final PTB model |
+| `ptb_brm_sensitivity_*.rds` | Serialized PTB sensitivity models |
 
 ---
 
