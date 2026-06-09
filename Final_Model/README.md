@@ -91,8 +91,6 @@ Posterior probabilities:
 
 ## Prior Sensitivity Analysis
 
-PTB Bayesian models are re-fit under multiple prior specifications to evaluate robustness of haplogroup effects to prior choice.
-
 
 ---
 
@@ -127,6 +125,7 @@ site random-effect SD ~ student_t(3, 0, 2.5)
 ```
 
 #### PTB prior sensitivity analyses evaluate:
+PTB Bayesian models are re-fit under multiple prior specifications to evaluate robustness of haplogroup effects to prior choice.
 
 | Prior | Meaning |
 |---|---|
