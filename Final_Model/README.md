@@ -184,7 +184,7 @@ Example:
 
 ```text
 model_outputs/
-└── All_M_PW_AGE_BMI_siteRE/
+└── M_PW_AGE_BMI_siteRE/
 ```
 
 Encodes:
