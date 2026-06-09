@@ -42,11 +42,11 @@ filtered_data = md[(md["GAGEBRTH"] >= lower_cutoff) & (md["GAGEBRTH"] <= upper_c
 
 
 #############################      More filtering
-# For each categorical variable class, determine the number of pre-term births and normal births (PTB=1 normal=0) and the % of PTB=1. 
-# Remove rows(samples) corresponding to a class from a categorical variable that total counts (PTB=1 normal=0) < 25. If only 1 class would remain after the prior filtering, don't exclude any samples and simply exclude the categorical variable from any future model.
-# Reports categorical variables to keep/exclude for future models. Also reports those classes removed due to low counts. 
-
-
+#For each categorical variable class, determine the number of pre-term births and normal births (PTB=1 normal=0) and the % of PTB=1. 
+#Remove rows(samples) corresponding to a class from a categorical variable that total counts (PTB=1 normal=0) < 20. 
+#If only 1 class would remain after the prior filtering, don't exclude any samples and simply exclude the categorical variable 
+#from any future model. Reports categorical variables to keep/exclude for future models 
+#(Those kept are in CategoricalVariablesToKeepTable.tsv). Also reports those classes removed due to low counts.
 
 results = []
 troubleClass=[]
