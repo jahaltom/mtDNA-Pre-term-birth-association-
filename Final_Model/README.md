@@ -97,7 +97,7 @@ Posterior probabilities:
 ---
 
 ### Bayesian Priors and Sampler Settings
-## Gestational Age (GA) Priors
+#### Gestational Age (GA) Priors
 
 For Bayesian GA models, haplogroup fixed effects use:
 ```
@@ -113,7 +113,7 @@ When random site effects are included ((1 | site)):
 ```
 site random-effect SD ~ student_t(3, 0, 2.5)
 ```
-## Pre-Term Birth (PTB) Priors
+#### Pre-Term Birth (PTB) Priors
 
 For the final Bayesian PTB model, haplogroup fixed effects use:
 ```
@@ -121,7 +121,7 @@ normal(0, 1.0)
 ```
 on the log-odds scale.
 
-## PTB prior sensitivity analyses evaluate:
+#### PTB prior sensitivity analyses evaluate:
 
 | Prior | Meaning |
 |---|---|
@@ -130,7 +130,7 @@ on the log-odds scale.
 | `Normal(0,2.5)` | Weakly informative |
 | `brms_default` | Default weakly informative priors |
 
-## Sampler Settings
+### Sampler Settings
 
 To improve MCMC convergence and reduce divergent transitions, customized sampler controls are used.
 
@@ -149,7 +149,7 @@ chains = 2
 iter = 3000
 warmup = 1000
 ```
-## Posterior summaries include:
+### Posterior summaries include:
 - Posterior mean estimates
 - 95% credible intervals
 - Posterior probability metrics
