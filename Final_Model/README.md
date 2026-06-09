@@ -364,13 +364,14 @@ Recommended thresholds:
 | ESS | > 400 |
 | Treedepth hits (>=15) | Minimal |
 
-If convergence is poor:
+If convergence is poor increase :
 
 ```r
 adapt_delta = 0.999
 iter = 6000
 warmup = 2000
 ```
+and/or use slightly stronger priors. 
 
 ---
 
