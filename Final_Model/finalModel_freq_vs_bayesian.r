@@ -11,7 +11,7 @@ suppressPackageStartupMessages({
   library(readr); library(dplyr); library(stringr); library(forcats)
   library(ggplot2); library(broom); library(broom.mixed)
   library(glmmTMB); library(emmeans); library(brms)
-  library(DHARMa); library(loo); library(posterior); library(tidyr); library(tibble)
+  library(DHARMa); library(posterior); library(tidyr); library(tibble)
 })
 
 set.seed(2025)
@@ -31,8 +31,8 @@ save_brms_diagnostics <- function(fit, prefix, outdir) {
     sd,
     median,
     mad,
-    ~posterior::quantile2(.x, probs = 0.05),
-    ~posterior::quantile2(.x, probs = 0.95),
+    ~posterior::quantile2(.x, probs = 0.025),
+    ~posterior::quantile2(.x, probs = 0.975),
     posterior::rhat,
     posterior::ess_bulk,
     posterior::ess_tail
@@ -218,7 +218,12 @@ df <- df_raw %>%
   )
 
 
-
+# Validate binary columns are 0/1/NA only
+bad_bin <- sapply(df[columnBin], function(x) any(!is.na(x) & !x %in% c(0, 1)))
+if (any(bad_bin)) {
+  stop("Binary columns contain non-0/1 values: ",
+       paste(names(bad_bin)[bad_bin], collapse = ", "))
+}
 
 
 # Ensure reference haplogroup is present; otherwise pick the most frequent
@@ -489,14 +494,7 @@ sink(file.path(OUTDIR, "ga_brm_summary.txt")); print(summary(brm_ga)); sink()
 
 sd_ga <- ga_sd_raw
 
-fx_brm_ga <- as.data.frame(summary(brm_ga)$fixed) %>%
-  tibble::rownames_to_column("term") %>%
-  mutate(
-    beta_days = Estimate * sd_ga,
-    lo_days   = `l-95% CI` * sd_ga,
-    hi_days   = `u-95% CI` * sd_ga
-  )
-write_csv(fx_brm_ga, file.path(OUTDIR, "ga_brm.csv"))
+
 
 png(file.path(OUTDIR, "ga_brm_pp_check.png"), width=1200, height=900)
 pp_check(brm_ga, ndraws=200)
@@ -504,7 +502,7 @@ dev.off()
 capture.output(bayes_R2(brm_ga), file = file.path(OUTDIR, "ga_brm_bayesR2.txt"))
 
 
-
+saveRDS(brm_ga, file.path(OUTDIR, "ga_brm.rds"))
 
 
 # --- Posterior probabilities for GA (Student-t model) ---
@@ -512,7 +510,7 @@ capture.output(bayes_R2(brm_ga), file = file.path(OUTDIR, "ga_brm_bayesR2.txt"))
 
 
 
-sd_ga <- ga_sd_raw
+
 
 # 1) Posterior draws for fixed effects (each column is a parameter draw on the standardized scale)
 dr <- posterior::as_draws_df(brm_ga)
@@ -591,7 +589,7 @@ prior_grid <- list(
   shrink_05 = make_pri_ptb(covariates, hap_names, sd_hap = 0.5),
   shrink_10 = make_pri_ptb(covariates, hap_names, sd_hap = 1.0),
   wide_25   = make_pri_ptb(covariates, hap_names, sd_hap = 2.5),
-  flat      = c()
+  brms_default       = c()
 )
 
 # 3) Fit under each prior (same model structure)
@@ -607,6 +605,12 @@ fit_under_prior <- function(pr) {
 }
 
 fits <- lapply(prior_grid, fit_under_prior)
+
+
+# Save sensitivity fits immediately in case of downstream crash
+for (nm in names(fits)) {
+  saveRDS(fits[[nm]], file.path(OUTDIR, paste0("ptb_brm_sensitivity_", nm, ".rds")))
+}
 
 # 4) Extract per-hap results
 summarize_haps <- function(fit, label) {
@@ -630,11 +634,14 @@ summarize_haps <- function(fit, label) {
     mutate(prior_setting = label)
 }
 
+
+
+                  
 results <- bind_rows(
   summarize_haps(fits$shrink_05, "Normal(0,0.5)"),
   summarize_haps(fits$shrink_10, "Normal(0,1.0)"),
   summarize_haps(fits$wide_25,   "Normal(0,2.5)"),
-  summarize_haps(fits$flat,      "flat")
+  summarize_haps(fits$brms_default,      "brms_default")
 ) %>%
   mutate(label = sub("^MainHap\\[T\\.(.+)\\]$", "\\1", sub("^MainHap", "", term))) %>%
   select(prior_setting, label, OR, OR_lo, OR_hi, Pr_OR_gt_1, p_two) %>%
@@ -658,7 +665,7 @@ ptb_brm_final <- brm(as.formula(paste("PTB ~ MainHap +", covariates)),
 
 
 fx_RE <- as.data.frame(summary(ptb_brm_final)$fixed)
-write_csv(fx_RE, file.path(OUTDIR, "ptb_brm_sensitivity.csv"))
+write_csv(fx_RE, file.path(OUTDIR, "ptb_brm_final_fixed_effects.csv"))
 
 sink(file.path(OUTDIR, "ptb_brm_summary.txt"))
 print(summary(ptb_brm_final))   # or your final PTB brms object name
@@ -670,7 +677,8 @@ save_brms_diagnostics(brm_ga, "ga_brm", OUTDIR)
 save_brms_diagnostics(ptb_brm_final, "ptb_brm_final", OUTDIR)
 
 
-
+saveRDS(ptb_brm_final, file.path(OUTDIR, "ptb_brm_final.rds"))
+                  
 ###What to do if convergence is bad? 
 ##Increase adapt_delta control = list(adapt_delta = 0.999, max_treedepth = 15)
 # Increase iterations chains = 4, iter = 6000, warmup = 2000
