@@ -127,7 +127,6 @@ cov_string <- covariates %>%
 OUTDIR <- file.path(
   "model_outputs",
   paste0(
-    "All_",
     DEFAULT_Ref,
     "_",
     cov_string
