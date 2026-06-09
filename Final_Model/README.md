@@ -106,7 +106,7 @@ normal(0, 0.5)
 Because GAGEBRTH is standardized prior to model fitting, this prior operates on the standardized gestational-age scale. Posterior estimates are later back-transformed to gestational days for interpretation.
 
 Additional priors:
-``
+```
 sigma ~ student_t(3, 0, 2.5)
 ```
 When random site effects are included ((1 | site)):
