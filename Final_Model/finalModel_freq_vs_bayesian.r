@@ -337,7 +337,9 @@ make_pri_ga <- function(covariates, hap_names, sd_hap = 0.5) {
 
   pri
 }
-
+pri_ga <- make_pri_ga(covariates, hap_names, sd_hap = 0.5)
+ctrl_ga  <- list(adapt_delta = 0.999, max_treedepth = 15)      
+                  
 # ---- PTB priors ----
 make_pri_ptb <- function(covariates, hap_names, sd_hap = 1.0) {
   pri <- make_hap_priors(hap_names, sd_hap = sd_hap)
@@ -351,10 +353,7 @@ make_pri_ptb <- function(covariates, hap_names, sd_hap = 1.0) {
 
   pri
 }
-
-pri_ga <- make_pri_ga(covariates, hap_names, sd_hap = 0.5)
-
-ctrl_ga  <- list(adapt_delta = 0.999, max_treedepth = 15)
+pri_ptb <- make_pri_ptb(covariates, hap_names, sd_hap = 1.0)
 ctrl_ptb <- list(adapt_delta = 0.99,  max_treedepth = 13)
 
 # ============================
@@ -599,7 +598,7 @@ fit_under_prior <- function(pr) {
     data = df, family = bernoulli(),
     prior = pr,
     chains = 2, iter = 3000, warmup = 1000, cores = 2,
-    control = modifyList(ctrl_ptb, list(adapt_delta = 0.995)),
+    control = ctrl_ptb ,
     init = 0, seed = 2025
   )
 }
@@ -659,9 +658,9 @@ readr::write_csv(results, file.path(OUTDIR, "ptb_brm_prior_sensitivity_haps.csv"
 
 ptb_brm_final <- brm(as.formula(paste("PTB ~ MainHap +", covariates)), 
               data=df, family=bernoulli(),
-              prior=make_pri_ptb(covariates, hap_names, sd_hap = 1.0),
+              prior=pri_ptb,
               chains=2, iter=3000, warmup=1000,
-              control=list(adapt_delta=0.995), init=0, seed=2025)
+              control = ctrl_ptb 
 
 
 fx_RE <- as.data.frame(summary(ptb_brm_final)$fixed)
