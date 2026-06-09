@@ -205,7 +205,7 @@ Metadata.Final.tsv
 ## Data preprocessing
 - Categorical variables converted to factors (as.factor)
 - Continuous and ordinal variables standardized (scale())
-- Binary variables converted to numeric (0/1)
+- Binary variables must be to numeric (0/1)
 - Gestational age (GAGEBRTH) standardized for model fitting and back-transformed to days for interpretation
 
 ## Running the Pipeline
