@@ -121,6 +121,11 @@ normal(0, 1.0)
 ```
 on the log-odds scale.
 
+When random site effects are included ((1 | site)):
+```
+site random-effect SD ~ student_t(3, 0, 2.5)
+```
+
 #### PTB prior sensitivity analyses evaluate:
 
 | Prior | Meaning |
