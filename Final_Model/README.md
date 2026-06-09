@@ -99,7 +99,7 @@ Posterior probabilities:
 ### Bayesian Priors and Sampler Settings
 #### Gestational Age (GA) Priors
 
-For Bayesian GA models, haplogroup fixed effects use:
+For final Bayesian GA models, haplogroup fixed effects use:
 ```
 normal(0, 0.5)
 ```
