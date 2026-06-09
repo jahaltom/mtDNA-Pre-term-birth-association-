@@ -209,9 +209,6 @@ df <- df_raw %>%
       ~ as.numeric(scale(.x))
     ),
 
-    # binary
-    across(all_of(columnBin), as.numeric),
-
     # GA outcome scaled for modeling
     GAGEBRTH = as.numeric(scale(GAGEBRTH))
   )
