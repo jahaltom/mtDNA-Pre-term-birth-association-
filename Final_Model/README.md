@@ -52,7 +52,7 @@ Outputs:
 - Odds ratios (OR)
 - Confidence intervals
 - Forest plots
-- Estimated marginal means (EMMs)
+- Estimated marginal means (predicted PTB probabilities)
 - Pairwise comparisons
 
 ---
@@ -102,6 +102,11 @@ PTB models are fit under:
 
 ---
 
+## Posterior summaries include:
+- Posterior mean estimates
+- 95% credible intervals
+- Posterior probability metrics
+  
 ## Input File
 
 Required input:
