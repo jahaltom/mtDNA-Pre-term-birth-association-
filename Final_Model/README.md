@@ -10,10 +10,10 @@ using both **Frequentist** (`glmmTMB`) and **Bayesian** (`brms`) frameworks. The
 
 - Dynamic covariate selection at runtime
 - Fixed (`site`) or random (`(1 | site)`) site effects
-- Gaussian and Student-t GA models
+- Frequentist Gaussian and Student-t GA models
 - Bayesian posterior probability estimation
 - Prior sensitivity analyses for PTB
-- Multiple testing correction (Benjamini–Hochberg)
+- Multiple testing correction (Benjamini–Hochberg) is restricted to haplogroup (`MainHap`) effects.
 - Sparse-cell detection
 - Automated convergence diagnostics
 
@@ -91,7 +91,7 @@ Posterior probabilities:
 
 ## Prior Sensitivity Analysis
 
-
+PTB Bayesian models are re-fit under multiple prior specifications to evaluate robustness of haplogroup effects to prior choice.
 
 
 ---
@@ -132,7 +132,7 @@ site random-effect SD ~ student_t(3, 0, 2.5)
 |---|---|
 | `Normal(0,0.5)` | Strong shrinkage |
 | `Normal(0,1.0)` | Moderate shrinkage |
-| `Normal(0,2.5)` | Weakly informative |
+| `Normal(0,2.5)` | Weak shrinkage / diffuse prior |
 | `brms_default` | Default weakly informative priors |
 
 ### Sampler Settings
