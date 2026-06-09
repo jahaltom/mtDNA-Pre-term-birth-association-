@@ -354,7 +354,7 @@ make_pri_ptb <- function(covariates, hap_names, sd_hap = 1.0) {
   pri
 }
 pri_ptb <- make_pri_ptb(covariates, hap_names, sd_hap = 1.0)
-ctrl_ptb <- list(adapt_delta = 0.99,  max_treedepth = 13)
+ctrl_ptb <- list(adapt_delta = 0.995,  max_treedepth = 13)
 
 # ============================
 # Frequentist: glmmTMB
@@ -660,7 +660,8 @@ ptb_brm_final <- brm(as.formula(paste("PTB ~ MainHap +", covariates)),
               data=df, family=bernoulli(),
               prior=pri_ptb,
               chains=2, iter=3000, warmup=1000,
-              control = ctrl_ptb 
+              control = ctrl_ptb, init = 0, seed = 2025
+)
 
 
 fx_RE <- as.data.frame(summary(ptb_brm_final)$fixed)
