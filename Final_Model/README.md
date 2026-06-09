@@ -198,7 +198,11 @@ Metadata.Final.tsv
 
 ---
 
-Categorical (as.factor), continuous/ordinal scaled, binary as numeric.  GA outcome scaled for modeling.
+## Data preprocessing
+- Categorical variables converted to factors (as.factor)
+- Continuous and ordinal variables standardized (scale())
+- Binary variables converted to numeric (0/1)
+- Gestational age (GAGEBRTH) standardized for model fitting and back-transformed to days for interpretation
 
 ## Running the Pipeline
 
@@ -344,6 +348,8 @@ Benjamini–Hochberg correction is applied to **MainHap effects only**.
 ---
 
 ## Convergence Guidelines
+
+Automated convergence diagnostics are saved for all Bayesian models.
 
 Recommended thresholds:
 
