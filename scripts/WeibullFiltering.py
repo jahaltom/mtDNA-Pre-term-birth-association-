@@ -301,3 +301,47 @@ for col in contFeat:
     plt.tight_layout()
     plt.savefig(f"{output_dir}PTBBox_{col}.All.png")
     plt.close()
+
+
+
+############
+##########Plot categorical features 
+for col in catigoricalFeat:
+    if col == target:
+        continue
+
+    plot_df = (
+        filtered_data
+        .groupby(col)["PTB"]
+        .agg(["mean", "count"])
+        .reset_index()
+        .rename(columns={"mean": "PTB_Rate", "count": "N"})
+    )
+
+    plot_df["PTB_Rate_Percent"] = plot_df["PTB_Rate"] * 100
+
+    plt.figure(figsize=(8, 4))
+    sns.barplot(data=plot_df, x=col, y="PTB_Rate_Percent")
+    plt.xticks(rotation=45, ha="right")
+    plt.ylabel("PTB rate (%)")
+    plt.xlabel(col)
+    plt.title(f"PTB rate by {col}")
+    plt.tight_layout()
+    plt.savefig(f"{output_dir}PTBRate_By_{col}.All.png")
+    plt.close()
+
+
+
+for col in catigoricalFeat:
+    if col == target:
+        continue
+
+    plt.figure(figsize=(8, 4))
+    sns.boxplot(data=filtered_data, x=col, y="GAGEBRTH")
+    plt.xticks(rotation=45, ha="right")
+    plt.ylabel("Gestational age at birth")
+    plt.xlabel(col)
+    plt.title(f"Gestational age by {col}")
+    plt.tight_layout()
+    plt.savefig(f"{output_dir}GAGEBRTH_Box_By_{col}.All.png")
+    plt.close()
