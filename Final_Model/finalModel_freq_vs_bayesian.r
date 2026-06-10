@@ -152,8 +152,6 @@ if (!dir.exists(OUTDIR)) {
 
 columnCat <- c(
   "FUEL_FOR_COOK",
-  "site",
-  "MainHap",
   "BABY_SEX",
   "CHRON_HTN",
   "DIABETES",
@@ -728,10 +726,9 @@ covariate_vars <- covariate_vars[!grepl("\\|", covariate_vars)]
 # Keep only real column names
 covariate_vars <- covariate_vars[covariate_vars %in% names(df_raw)]
 
-# Identify which selected covariates are continuous/binary/categorical
-summary_cont <- intersect(covariate_vars, columnCont)
-summary_bin  <- intersect(covariate_vars, columnBin)
-summary_cat  <- intersect(covariate_vars, columnCat)
+# Identify which selected covariates are continuous/categorical
+summary_cont <- intersect(covariate_vars, cov_cont)
+summary_cat  <- intersect(covariate_vars, cov_cat)
 
 site_summary <- df_raw %>%
   group_by(site) %>%
@@ -750,15 +747,7 @@ site_summary <- df_raw %>%
         sd   = ~ sd(.x, na.rm = TRUE)
       ),
       .names = "{.col}_{.fn}"
-    ),
 
-    across(
-      all_of(summary_bin),
-      list(
-        n_yes = ~ sum(.x == 1, na.rm = TRUE),
-        prop_yes = ~ mean(.x == 1, na.rm = TRUE)
-      ),
-      .names = "{.col}_{.fn}"
     ),
 
     .groups = "drop"
