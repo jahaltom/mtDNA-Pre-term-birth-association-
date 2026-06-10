@@ -153,7 +153,14 @@ if (!dir.exists(OUTDIR)) {
 columnCat <- c(
   "FUEL_FOR_COOK",
   "site",
-  "MainHap"
+  "MainHap",
+  "BABY_SEX",
+  "CHRON_HTN",
+  "DIABETES",
+  "HH_ELECTRICITY",
+  "TB",
+  "THYROID",
+  "TYP_HOUSE"
 )
 
 columnCont <- c(
@@ -172,15 +179,7 @@ columnCont <- c(
   "PC5"
 )
 
-columnBin <- c(
-  "BABY_SEX",
-  "CHRON_HTN",
-  "DIABETES",
-  "HH_ELECTRICITY",
-  "TB",
-  "THYROID",
-  "TYP_HOUSE"
-)
+
 
 
 
@@ -197,29 +196,38 @@ ga_sd_raw   <- sd(df_raw$GAGEBRTH, na.rm = TRUE)
 # LOAD & PREPROCESS FOR MODELING
 # ---------------------------------
 
+# Covariate string
+
+
+# Parse variables from formula-like string
+cov_vars <- trimws(unlist(strsplit(covariates, "\\+")))
+
+# Which are categorical vs continuous
+cov_cat  <- intersect(cov_vars, columnCat)
+cov_cont <- intersect(cov_vars, columnCont)
+
+
+
+
 df <- df_raw %>%
   mutate(
 
-    # categorical
-    across(all_of(columnCat), as.factor),
+    # only categorical vars in cov string
+    across(all_of(cov_cat), as.factor),
+    site=as.factor(site),
+    MainHap=as.factor(MainHap),
 
-    # continuous / ordinal scaled IN PLACE
+    # only continuous vars in cov string scaled in place
     across(
-      all_of(columnCont),
+      all_of(cov_cont),
       ~ as.numeric(scale(.x))
     ),
 
-    # GA outcome scaled for modeling
+    # GA outcome scaled
     GAGEBRTH = as.numeric(scale(GAGEBRTH))
   )
 
 
-# Validate binary columns are 0/1/NA only
-bad_bin <- sapply(df[columnBin], function(x) any(!is.na(x) & !x %in% c(0, 1)))
-if (any(bad_bin)) {
-  stop("Binary columns contain non-0/1 values: ",
-       paste(names(bad_bin)[bad_bin], collapse = ", "))
-}
 
 
 # Ensure reference haplogroup is present; otherwise pick the most frequent
