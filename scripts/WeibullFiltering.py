@@ -113,9 +113,9 @@ print(classToRemove)
 class_counts = results.groupby('Column')['Value'].nunique()
 # Identify columns with exactly two unique classes
 columns_with_two_classes = class_counts[class_counts == 2].index.tolist()
-print("Categorical variables with exactly two classes.  Will be used as binary variables for Feature selection:", str(columns_with_two_classes).replace(" ", ""))
+print("Binary categorical variables for feature selection.  Will be used as binary variables for Feature selection:", str(columns_with_two_classes).replace(" ", ""))
 columns_with_moreThantwo_classes = class_counts[class_counts > 2].index.tolist()
-print("Categorical variables for Feature selection:", str(columns_with_moreThantwo_classes).replace(" ", ""))
+print("Multi-class categorical variables for feature selection::", str(columns_with_moreThantwo_classes).replace(" ", ""))
 
 
 
