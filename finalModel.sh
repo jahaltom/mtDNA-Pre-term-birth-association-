@@ -101,6 +101,6 @@ python  ../scripts/CombinePCA.py
 
 
 module load R
-sed -i "s/MainHap/$target/g" finalModel_freq_vs_bayesian.r
-Rscript finalModel_freq_vs_bayesian.r REF COVARIATES
+sed "s/MainHap/$target/g" finalModel_freq_vs_bayesian.r > finalModel_freq_vs_bayesian_IDENT.r
+Rscript finalModel_freq_vs_bayesian_IDENT.r REF COVARIATES
 
