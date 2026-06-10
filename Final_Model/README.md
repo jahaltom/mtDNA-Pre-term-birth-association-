@@ -180,6 +180,13 @@ Metadata.Final.tsv
 
 #### Categorical Covariates
 - `FUEL_FOR_COOK`
+- - `BABY_SEX`
+- `CHRON_HTN`
+- `DIABETES`
+- `HH_ELECTRICITY`
+- `TB`
+- `THYROID`
+- `TYP_HOUSE`
 #### Continuous / Ordinal Covariates
 - `PW_AGE`
 - `PW_EDUCATION`
@@ -191,21 +198,14 @@ Metadata.Final.tsv
 - `DRINKING_SOURCE`
 - `PC1–PC5`
 
-#### Binary Covariates
-- `BABY_SEX`
-- `CHRON_HTN`
-- `DIABETES`
-- `HH_ELECTRICITY`
-- `TB`
-- `THYROID`
-- `TYP_HOUSE`
+
+
 
 ---
 
 ## Data preprocessing
 - Categorical variables converted to factors (as.factor)
 - Continuous and ordinal variables standardized (scale())
-- Binary variables must be to numeric (0/1)
 - Gestational age (GAGEBRTH) standardized for model fitting and back-transformed to days for interpretation
 
 ## Running the Pipeline
