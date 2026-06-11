@@ -382,10 +382,12 @@ tidy_ga_gaussian <- broom.mixed::tidy(
 ) %>%
   bh_on_hap() %>%
   mutate(
+    label = robust_hap_label(term),
     beta_days = estimate * ga_sd_raw,
     lo_days   = conf.low * ga_sd_raw,
     hi_days   = conf.high * ga_sd_raw
-  )
+  ) %>%
+  select(label, everything())
 
 write_csv(
   tidy_ga_gaussian,
@@ -412,10 +414,12 @@ tidy_ga_student <- broom.mixed::tidy(
 ) %>%
   bh_on_hap() %>%
   mutate(
+    label = robust_hap_label(term),
     beta_days = estimate * ga_sd_raw,
     lo_days   = conf.low * ga_sd_raw,
     hi_days   = conf.high * ga_sd_raw
-  )
+  ) %>%
+  select(label, everything())
 
 write_csv(
   tidy_ga_student,
@@ -446,7 +450,11 @@ write_csv(
 ptb_tmb <- glmmTMB(as.formula(paste("PTB ~ MainHap +", covariates)),
                    data = df, family = binomial())
 fx_ptb  <- broom.mixed::tidy(ptb_tmb, effects = "fixed", conf.int = TRUE) %>%
-  bh_on_hap() %>% to_or()
+  bh_on_hap() %>%
+  to_or() %>%
+  mutate(label = robust_hap_label(term)) %>%
+  select(label, everything())
+
 write_csv(fx_ptb, file.path(OUTDIR, "ptb_glmmtmb.csv"))
 
 analysis_label <- if ("site" %in% names(df) &&
@@ -551,8 +559,12 @@ m <- hap_mask(fx_brm_ga$term, var = "MainHap")
 fx_brm_ga$padj_signprob <- NA_real_
 fx_brm_ga$padj_signprob[m] <- p.adjust(fx_brm_ga$p_two[m], method = "BH")
 
+fx_brm_ga <- fx_brm_ga %>%
+  select(label, term, everything())
+
 # 5) Write it out
 readr::write_csv(fx_brm_ga, file.path(OUTDIR, "ga_brm_posterior_probs.csv"))
+
 
 
 
@@ -666,8 +678,65 @@ ptb_brm_final <- brm(as.formula(paste("PTB ~ MainHap +", covariates)),
 )
 
 
-fx_RE <- as.data.frame(summary(ptb_brm_final)$fixed)
-write_csv(fx_RE, file.path(OUTDIR, "ptb_brm_final_fixed_effects.csv"))
+# ---- Final PTB brms fixed effects with posterior probabilities ----
+
+# Summary table
+fx_RE <- as.data.frame(summary(ptb_brm_final)$fixed) %>%
+  rownames_to_column("term") %>%
+  mutate(
+    label = robust_hap_label(term),
+
+    # convert log-odds to odds ratios
+    OR      = exp(Estimate),
+    OR_low  = exp(`l-95% CI`),
+    OR_hi   = exp(`u-95% CI`)
+  )
+
+# Posterior draws
+draws <- posterior::as_draws_df(ptb_brm_final)
+
+fix_cols <- grep("^b_", names(draws), value = TRUE)
+
+post_tab <- lapply(fix_cols, function(nm) {
+  s <- as.numeric(draws[[nm]])  # log-OR draws
+
+  tibble(
+    term = sub("^b_", "", nm),
+
+    # posterior probability of increased PTB odds
+    Pr_OR_gt_1 = mean(exp(s) > 1),
+
+    # Bayesian two-sided sign probability
+    p_two = 2 * pmin(mean(s > 0), mean(s < 0))
+  )
+}) %>%
+  bind_rows()
+
+# Merge posterior probabilities
+fx_RE <- fx_RE %>%
+  left_join(post_tab, by = "term")
+
+# Optional: BH adjust only haplogroups
+m <- hap_mask(fx_RE$term, var = "MainHap")
+fx_RE$padj <- NA_real_
+fx_RE$padj[m] <- p.adjust(fx_RE$p_two[m], method = "BH")
+
+# Order columns nicely
+fx_RE <- fx_RE %>%
+  select(
+    label,
+    term,
+    OR, OR_low, OR_hi,
+    Estimate, Est.Error,
+    `l-95% CI`, `u-95% CI`,
+    Pr_OR_gt_1, p_two, padj,
+    Rhat, Bulk_ESS, Tail_ESS
+  )
+
+write_csv(
+  fx_RE,
+  file.path(OUTDIR, "ptb_brm_final_fixed_effects.csv")
+)
 
 sink(file.path(OUTDIR, "ptb_brm_summary.txt"))
 print(summary(ptb_brm_final))   # or your final PTB brms object name
@@ -788,6 +857,44 @@ write_csv(hap_site_ptb_table,
           file.path(OUTDIR, "hap_site_ptb_table.csv"))
 
 print(hap_site_ptb_table)
+
+# ---- Quick visualization: PTB rate by haplogroup and site ----
+hap_site_ptb_plot <- hap_site_ptb_table %>%
+  mutate(
+    MainHap = forcats::fct_reorder(MainHap, ptb_rate, .fun = max, .desc = TRUE),
+    ptb_rate_percent = ptb_rate * 100
+  )
+
+gg <- ggplot(
+  hap_site_ptb_plot,
+  aes(x = MainHap, y = ptb_rate_percent, fill = site)
+) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+  geom_text(
+    aes(label = paste0(round(ptb_rate_percent, 1), "%")),
+    position = position_dodge(width = 0.8),
+    vjust = -0.3,
+    size = 3
+  ) +
+  theme_bw(13) +
+  labs(
+    title = paste0("PTB rate by haplogroup and site; ref: ", ref_name),
+    x = "Haplogroup",
+    y = "PTB rate (%)",
+    fill = "Site"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+ggsave(
+  file.path(OUTDIR, "hap_site_ptb_rate_barplot.png"),
+  gg,
+  width = 9,
+  height = 5.5,
+  dpi = 300
+)
+
 
 # ---- Flag sparse / problematic cells ----
 hap_site_ptb_flags <- hap_site_ptb_table %>%
