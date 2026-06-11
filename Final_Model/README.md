@@ -304,6 +304,7 @@ Encodes:
 | `site_summary.csv` | Site-level descriptive statistics |
 | `hap_ptb_counts.csv` | PTB counts by haplogroup |
 | `hap_site_ptb_table.csv` | Haplogroup × site PTB table |
+| `hap_site_ptb_rate_barplot.png` | Haplogroup × site PTB barplot |
 | `hap_site_ptb_flags.csv` | Sparse/problematic cell flags (eg. sparse_cell = n_total < 5,low_events  = n_ptb < 2) |
 | `hap_site_ptb_problem_cells.csv` | Problematic cells only |
 | `model_formula_used.txt` | Exact formulas and parameters |
