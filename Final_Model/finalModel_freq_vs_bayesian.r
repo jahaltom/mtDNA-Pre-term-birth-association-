@@ -859,23 +859,51 @@ write_csv(hap_site_ptb_table,
 print(hap_site_ptb_table)
 
 # ---- Quick visualization: PTB rate by haplogroup and site ----
+
 hap_site_ptb_plot <- hap_site_ptb_table %>%
   mutate(
     MainHap = forcats::fct_reorder(MainHap, ptb_rate, .fun = max, .desc = TRUE),
     ptb_rate_percent = ptb_rate * 100
   )
 
+# Total N per haplogroup (across sites)
+hap_n <- hap_site_ptb_plot %>%
+  group_by(MainHap) %>%
+  summarise(n_total = sum(n_total), .groups = "drop")
+
 gg <- ggplot(
   hap_site_ptb_plot,
   aes(x = MainHap, y = ptb_rate_percent, fill = site)
 ) +
-  geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+  geom_col(
+    position = position_dodge(width = 0.8),
+    width = 0.7
+  ) +
+
+  # PTB % labels above bars
   geom_text(
     aes(label = paste0(round(ptb_rate_percent, 1), "%")),
     position = position_dodge(width = 0.8),
     vjust = -0.3,
     size = 3
   ) +
+
+  # Haplogroup N labels below x-axis
+  geom_text(
+    data = hap_n,
+    aes(
+      x = MainHap,
+      y = -2,
+      label = paste0("(N=", n_total, ")")
+    ),
+    inherit.aes = FALSE,
+    size = 3
+  ) +
+
+  coord_cartesian(
+    ylim = c(-4, max(hap_site_ptb_plot$ptb_rate_percent) * 1.15)
+  ) +
+
   theme_bw(13) +
   labs(
     title = paste0("PTB rate by haplogroup and site; ref: ", ref_name),
@@ -884,17 +912,17 @@ gg <- ggplot(
     fill = "Site"
   ) +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.margin = margin(10, 10, 25, 10)
   )
 
 ggsave(
   file.path(OUTDIR, "hap_site_ptb_rate_barplot.png"),
   gg,
-  width = 9,
-  height = 5.5,
+  width = 10,
+  height = 6,
   dpi = 300
 )
-
 
 # ---- Flag sparse / problematic cells ----
 hap_site_ptb_flags <- hap_site_ptb_table %>%
