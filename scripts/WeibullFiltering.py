@@ -276,43 +276,82 @@ plt.savefig("weibullFiltering.png", bbox_inches="tight")
 plt.clf()
 
 
-############
-##########Plot continuous features 
-# Output directory for plots
+
+
+# -----------------------------
+# Output directory
+# -----------------------------
 output_dir = "plotsAll/"
 os.makedirs(output_dir, exist_ok=True)
 
+# -----------------------------
+# Settings
+# -----------------------------
+SITE_COL = "site"
+GA_COL = "GAGEBRTH"
+PTB_COL = "PTB"
+
+sns.set_theme(style="whitegrid")
+
+# -----------------------------
+# Continuous features
+# -----------------------------
 for col in contFeat:
-    # Scatter plots for GAGEBRTH
-    plt.figure(figsize=(6, 4))
-    sns.regplot(x=filtered_data[col], y=filtered_data['GAGEBRTH'], scatter_kws={'alpha': 0.6})
-    plt.title(f"{col} vs. GAGEBRTH")
+
+    # -------------------------
+    # Scatter: continuous feature vs GA, colored by site
+    # -------------------------
+    plt.figure(figsize=(7, 5))
+
+    sns.scatterplot(
+        data=filtered_data,
+        x=col,
+        y=GA_COL,
+        hue=SITE_COL,
+        alpha=0.6
+    )
+
+    plt.title(f"{col} vs. Gestational Age by Site")
     plt.xlabel(col)
-    plt.ylabel("GAGEBRTH (Gestational Age in Days)")
+    plt.ylabel("Gestational Age at Birth (days)")
+    plt.legend(title="Site", bbox_to_anchor=(1.05, 1), loc="upper left")
     plt.tight_layout()
-    plt.savefig(f"{output_dir}GAGEBRTHScatter_{col}.All.png")
+
+    plt.savefig(f"{output_dir}GAGEBRTHScatter_{col}.All_BySite.png", dpi=300)
     plt.close()
-    # Box plots for PTB
-    plt.figure(figsize=(6, 4))
-    sns.boxplot(x=filtered_data['PTB'], y=filtered_data[col])
-    plt.title(f"{col} vs. PTB")
-    plt.xlabel("PTB (0 = Full-term, 1 = Pre-term)")
+
+    # -------------------------
+    # Boxplot: continuous feature by PTB, colored by site
+    # -------------------------
+    plt.figure(figsize=(7, 5))
+
+    sns.boxplot(
+        data=filtered_data,
+        x=PTB_COL,
+        y=col,
+        hue=SITE_COL
+    )
+
+    plt.title(f"{col} by PTB Status and Site")
+    plt.xlabel("PTB Status (0 = Full-term, 1 = Preterm)")
     plt.ylabel(col)
+    plt.legend(title="Site", bbox_to_anchor=(1.05, 1), loc="upper left")
     plt.tight_layout()
-    plt.savefig(f"{output_dir}PTBBox_{col}.All.png")
+
+    plt.savefig(f"{output_dir}PTBBox_{col}.All_BySite.png", dpi=300)
     plt.close()
 
 
-
-############
-##########Plot categorical features 
+# -----------------------------
+# Categorical features: PTB rate by category and site
+# -----------------------------
 for col in catigoricalFeat:
     if col == target:
         continue
 
     plot_df = (
         filtered_data
-        .groupby(col)["PTB"]
+        .groupby([col, SITE_COL])[PTB_COL]
         .agg(["mean", "count"])
         .reset_index()
         .rename(columns={"mean": "PTB_Rate", "count": "N"})
@@ -320,28 +359,54 @@ for col in catigoricalFeat:
 
     plot_df["PTB_Rate_Percent"] = plot_df["PTB_Rate"] * 100
 
-    plt.figure(figsize=(8, 4))
-    sns.barplot(data=plot_df, x=col, y="PTB_Rate_Percent")
+    plt.figure(figsize=(9, 5))
+
+    ax = sns.barplot(
+        data=plot_df,
+        x=col,
+        y="PTB_Rate_Percent",
+        hue=SITE_COL
+    )
+
     plt.xticks(rotation=45, ha="right")
     plt.ylabel("PTB rate (%)")
     plt.xlabel(col)
-    plt.title(f"PTB rate by {col}")
+    plt.title(f"PTB Rate by {col} and Site")
+    plt.legend(title="Site", bbox_to_anchor=(1.05, 1), loc="upper left")
+
+    # Optional N labels above bars
+    for container in ax.containers:
+        ax.bar_label(container, fmt="%.1f", fontsize=8, padding=2)
+
     plt.tight_layout()
-    plt.savefig(f"{output_dir}PTBRate_By_{col}.All.png")
+    plt.savefig(f"{output_dir}PTBRate_By_{col}.All_BySite.png", dpi=300)
     plt.close()
 
 
-
+# -----------------------------
+# Categorical features: GA by category and site
+# -----------------------------
 for col in catigoricalFeat:
     if col == target:
         continue
 
-    plt.figure(figsize=(8, 4))
-    sns.boxplot(data=filtered_data, x=col, y="GAGEBRTH")
+    plt.figure(figsize=(9, 5))
+
+    sns.boxplot(
+        data=filtered_data,
+        x=col,
+        y=GA_COL,
+        hue=SITE_COL
+    )
+
     plt.xticks(rotation=45, ha="right")
-    plt.ylabel("Gestational age at birth")
+    plt.ylabel("Gestational Age at Birth (days)")
     plt.xlabel(col)
-    plt.title(f"Gestational age by {col}")
+    plt.title(f"Gestational Age by {col} and Site")
+    plt.legend(title="Site", bbox_to_anchor=(1.05, 1), loc="upper left")
     plt.tight_layout()
-    plt.savefig(f"{output_dir}GAGEBRTH_Box_By_{col}.All.png")
+
+    plt.savefig(f"{output_dir}GAGEBRTH_Box_By_{col}.All_BySite.png", dpi=300)
     plt.close()
+
+print(f"Saved plots to: {output_dir}")
