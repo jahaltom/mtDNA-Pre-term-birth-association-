@@ -346,7 +346,7 @@ for col in contFeat:
 # Categorical features: PTB rate by category and site
 # -----------------------------
 for col in catigoricalFeat:
-    if col == target:
+    if col in [target, SITE_COL]:
         continue
 
     plot_df = (
@@ -387,7 +387,7 @@ for col in catigoricalFeat:
 # Categorical features: GA by category and site
 # -----------------------------
 for col in catigoricalFeat:
-    if col == target:
+    if col in [target, SITE_COL]:
         continue
 
     plt.figure(figsize=(9, 5))
