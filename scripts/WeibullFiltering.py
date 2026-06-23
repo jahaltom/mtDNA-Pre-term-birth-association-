@@ -103,7 +103,7 @@ except:
 
 
 #categorical variables to keep
-print("Categorical variables to keep for future model")
+print("Categorical variables to keep for workflow2.sh")
 print(str(set(results[results["Column"].duplicated(keep=False)]["Column"].to_list())).replace(" ", ""))
 print("Categorical variables excluded from future model")
 print(featToExclude)
