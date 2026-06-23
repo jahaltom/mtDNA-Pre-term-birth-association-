@@ -35,7 +35,7 @@ Takes in Metadata.C.tsv or Metadata.M.tsv and analyzes the dataset for missing d
    - Defines lower/upper cutoff thresholds, in days, for outlier detection (1st percentile and 99th percentile).
    - Filters the data on these threshholds (>= lower_cutoff) & <= upper_cutoff). 
 - For each categorical variable class, determine the number of pre-term births and normal births (PTB=1 normal=0) and the % of PTB=1. Remove rows(samples) corresponding to a class from a categorical variable that total counts (PTB=1 normal=0) < 20. If only 1 class would remain after the prior filtering, don't exclude any samples and simply exclude the categorical variable from any future model. Reports categorical variables to keep/exclude for future models (Those kept are in CategoricalVariablesToKeepTable.tsv). Also reports those classes removed due to low counts.
-- Also reports categorical variables with exactly two classes (binary). These will be used as binary variables for Feature selection. Outputs Categorical variables for Feature selection.
+- Also reports categorical variables with exactly two classes (binary). These will be used as binary variables for Feature selection. Outputs Multi-class categorical variables for feature selection.
 - Reports Weibull parameters (Shape, Scale, and Location) and upper/lower cutoffs in days.
   
 - Multi-site analysis:
@@ -48,7 +48,7 @@ Takes in Metadata.C.tsv or Metadata.M.tsv and analyzes the dataset for missing d
 
 - Outputs filtered metadata as (Metadata.Weibull.tsv). Also outputs (IDs2.txt) which are only Sample_IDs  from (Metadata.Weibull.tsv) which will be used for sample selection form the nDNA plink data. 
 - Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
-- All continuous features are ploted against PTB and GAGEBRTH (in plotsAll). 
+- All continuous and categorical  features are ploted against PTB and GAGEBRTH (in plotsAll) labeled by site. 
 
 
 #### CombinePCA.py:    
