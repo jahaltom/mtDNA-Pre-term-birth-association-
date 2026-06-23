@@ -70,7 +70,7 @@ For the single-site analysis:overall: >= 20 total and >= 4 PTB. Finally, it save
 
 
 #### workflow2.sh
-- Looking at out.txt from above, place "Categorical variables to keep for future model" in columnCat below.
+- Looking at out.txt from above, place "Categorical variables to keep for workflow2.sh" in columnCat below.
 - Look for outliers in continuous features in plotsAll. 
 - Carry same continuous features down from input into workflow.sh.
 - Update workflow2.sh and run.
@@ -101,8 +101,8 @@ sbatch workflow2.sh
 - Look at PCA plots and make sure they look good.
 - Carry same continuous features down from input into workflow.sh.
 - See out.txt for;
-	- Categorical variables with exactly two classes.  Will be used as binary variables for Feature selection. Place in columnBin
-	- Categorical variables for Feature selection. Place in columnCat
+	- Binary categorical variables for feature selection. Place in columnBin
+	- Multi-class categorical variables for feature selection. Place in columnCat
 
 
 ```
