@@ -137,7 +137,7 @@ print("Multi-class categorical variables for feature selection::", str(columns_w
 #   - overall: >= min_n_total total, >= min_events_total PTB
 # Single-site analysis:
 #   - overall: >= min_n_total total, >= min_events_total PTB
-# Unsupported haplogroups are relabeled as Other_<population>.
+
 
 # --- RULES ---
 n_sites = filtered_data["site"].nunique()
@@ -204,7 +204,7 @@ else:
 
 print("Keeping haplogroups:", keep_haps)
 
-# --- DROP unsupported haplogroups entirely (no "Other") ---
+
 
 print("\nDropping unsupported haplogroups...")
 
