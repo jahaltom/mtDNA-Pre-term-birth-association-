@@ -60,7 +60,10 @@ for col in catigoricalFeat:
         # Ensure there are no missing categories (0 or 1)
         ptb_counts = ptb_counts.reindex([0, 1], fill_value=0)
         total_counts = ptb_counts.sum() 
-        if total_counts < 20:
+
+        has_both_outcomes = (ptb_counts[0] >= 1) and (ptb_counts[1] >= 1)
+
+        if (total_counts < 20) or (not has_both_outcomes):
             troubleClass.append({
                 "Column": col,
                 "Value": value,
@@ -242,6 +245,50 @@ filtered_data.to_csv('Metadata.Weibull.tsv', index=False, sep="\t")
 #Need dummy column for plink PCA
 filtered_data["Dummy"]=0
 filtered_data[["Dummy","Sample_ID"]].to_csv("IDs2.txt", index=False,header=False,sep='\t') 
+
+
+
+
+final_cat_summary = []
+
+for col in catigoricalFeat:
+
+    for value in sorted(filtered_data[col].dropna().unique()):
+
+        ptb_counts = (
+            filtered_data[filtered_data[col] == value]["PTB"]
+            .value_counts()
+            .reindex([0,1], fill_value=0)
+        )
+
+        total = ptb_counts.sum()
+
+        final_cat_summary.append({
+            "Column": col,
+            "Value": value,
+            "Term_Count": ptb_counts[0],
+            "PTB_Count": ptb_counts[1],
+            "Total": total,
+            "PTB_Percent": round(ptb_counts[1] / total * 100, 2)
+        })
+
+final_cat_summary = pd.DataFrame(final_cat_summary)
+
+
+print("\nFinal Categorical Variables After All Filtering")
+print(final_cat_summary.sort_values(["Column","Value"]))
+
+final_cat_summary.to_csv(
+    "FinalCategoricalClassSummary.tsv",
+    sep="\t",
+    index=False
+)
+
+
+
+
+
+
 
 
 
