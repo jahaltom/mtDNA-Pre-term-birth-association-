@@ -68,23 +68,25 @@ else:
     n_sites = 0
 
 if ("site" in df.columns) and (n_sites >= 3):
-    # With 3+ sites, a true unseen-site test is meaningful
     groups_all = df["site"].values
     gss = GroupShuffleSplit(n_splits=1, test_size=0.3, random_state=42)
     train_idx, test_idx = next(gss.split(X, y, groups=groups_all))
+
     X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
     y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+    groups_train = groups_all[train_idx]
+
 elif ("site" in df.columns) and (n_sites == 2):
-    # With only 2 sites, prefer site-aware CV elsewhere and
-    # just do a standard row-wise split here
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=42
     )
+    groups_train = df.loc[X_train.index, "site"].values
+
 else:
-    # No / insufficient site info → standard split
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=42
     )
+    groups_train = None
 
 # Preprocessing pipeline
 preprocessor = ColumnTransformer(
@@ -101,8 +103,19 @@ X_test_preprocessed = preprocessor.transform(X_test)
 
 
 
+
+
+
+from sklearn.model_selection import GroupKFold, KFold
+def get_cv():
+    if groups_train is not None and len(np.unique(groups_train)) >= 2:
+        return GroupKFold(n_splits=min(5, len(np.unique(groups_train)))).split(
+            X_train_preprocessed, y_train, groups_train
+        )
+    return KFold(n_splits=5, shuffle=True, random_state=42)
+    
 # Step 1: Ridge Regression
-ridge = RidgeCV(alphas=np.logspace(-3, 3, 13), cv=5)
+ridge = RidgeCV(alphas=np.logspace(-3, 3, 13), cv=get_cv())
 ridge.fit(X_train_preprocessed, y_train)
 
 evaluate_model_regression(ridge, X_test_preprocessed, y_test, "RidgeRegression")
@@ -120,7 +133,7 @@ with open(os.path.join("RidgeImportancee.txt"), "w") as r:
 
 
 # Lasso Regression for continuous prediction
-lasso = LassoCV(cv=5, max_iter=5000, random_state=42)
+lasso = LassoCV(cv=get_cv(), max_iter=5000, random_state=42)
 lasso.fit(X_train_preprocessed, y_train)  # y_train should be continuous, not binary
 evaluate_model_regression(lasso, X_test_preprocessed, y_test, "LassoRegression")
 
@@ -137,9 +150,9 @@ with open(os.path.join("LassoImportancee.txt"), "w") as l:
 
 # Step 3: ElasticNet Regression
 elasticnet = ElasticNetCV(
-    alphas=np.logspace(-3, 1, 20),   # 0.001 → 10
+    alphas=np.logspace(-3, 1, 20),
     l1_ratio=[0.1, 0.5, 0.9],
-    cv=5,
+    cv=get_cv(),
     random_state=42
 )
 
