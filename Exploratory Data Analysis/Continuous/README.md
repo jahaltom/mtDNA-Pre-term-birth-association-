@@ -1,5 +1,5 @@
 # ContinuousEDA.py
-- Takes in Metadata.Final.tsv and continuous columns. Standardize continuous variables with StandardScaler.
+- Takes in Metadata.Final.tsv and continuous columns. 
 
 - Target MainHap(Or SuperHap or SubHap) is one hot encoded and and 1st is not dropped.
   
