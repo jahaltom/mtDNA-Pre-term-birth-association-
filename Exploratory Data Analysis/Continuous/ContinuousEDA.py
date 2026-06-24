@@ -1,7 +1,6 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler
 from scipy.stats import pointbiserialr, pearsonr
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.stats.multitest import multipletests
@@ -25,9 +24,7 @@ df = pd.concat([df[continuous_vars + ['PTB', 'GAGEBRTH']], pd.get_dummies(df[sys
 # Create a deep copy of the DataFrame
 dfCont = df.copy(deep=True)
 
-# Standardize continuous variables
-scaler = StandardScaler()
-dfCont[continuous_vars] = scaler.fit_transform(dfCont[continuous_vars])
+
 
 # Output directory for plots
 output_dir = "plots/"
