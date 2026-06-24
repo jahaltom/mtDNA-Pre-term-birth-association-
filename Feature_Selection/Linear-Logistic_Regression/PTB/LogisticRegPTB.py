@@ -90,16 +90,19 @@ if ("site" in df.columns) and (n_sites >= 3):
     train_idx, test_idx = next(gss.split(X, y, groups=groups_all))
     X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
     y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+    groups_train = groups_all[train_idx]
 elif ("site" in df.columns) and (n_sites == 2):
     # With only 2 sites, we just do a stratified row-wise split
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=42, stratify=y
     )
+    groups_train = df.loc[X_train.index, "site"].values
 else:
     # No / insufficient site info → standard stratified split
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=42, stratify=y
     )
+    groups_train = None
 
 # -----------------------------
 # Preprocessing pipeline
@@ -119,14 +122,26 @@ X_test_preprocessed  = preprocessor.transform(X_test)
 
 
 
+from sklearn.model_selection import GroupKFold, StratifiedKFold
 
+def get_cv():
+    if groups_train is not None and len(np.unique(groups_train)) >= 2:
+        return GroupKFold(
+            n_splits=min(5, len(np.unique(groups_train)))
+        ).split(X_train_preprocessed, y_train, groups_train)
+
+    return StratifiedKFold(
+        n_splits=5,
+        shuffle=True,
+        random_state=42
+    )
 
 
 
 
 
 # Step 2a: Penalized Logistic Regression (Lasso)
-lasso = LogisticRegressionCV(penalty='l1', solver='saga', cv=5, max_iter=5000, class_weight='balanced', random_state=42)
+lasso = LogisticRegressionCV(penalty='l1', solver='saga', cv=get_cv(), max_iter=5000, class_weight='balanced', random_state=42)
 lasso.fit(X_train_preprocessed, y_train)
 
 evaluate_model(lasso, X_test_preprocessed, y_test, "LassoRegression")
@@ -149,7 +164,7 @@ plot_feat(lasso_coefs,"LASSO")
 
 
 # Step 2a: Ridge Regression (Ridge)
-ridge = LogisticRegressionCV(penalty='l2', solver='saga', cv=5, max_iter=5000, class_weight='balanced', random_state=42)
+ridge = LogisticRegressionCV(penalty='l2', solver='saga', cv=get_cv(), max_iter=5000, class_weight='balanced', random_state=42)
 ridge.fit(X_train_preprocessed, y_train)
 
 evaluate_model(ridge, X_test_preprocessed, y_test, "RidgeRegression")
