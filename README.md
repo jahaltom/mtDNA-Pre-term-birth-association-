@@ -100,6 +100,8 @@ sbatch workflow2.sh
 - If you have site as a categorical variable, you cannot use the population variable, and visa versa. 
 - Look at PCA plots and make sure they look good.
 - Carry same continuous features down from input into workflow.sh.
+- Do not include Haplogroup as a predictor in feature-selection scripts.
+- Do not include site if nDNA PCs are included, especially for joint multi-site runs.
 - See out.txt for;
 	- Binary categorical variables for feature selection. Place in columnBin
 	- Multi-class categorical variables for feature selection. Place in columnCat
