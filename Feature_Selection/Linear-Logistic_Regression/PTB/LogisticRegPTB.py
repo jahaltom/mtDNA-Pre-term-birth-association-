@@ -64,13 +64,14 @@ def evaluate_model(model, X_test, y_test, model_name):
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
 
-# Define features
-categorical_columns = sys.argv[1].split(',')
-continuous_columns = sys.argv[2].split(',')
-if len(sys.argv) > 3 and sys.argv[3].strip():
-    binary_columns = sys.argv[3].split(',')
-else:
-    binary_columns = []   # <- default when no 3rd arg
+def parse_arg(i):
+    if len(sys.argv) <= i or not sys.argv[i].strip():
+        return []
+    return [x.strip() for x in sys.argv[i].split(",") if x.strip()]
+
+categorical_columns = parse_arg(1)
+continuous_columns = parse_arg(2)
+binary_columns = parse_arg(3)
 
 X = df[categorical_columns + continuous_columns + binary_columns]
 y = df["PTB"]
