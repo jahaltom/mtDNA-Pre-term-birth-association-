@@ -413,7 +413,8 @@ seed = 2025
 
 ---
 
-## Author
 
-**Jeffrey Haltom, PhD**  
-Bioinformatics • Statistical Genetics • Mitochondrial Genomics
+
+## Summary Table Generator: 
+
+ModelSummaryTable.py: Aggregates outputs from all final Bayesian (brms) and frequentist (glmmTMB) haplogroup association analyses across populations into standardized manuscript-ready summary tables containing effect estimates, significance metrics, posterior probabilities, descriptive statistics, and model metadata for both gestational age and preterm birth.
