@@ -385,9 +385,9 @@ tidy_ga_gaussian <- broom.mixed::tidy(
     label = robust_hap_label(term),
     beta_days = estimate * ga_sd_raw,
     lo_days   = conf.low * ga_sd_raw,
-    hi_days   = conf.high * ga_sd_raw
+    hi_days   = conf.high * ga_sd_raw,
     AIC = AIC(ga_tmb_gaussian),
-    BIC = BIC(ga_tmb_gaussian),
+    BIC = BIC(ga_tmb_gaussian)
   ) %>%
   select(label, everything())
 
@@ -420,9 +420,9 @@ tidy_ga_student <- broom.mixed::tidy(
     label = robust_hap_label(term),
     beta_days = estimate * ga_sd_raw,
     lo_days   = conf.low * ga_sd_raw,
-    hi_days   = conf.high * ga_sd_raw
+    hi_days   = conf.high * ga_sd_raw,
     AIC = AIC(ga_tmb_student),
-    BIC = BIC(ga_tmb_student),
+    BIC = BIC(ga_tmb_student)
   ) %>%
   select(label, everything())
 
