@@ -386,6 +386,8 @@ tidy_ga_gaussian <- broom.mixed::tidy(
     beta_days = estimate * ga_sd_raw,
     lo_days   = conf.low * ga_sd_raw,
     hi_days   = conf.high * ga_sd_raw
+    AIC = AIC(ga_tmb_gaussian),
+    BIC = BIC(ga_tmb_gaussian),
   ) %>%
   select(label, everything())
 
@@ -399,17 +401,7 @@ png(file.path(OUTDIR, "ga_glmmtmb_gaussian_DHARMa.png"), width = 1200, height = 
 plot(simulateResiduals(ga_tmb_gaussian))
 dev.off()
 
-ga_gaussian_fit_stats <- tibble(
-  model_type = "GA_gaussian_glmmTMB",
-  AIC = AIC(ga_tmb_gaussian),
-  BIC = BIC(ga_tmb_gaussian),
-  logLik = as.numeric(logLik(ga_tmb_gaussian))
-)
 
-write_csv(
-  ga_gaussian_fit_stats,
-  file.path(OUTDIR, "ga_glmmtmb_gaussian_fit_stats.csv")
-)
 
 # ---- GA Student-t ----
 ga_tmb_student <- glmmTMB(
@@ -429,6 +421,8 @@ tidy_ga_student <- broom.mixed::tidy(
     beta_days = estimate * ga_sd_raw,
     lo_days   = conf.low * ga_sd_raw,
     hi_days   = conf.high * ga_sd_raw
+    AIC = AIC(ga_tmb_student),
+    BIC = BIC(ga_tmb_student),
   ) %>%
   select(label, everything())
 
@@ -442,17 +436,7 @@ png(file.path(OUTDIR, "ga_glmmtmb_student_t_DHARMa.png"), width = 1200, height =
 plot(simulateResiduals(ga_tmb_student))
 dev.off()
 
-ga_student_fit_stats <- tibble(
-  model_type = "GA_student_t_glmmTMB",
-  AIC = AIC(ga_tmb_student),
-  BIC = BIC(ga_tmb_student),
-  logLik = as.numeric(logLik(ga_tmb_student))
-)
 
-write_csv(
-  ga_student_fit_stats,
-  file.path(OUTDIR, "ga_glmmtMB_student_t_fit_stats.csv")
-)
 
 # ---- Compare GA Gaussian vs Student-t ----
 ga_model_compare <- tibble::tibble(
@@ -474,7 +458,11 @@ ptb_tmb <- glmmTMB(as.formula(paste("PTB ~ MainHap +", covariates)),
 fx_ptb  <- broom.mixed::tidy(ptb_tmb, effects = "fixed", conf.int = TRUE) %>%
   bh_on_hap() %>%
   to_or() %>%
-  mutate(label = robust_hap_label(term)) %>%
+  mutate(
+    label = robust_hap_label(term),
+    AIC = AIC(ptb_tmb),
+    BIC = BIC(ptb_tmb)) 
+%>%
   select(label, everything())
 
 write_csv(fx_ptb, file.path(OUTDIR, "ptb_glmmtmb.csv"))
@@ -508,17 +496,7 @@ if (!inherits(emm_ptb, "try-error")) {
             file.path(OUTDIR, "ptb_glmmtmb_emmeans_pairs_BH.csv"),
             row.names = FALSE)
 }
-ptb_fit_stats <- tibble(
-  model_type = "PTB_binomial_glmmTMB",
-  AIC = AIC(ptb_tmb),
-  BIC = BIC(ptb_tmb),
-  logLik = as.numeric(logLik(ptb_tmb))
-)
 
-write_csv(
-  ptb_fit_stats,
-  file.path(OUTDIR, "ptb_glmmtmb_fit_stats.csv")
-)
 # ============================
 # Bayesian: brms mirrors with robust priors/controls
 # ============================
