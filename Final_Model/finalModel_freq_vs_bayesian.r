@@ -461,8 +461,8 @@ fx_ptb  <- broom.mixed::tidy(ptb_tmb, effects = "fixed", conf.int = TRUE) %>%
   mutate(
     label = robust_hap_label(term),
     AIC = AIC(ptb_tmb),
-    BIC = BIC(ptb_tmb)) 
-%>%
+    BIC = BIC(ptb_tmb)
+)%>%
   select(label, everything())
 
 write_csv(fx_ptb, file.path(OUTDIR, "ptb_glmmtmb.csv"))
