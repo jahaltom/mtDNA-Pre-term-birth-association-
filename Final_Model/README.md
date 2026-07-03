@@ -261,10 +261,10 @@ Encodes:
 
 | File | Description |
 |---|---|
-| `ga_glmmtmb_gaussian.csv` | Gaussian GA model coefficients |
-| `ga_glmmtmb_student_t.csv` | Student-t GA coefficients |
+| `ga_glmmtmb_gaussian.csv` | Gaussian GA model coefficients with AIC/BIC |
+| `ga_glmmtmb_student_t.csv` | Student-t GA coefficients with AIC/BIC |
 | `ga_glmmtmb_gaussian_vs_student_t_AIC.csv` | AIC comparison |
-| `ptb_glmmtmb.csv` | PTB logistic model |
+| `ptb_glmmtmb.csv` | PTB logistic model with AIC/BIC |
 | `ptb_glmmtmb_site_forest.png` | PTB odds-ratio forest plot |
 | `ptb_glmmtmb_emmeans_probs.csv` | Predicted PTB probabilities |
 | `ptb_glmmtmb_emmeans_pairs_BH.csv` | Pairwise BH-adjusted comparisons |
