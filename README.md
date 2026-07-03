@@ -71,10 +71,10 @@ For the single-site analysis:overall: >= 20 total and >= 4 PTB. Finally, it save
 
 #### workflow2.sh
 - Looking at out.txt from above, place "Categorical variables to keep for workflow2.sh" in columnCat below.
-- Look for outliers in continuous features in plotsAll. 
+- Look for outliers in categorical/continuous features in plotsAll. 
 - Carry same continuous features down from input into workflow.sh.
 - Update workflow2.sh and run.
-- Specify target (MainHap,SubHap, SuperHap)
+- Specify target (MainHap,SubHap, PhyloHap)
 ```
 columnCat="('TYP_HOUSE','HH_ELECTRICITY','TOILET','WEALTH_INDEX','THYROID','CHRON_HTN','DIABETES','TB','FUEL_FOR_COOK','MainHap','DRINKING_SOURCE','BABY_SEX','population','site')"
 columnCont="('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI')"
@@ -96,8 +96,6 @@ sbatch workflow2.sh
 
 #### Feature Selection 
 ##### featureSelection.sh
-- site and MainHap (or SuperHap or SubHap) must be in categorical to correctly account for them in the models.
-- If you have site as a categorical variable, you cannot use the population variable, and visa versa. 
 - Look at PCA plots and make sure they look good.
 - Carry same continuous features down from input into workflow.sh.
 - Do not include Haplogroup as a predictor in feature-selection scripts.
@@ -122,7 +120,7 @@ sbatch featureSelection.sh
 #### Final Model
 
 ##### finalModel.sh
-- Specify target (MainHap,SubHap,SuperHap).
+- Specify target (MainHap,SubHap,PhyloHap).
 
 ```
 
@@ -141,19 +139,6 @@ sed -i "s/REF/$ref/g" finalModel.sh
 sbatch finalModel.sh
 ```
 
-##### FinalModel.ML.sh
-
-
-```
-columnCat="('MainHap','site')"
-columnCont="('PW_AGE','BMI')"
-
-
-sed -i "s/CAT/$columnCat/g" FinalModel.ML.sh
-sed -i "s/CONT/$columnCont/g" FinalModel.ML.sh
-
-sbatch FinalModel.ML.sh
-```
 
 
 
