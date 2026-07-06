@@ -7,7 +7,8 @@ import numpy as np
 # Input files
 # -----------------------
 ga_brm_file = "ga_brm_posterior_probs.csv"
-ga_tmb_file = "ga_glmmtmb_gaussian.csv"
+ga_tmb_G_file = "ga_glmmtmb_gaussian.csv"
+ga_tmb_T_file = "ga_glmmtmb_student_t.csv"
 ptb_brm_file = "ptb_brm_prior_sensitivity_haps.csv"
 ptb_tmb_file = "ptb_glmmtmb.csv"
 rate_file = "hap_site_ptb_table.csv"
@@ -232,9 +233,10 @@ for p in populations:
         # GA table
         # -----------------------
         ga_brm_path = run_path / ga_brm_file
-        ga_tmb_path = run_path / ga_tmb_file
+        ga_tmb_T_path = run_path / ga_tmb_T_file
+        ga_tmb_G_path = run_path / ga_tmb_G_file
 
-        if ga_brm_path.exists() and ga_tmb_path.exists():
+        if ga_brm_path.exists() and ga_tmb_T_path.exists() and ga_tmb_G_path.exists():
 
             ga_brm = pd.read_csv(ga_brm_path).copy()
 
@@ -255,30 +257,53 @@ for p in populations:
                 "padj": ga_brm["padj_signprob"]
             })
 
-            ga_tmb = pd.read_csv(ga_tmb_path).copy()
+            ga_tmbG = pd.read_csv(ga_tmb_G_path).copy()
 
-            ga_tmb_final = pd.DataFrame({
-                "haplogroup": ga_tmb["label"],
+            ga_tmb_G_final = pd.DataFrame({
+                "haplogroup": ga_tmbG["label"],
                 "population": p,
                 "reference_haplogroup": reference_haplogroup,
                 "model_equation": GA_EQUATION,
-                "model": "glmmTMB",
-                "effect_days": ga_tmb["estimate"],
-                "ci_low_days": ga_tmb["conf.low"],
-                "ci_high_days": ga_tmb["conf.high"],
-                "direction": ga_tmb["estimate"].apply(direction_ga),
+                "model": "glmmTMB_gaussian",
+                "effect_days": ga_tmbG["estimate"],
+                "ci_low_days": ga_tmbG["conf.low"],
+                "ci_high_days": ga_tmbG["conf.high"],
+                "direction": ga_tmbG["estimate"].apply(direction_ga),
                 "Pr_longer_GA": np.nan,
                 "Pr_GA_gt_1_day_longer": np.nan,
                 "Pr_GA_gt_1_day_shorter": np.nan,
-                "p_or_p_two": ga_tmb["p.value"],
-                "padj": ga_tmb["padj"],
-                "AIC": ga_tmb["AIC"] if "AIC" in ga_tmb.columns else np.nan,
-                "BIC": ga_tmb["BIC"] if "BIC" in ga_tmb.columns else np.nan,
-                "logLik": ga_tmb["logLik"] if "logLik" in ga_tmb.columns else np.nan
+                "p_or_p_two": ga_tmbG["p.value"],
+                "padj": ga_tmbG["padj"],
+                "AIC": ga_tmbG["AIC"] if "AIC" in ga_tmbG.columns else np.nan,
+                "BIC": ga_tmbG["BIC"] if "BIC" in ga_tmbG.columns else np.nan,
+                "logLik": ga_tmbG["logLik"] if "logLik" in ga_tmbG.columns else np.nan
             })
+            
+            ga_tmbT = pd.read_csv(ga_tmb_T_path).copy()
+
+            ga_tmb_T_final = pd.DataFrame({
+                "haplogroup": ga_tmbT["label"],
+                "population": p,
+                "reference_haplogroup": reference_haplogroup,
+                "model_equation": GA_EQUATION,
+                "model": "glmmTMB_StudentT",
+                "effect_days": ga_tmbT["estimate"],
+                "ci_low_days": ga_tmbT["conf.low"],
+                "ci_high_days": ga_tmbT["conf.high"],
+                "direction": ga_tmbT["estimate"].apply(direction_ga),
+                "Pr_longer_GA": np.nan,
+                "Pr_GA_gt_1_day_longer": np.nan,
+                "Pr_GA_gt_1_day_shorter": np.nan,
+                "p_or_p_two": ga_tmbT["p.value"],
+                "padj": ga_tmbT["padj"],
+                "AIC": ga_tmbT["AIC"] if "AIC" in ga_tmbT.columns else np.nan,
+                "BIC": ga_tmbT["BIC"] if "BIC" in ga_tmbT.columns else np.nan,
+                "logLik": ga_tmbT["logLik"] if "logLik" in ga_tmbT.columns else np.nan
+            })
+            
 
             final_ga = pd.concat(
-                [ga_brm_final, ga_tmb_final],
+                [ga_brm_final, ga_tmb_G_final,ga_tmb_T_final],
                 ignore_index=True
             )
 
