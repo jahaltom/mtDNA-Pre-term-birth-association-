@@ -115,7 +115,7 @@ sed -i "s/CONT/$columnCont/g" featureSelection.sh
 sed -i "s/BIN/$columnBin/g" featureSelection.sh
 sbatch featureSelection.sh
 ```
-
+Run ConsensusFeatureTable.py once all MLs finished. 
 
 #### Final Model
 
