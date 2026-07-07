@@ -1,6 +1,6 @@
 # mtDNA Pre-Term Birth Association Pipeline
 
-## Overview
+## Overview (finalModel_freq_vs_bayesian.r)
 This pipeline evaluates associations between **mitochondrial DNA (mtDNA) haplogroups** and:
 
 - **Gestational Age (GA)** — continuous outcome
