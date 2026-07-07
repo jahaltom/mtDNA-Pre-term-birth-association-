@@ -123,20 +123,21 @@ Run ConsensusFeatureTable.py once all MLs finished.
 - Specify target (MainHap,SubHap,PhyloHap).
 
 ```
-
-columnCat="('MainHap')"
+columnCat="('PhyloHap','BABY_SEX')"
 columnCont="('PW_AGE','MAT_HEIGHT')"
-target="MainHap"
-covs='"PW_AGE + MAT_HEIGHT + site"'  ### Fixed "site" or random effect "(1 | site)"
-ref='"M"'
+target="PhyloHap"
+covs='"BABY_SEX + PW_AGE + MAT_HEIGHT + PC1 + PC2 + PC3"'
+ref='"M3"'
+ID="PCsM3"
 
-sed -i "s/CAT/$columnCat/g" finalModel.sh
-sed -i "s/CONT/$columnCont/g" finalModel.sh
-sed -i "s/TARGET/$target/g" finalModel.sh
-sed -i "s/COVARIATES/$covs/g" finalModel.sh
-sed -i "s/REF/$ref/g" finalModel.sh
+sed "s/CAT/$columnCat/g" finalModel.sh > finalModel.$ID.sh
+sed -i "s/CONT/$columnCont/g" finalModel.$ID.sh
+sed -i "s/TARGET/$target/g" finalModel.$ID.sh
+sed -i "s/COVARIATES/$covs/g" finalModel.$ID.sh
+sed -i "s/REF/$ref/g" finalModel.$ID.sh
+sed -i "s/IDENT/$ID/g" finalModel.$ID.sh
 
-sbatch finalModel.sh
+sbatch finalModel.$ID.sh
 ```
 
 
