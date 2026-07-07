@@ -29,12 +29,13 @@ columnCont_string=$( echo "${columnsCont[*]}")
 
 
 
-
-cp $file Final_Model
-cd Final_Model
+cp -r Final_Model Final_Model_IDENT
+cp $file Final_Model_IDENT
+mv Final_Model_IDENT Final_Model
+cd Final_Model/Final_Model_IDENT
 
 #Removes samples where gestational age "GAGEBRTH" or  PTB (0 or 1) is na. Also removes samples with missing data in any of the input columns.
-python ../scripts/removeMissingData.py $file "$columnCat_string" "$columnCont_string"
+python ../../scripts/removeMissingData.py $file "$columnCat_string" "$columnCont_string"
 
 
 
@@ -70,11 +71,11 @@ plink --bfile nDNA_final --missing --freq --out nDNA_stats
 
 
 conda activate ML
-python ../scripts/outlierPCA.py
+python ../../scripts/outlierPCA.py
 
 
 # Call the Python script with the column string as an argument
-python ../scripts/WeibullFiltering.py "$columnCat_string" "$columnCont_string"  "$target"> out.txt
+python ../../scripts/WeibullFiltering.py "$columnCat_string" "$columnCont_string"  "$target"> out.txt
 
 
 
@@ -96,11 +97,24 @@ plink --bfile nDNA_final2 --pca 10 --out PCA2/cleaned
 
 
 conda activate ML
-python  ../scripts/CombinePCA.py
+python  ../../scripts/CombinePCA.py
 
+
+
+python site_pc_structure_tests.py \
+  --input Metadata.Final.tsv \
+  --sep $'\t' \
+  --site-col site \
+  --pc-prefix PC \
+  --n-pcs 5 \
+  --permutations 999 \
+  --out-prefix nDNA_PC_site
 
 
 module load R
 sed "s/MainHap/$target/g" finalModel_freq_vs_bayesian.r > finalModel_freq_vs_bayesian_IDENT.r
 Rscript finalModel_freq_vs_bayesian_IDENT.r REF COVARIATES
 
+
+
+cp -r model_outputs/* ../
