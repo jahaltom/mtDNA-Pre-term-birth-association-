@@ -120,7 +120,7 @@ Run ConsensusFeatureTable.py once all MLs finished.
 #### Final Model
 ##### This is the final model that will associate mtDNA haplogroup with PTB/GA. (finalModel.sh)
 - Specify target (MainHap,SubHap,PhyloHap).
-- Choose categorical and continuous features found to be important in feature selection. Include some known covariates that effect PTB (BABY_SEX, MAT_HEIGHT, PW_AGE, nDNA PCs). Don't include nDNA PCs in continuous, only place in covs (covariates) section.
+- Choose categorical and continuous covariates found to be important in feature selection. Include some known covariates that effect PTB (BABY_SEX, MAT_HEIGHT, PW_AGE, nDNA PCs). Don't include nDNA PCs in continuous, only place in covs (covariates) section.
 - Choose a reference haplogroup.
 - Construct an informative ID.
 
