@@ -31,8 +31,7 @@ columnCont_string=$( echo "${columnsCont[*]}")
 
 cp -r Final_Model Final_Model_IDENT
 cp $file Final_Model_IDENT
-mv Final_Model_IDENT Final_Model
-cd Final_Model/Final_Model_IDENT
+cd Final_Model_IDENT
 
 #Removes samples where gestational age "GAGEBRTH" or  PTB (0 or 1) is na. Also removes samples with missing data in any of the input columns.
 python ../../scripts/removeMissingData.py $file "$columnCat_string" "$columnCont_string"
