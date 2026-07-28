@@ -34,7 +34,7 @@ cp $file Final_Model_IDENT
 cd Final_Model_IDENT
 
 #Removes samples where gestational age "GAGEBRTH" or  PTB (0 or 1) is na. Also removes samples with missing data in any of the input columns.
-python ../../scripts/removeMissingData.py $file "$columnCat_string" "$columnCont_string"
+python ../scripts/removeMissingData.py $file "$columnCat_string" "$columnCont_string"
 
 
 
@@ -70,11 +70,11 @@ plink --bfile nDNA_final --missing --freq --out nDNA_stats
 
 
 conda activate ML
-python ../../scripts/outlierPCA.py
+python ../scripts/outlierPCA.py
 
 
 # Call the Python script with the column string as an argument
-python ../../scripts/WeibullFiltering.py "$columnCat_string" "$columnCont_string"  "$target"> out.txt
+python ../scripts/WeibullFiltering.py "$columnCat_string" "$columnCont_string"  "$target"> out.txt
 
 
 
@@ -96,7 +96,7 @@ plink --bfile nDNA_final2 --pca 10 --out PCA2/cleaned
 
 
 conda activate ML
-python  ../../scripts/CombinePCA.py
+python  ../scripts/CombinePCA.py
 
 
 
@@ -116,4 +116,4 @@ Rscript finalModel_freq_vs_bayesian_IDENT.r REF COVARIATES
 
 
 
-cp -r model_outputs/* ../
+cp -r model_outputs/* .
