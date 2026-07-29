@@ -149,7 +149,7 @@ PTB model:
 ```
 adapt_delta = 0.995
 max_treedepth = 13
-chains = 2
+chains = 4
 iter = 3000
 warmup = 1000
 ```
