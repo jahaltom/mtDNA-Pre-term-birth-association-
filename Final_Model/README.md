@@ -363,7 +363,7 @@ Recommended thresholds:
 | Divergences | 0 |
 | Rhat | < 1.01 |
 | ESS | > 400 |
-| Treedepth hits (>=15) | Minimal |
+| Treedepth hits (>=max_treedepth) | Minimal |
 
 If convergence is poor increase :
 
