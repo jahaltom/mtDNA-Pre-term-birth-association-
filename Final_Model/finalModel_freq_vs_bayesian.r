@@ -556,7 +556,7 @@ post_tab <- lapply(fix_cols, function(nm) {
   data.frame(
     param          = nm,
     Pr_beta_gt0    = mean(s > 0),                  # Pr(β > 0)
-    p_two          = 2 * pmin(mean(s > 0), mean(s < 0)),  # two-sided posterior sign probability (Bayesian analog)
+    Pr_beta_lt0    = mean(s < 0),
     Pr_days_gt_1   = mean(sd_ga * s >  1),         # Pr(effect > +1 day)
     Pr_days_lt_m1  = mean(sd_ga * s < -1)          # Pr(effect < -1 day)
   )
@@ -579,10 +579,7 @@ fx_brm_ga <- as.data.frame(summary(brm_ga)$fixed) %>%
   ) %>%
   left_join(post_tab, by = c("term","label"))
 
-# Optional: BH adjust the Bayesian two-sided sign probs across hap terms only
-m <- hap_mask(fx_brm_ga$term, var = "MainHap")
-fx_brm_ga$padj_signprob <- NA_real_
-fx_brm_ga$padj_signprob[m] <- p.adjust(fx_brm_ga$p_two[m], method = "BH")
+
 
 fx_brm_ga <- fx_brm_ga %>%
   select(label, term, everything())
