@@ -347,8 +347,8 @@ make_pri_ptb <- function(covariates, sd_fixed = 1.0) {
 
   # Applies Normal(0, sd_fixed) to every population-level coefficient:
   # haplogroups, clinical covariates, PCs, sex, and fixed site effects.
-  pri <- prior(
-    normal(0, sd_fixed),
+  pri <- prior_string(
+    sprintf("normal(0, %g)", sd_fixed),
     class = "b"
   )
 
@@ -664,7 +664,7 @@ summarize_haps <- function(fit, label) {
     s <- as.numeric(draws[[nm]])                 # log-OR draws
     tibble(term = sub("^b_", "", nm),
            Pr_OR_gt_1 = mean(exp(s) > 1),
-           p_two      = 2 * pmin(mean(s > 0), mean(s < 0)))
+         
   }) %>% bind_rows()
 
   left_join(fx_h, post, by = "term") %>%
@@ -681,14 +681,10 @@ results <- bind_rows(
   summarize_haps(fits$brms_default,      "brms_default")
 ) %>%
   mutate(label = sub("^MainHap\\[T\\.(.+)\\]$", "\\1", sub("^MainHap", "", term))) %>%
-  select(prior_setting, label, OR, OR_lo, OR_hi, Pr_OR_gt_1, p_two) %>%
+  select(prior_setting, label, OR, OR_lo, OR_hi, Pr_OR_gt_1) %>%
   arrange(prior_setting, label)
 
-# Optional: BH across hap terms within each prior setting
-results <- results %>%
-  group_by(prior_setting) %>%
-  mutate(padj = p.adjust(p_two, method = "BH")) %>%
-  ungroup()
+
 
 readr::write_csv(results, file.path(OUTDIR, "ptb_brm_prior_sensitivity_haps.csv"))
 
@@ -730,8 +726,6 @@ post_tab <- lapply(fix_cols, function(nm) {
     # posterior probability of increased PTB odds
     Pr_OR_gt_1 = mean(exp(s) > 1),
 
-    # Bayesian two-sided sign probability
-    p_two = 2 * pmin(mean(s > 0), mean(s < 0))
   )
 }) %>%
   bind_rows()
@@ -740,22 +734,19 @@ post_tab <- lapply(fix_cols, function(nm) {
 fx_RE <- fx_RE %>%
   left_join(post_tab, by = "term")
 
-# Optional: BH adjust only haplogroups
-m <- hap_mask(fx_RE$term, var = "MainHap")
-fx_RE$padj <- NA_real_
-fx_RE$padj[m] <- p.adjust(fx_RE$p_two[m], method = "BH")
+
 
 # Order columns nicely
 fx_RE <- fx_RE %>%
-  select(
+select(
     label,
     term,
     OR, OR_low, OR_hi,
     Estimate, Est.Error,
     `l-95% CI`, `u-95% CI`,
-    Pr_OR_gt_1, p_two, padj,
+    Pr_OR_gt_1,
     Rhat, Bulk_ESS, Tail_ESS
-  )
+)
 
 write_csv(
   fx_RE,
