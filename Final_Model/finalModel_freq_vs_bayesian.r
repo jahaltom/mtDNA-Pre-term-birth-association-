@@ -668,7 +668,7 @@ summarize_haps <- function(fit, label) {
     s <- as.numeric(draws[[nm]])                 # log-OR draws
     tibble(term = sub("^b_", "", nm),
            Pr_OR_gt_1 = mean(exp(s) > 1)
-         
+         )
   }) %>% bind_rows()
 
   left_join(fx_h, post, by = "term") %>%
