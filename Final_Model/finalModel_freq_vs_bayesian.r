@@ -624,12 +624,11 @@ readr::write_csv(fx_brm_ga, file.path(OUTDIR, "ga_brm_posterior_probs.csv"))
 
 # 2) Define prior settings to try
 prior_grid <- list(
-  shrink_05 = make_pri_ptb(covariates, hap_names, sd_hap = 0.5),
-  shrink_10 = make_pri_ptb(covariates, hap_names, sd_hap = 1.0),
-  wide_25   = make_pri_ptb(covariates, hap_names, sd_hap = 2.5),
-  brms_default       = c()
+  shrink_05 = make_pri_ptb(covariates, sd_fixed = 0.5),
+  shrink_10 = make_pri_ptb(covariates, sd_fixed = 1.0),
+  wide_25   = make_pri_ptb(covariates, sd_fixed = 2.5),
+  brms_default = c()
 )
-
 # 3) Fit under each prior (same model structure)
 fit_under_prior <- function(pr) {
   brm(
