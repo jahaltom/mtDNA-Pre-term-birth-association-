@@ -337,7 +337,7 @@ make_pri_ga <- function(covariates, sd_fixed = 0.5) {
 
   pri
 }
-pri_ga <- make_pri_ga(covariates, sd_hap = 0.5)
+pri_ga <- make_pri_ga(covariates, sd_fixed = 0.5)
 ctrl_ga  <- list(adapt_delta = 0.999, max_treedepth = 15)      
                   
 # ---- PTB priors: same prior for all fixed effects ----
