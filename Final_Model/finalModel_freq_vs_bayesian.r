@@ -342,20 +342,35 @@ make_pri_ga <- function(covariates, hap_names, sd_hap = 0.5) {
 pri_ga <- make_pri_ga(covariates, hap_names, sd_hap = 0.5)
 ctrl_ga  <- list(adapt_delta = 0.999, max_treedepth = 15)      
                   
-# ---- PTB priors ----
-make_pri_ptb <- function(covariates, hap_names, sd_hap = 1.0) {
-  pri <- make_hap_priors(hap_names, sd_hap = sd_hap)
+# ---- PTB priors: same prior for all fixed effects ----
+make_pri_ptb <- function(covariates, sd_fixed = 1.0) {
 
+  # Applies Normal(0, sd_fixed) to every population-level coefficient:
+  # haplogroups, clinical covariates, PCs, sex, and fixed site effects.
+  pri <- prior(
+    normal(0, sd_fixed),
+    class = "b"
+  )
+
+  # Prior for random-effect standard deviation, if using (1 | site)
   if (has_site_re) {
     pri <- c(
       pri,
-      prior(student_t(3, 0, 2.5), class = "sd")
+      prior(
+        student_t(3, 0, 2.5),
+        class = "sd"
+      )
     )
   }
 
   pri
 }
-pri_ptb <- make_pri_ptb(covariates, hap_names, sd_hap = 1.0)
+
+# Final model uses Normal(0,1) for all fixed-effect slopes
+pri_ptb <- make_pri_ptb(
+  covariates,
+  sd_fixed = 1.0
+)
 ctrl_ptb <- list(adapt_delta = 0.995,  max_treedepth = 13)
 
 # ============================
@@ -638,14 +653,14 @@ for (nm in names(fits)) {
 # 4) Extract per-hap results
 summarize_haps <- function(fit, label) {
   fx   <- as.data.frame(summary(fit)$fixed) %>% rownames_to_column("term")
-  fx_h <- fx %>% filter(grepl("^MainHap", term)) %>%
+  fx_h <- fx %>% 
     transmute(term,
               OR    = exp(Estimate),
               OR_lo = exp(`l-95% CI`),
               OR_hi = exp(`u-95% CI`))
 
   draws <- as_draws_df(fit)
-  hap_cols <- grep("^b_MainHap", names(draws), value = TRUE)
+  hap_cols <- grep("^b_", names(draws), value = TRUE)
   post <- lapply(hap_cols, function(nm) {
     s <- as.numeric(draws[[nm]])                 # log-OR draws
     tibble(term = sub("^b_", "", nm),
