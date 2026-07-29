@@ -18,7 +18,7 @@ set.seed(2025)
 
 
 # ---- brms convergence diagnostics helper ----
-save_brms_diagnostics <- function(fit, prefix, outdir) {
+save_brms_diagnostics <- function(fit, prefix, outdir, max_treedepth) {
   # Summary table
   summ <- as.data.frame(summary(fit)$fixed)
   summ$term <- rownames(summ)
@@ -53,7 +53,11 @@ save_brms_diagnostics <- function(fit, prefix, outdir) {
   n_div <- sum(np$Parameter == "divergent__" & np$Value == 1, na.rm = TRUE)
 
   # Max treedepth hits
-  n_treedepth <- sum(np$Parameter == "treedepth__" & np$Value >= 15, na.rm = TRUE)
+  n_treedepth <- sum(
+  np$Parameter == "treedepth__" &
+  np$Value >= max_treedepth,
+  na.rm = TRUE
+)
 
   # BFMI
   # BFMI / energy diagnostic (version-safe)
@@ -266,15 +270,7 @@ bh_on_hap <- function(tbl, term_col = "term", p_col = "p.value", var = "MainHap"
   dplyr::mutate(tbl, padj = q)
 }
 
-bh_on_hap_wald <- function(tbl, term_col="term", mean_col="Estimate", se_col="Est.Error", var="MainHap") {
-  stopifnot(all(c(term_col, mean_col, se_col) %in% names(tbl)))
-  z <- abs(tbl[[mean_col]] / tbl[[se_col]])
-  p <- 2 * pnorm(-z)
-  m <- hap_mask(tbl[[term_col]], var)
-  q <- rep(NA_real_, nrow(tbl))
-  if (any(m)) q[m] <- p.adjust(p[m], method = "BH")
-  tibble::add_column(tbl, p.value = p, padj = q, .after = se_col)
-}
+
 
 to_or <- function(tbl, est = "estimate", lo = "conf.low", hi = "conf.high") {
   tbl %>% mutate(OR = exp(.data[[est]]),
@@ -322,11 +318,13 @@ make_hap_priors <- function(hap_names, sd_hap = 0.5) {
 }
 
 # ---- GA priors ----
-make_pri_ga <- function(covariates, hap_names, sd_hap = 0.5) {
-  pri <- make_hap_priors(hap_names, sd_hap = sd_hap)
+make_pri_ga <- function(covariates, sd_fixed = 0.5) {
 
   pri <- c(
-    pri,
+    prior_string(
+      sprintf("normal(0, %g)", sd_fixed),
+      class = "b"
+    ),
     prior(student_t(3, 0, 2.5), class = "sigma")
   )
 
@@ -530,9 +528,7 @@ sd_ga <- ga_sd_raw
 
 
 
-png(file.path(OUTDIR, "ga_brm_pp_check.png"), width=1200, height=900)
-pp_check(brm_ga, ndraws=200)
-dev.off()
+
 capture.output(bayes_R2(brm_ga), file = file.path(OUTDIR, "ga_brm_bayesR2.txt"))
 
 
@@ -639,7 +635,7 @@ fit_under_prior <- function(pr) {
     as.formula(paste("PTB ~ MainHap +", covariates)),
     data = df, family = bernoulli(),
     prior = pr,
-    chains = 2, iter = 3000, warmup = 1000, cores = 2,
+    chains = 4, iter = 4000, warmup = 2000, cores = 4,
     control = ctrl_ptb ,
     init = 0, seed = 2025
   )
@@ -728,7 +724,7 @@ post_tab <- lapply(fix_cols, function(nm) {
     term = sub("^b_", "", nm),
 
     # posterior probability of increased PTB odds
-    Pr_OR_gt_1 = mean(exp(s) > 1),
+    Pr_OR_gt_1 = mean(exp(s) > 1)
 
   )
 }) %>%
@@ -763,8 +759,8 @@ sink()
 
 
 #Diagnostics:
-save_brms_diagnostics(brm_ga, "ga_brm", OUTDIR)
-save_brms_diagnostics(ptb_brm_final, "ptb_brm_final", OUTDIR)
+save_brms_diagnostics(brm_ga, "ga_brm", OUTDIR,max_treedepth = 15)
+save_brms_diagnostics(ptb_brm_final, "ptb_brm_final", OUTDIR,max_treedepth = 13)
 
 
 saveRDS(ptb_brm_final, file.path(OUTDIR, "ptb_brm_final.rds"))
