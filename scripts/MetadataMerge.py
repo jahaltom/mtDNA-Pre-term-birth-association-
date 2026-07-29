@@ -77,7 +77,15 @@ df.loc[df['SNIFF_TOBA'] == 1, 'SNIFF_FREQ'] = 0
 
 
 # calulate BMI
-df["BMI"] = df["MAT_WEIGHT"]/(df["MAT_HEIGHT"]/100)**2
+df["BMI"] = np.where(
+    (df["MAT_WEIGHT"] < 0) | (df["MAT_HEIGHT"] < 0),
+    -77,
+    df["MAT_WEIGHT"] / (df["MAT_HEIGHT"] / 100) ** 2
+)
+
+
+
+
 
 
 # Function to categorize population based on site
