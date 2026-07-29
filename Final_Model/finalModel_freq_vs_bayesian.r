@@ -566,7 +566,14 @@ post_tab <- lapply(fix_cols, function(nm) {
 post_tab <- post_tab %>%
   mutate(term = sub("^b_", "", param),
          label = robust_hap_label(term)) %>%
-  select(term, label, Pr_beta_gt0, p_two, Pr_days_gt_1, Pr_days_lt_m1)
+  select(
+    term,
+    label,
+    Pr_beta_gt0,
+    Pr_beta_lt0,
+    Pr_days_gt_1,
+    Pr_days_lt_m1
+)
 
 # 4) Join to your existing GA summary, add back-transformed days, and (optionally) BH within hap terms
 fx_brm_ga <- as.data.frame(summary(brm_ga)$fixed) %>%
@@ -660,7 +667,7 @@ summarize_haps <- function(fit, label) {
   post <- lapply(hap_cols, function(nm) {
     s <- as.numeric(draws[[nm]])                 # log-OR draws
     tibble(term = sub("^b_", "", nm),
-           Pr_OR_gt_1 = mean(exp(s) > 1),
+           Pr_OR_gt_1 = mean(exp(s) > 1)
          
   }) %>% bind_rows()
 
