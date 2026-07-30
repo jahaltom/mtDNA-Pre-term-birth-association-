@@ -112,6 +112,15 @@ save_brms_diagnostics <- function(fit, prefix, outdir, max_treedepth) {
 
 args <- commandArgs(trailingOnly = TRUE)
 
+if (length(args) < 2 || any(is.na(args[1:2])) || any(trimws(args[1:2]) == "")) {
+  stop(
+    "Usage: Rscript script.R <default_reference_haplogroup> <covariate_formula>\n",
+    "  e.g. Rscript script.R H \"PW_AGE + BABY_SEX + (1|site)\"",
+    call. = FALSE
+  )
+}
+
+
 # Choose a default reference for the Joint cohort
 DEFAULT_Ref <- args[1]
 covariates <- args[2]
@@ -309,13 +318,8 @@ message("covariates = ", covariates)
 message("has_site_re = ", has_site_re)
 message("has_site_fe = ", has_site_fe)
 
-# ---- Helper to build hap-only priors ----
-make_hap_priors <- function(hap_names, sd_hap = 0.5) {
-  pri_list <- lapply(hap_names, function(nm)
-    prior_string(sprintf("normal(0, %g)", sd_hap), class = "b", coef = nm)
-  )
-  do.call(c, pri_list)
-}
+
+
 
 # ---- GA priors ----
 make_pri_ga <- function(covariates, sd_fixed = 0.5) {
@@ -693,7 +697,7 @@ readr::write_csv(results, file.path(OUTDIR, "ptb_brm_prior_sensitivity_haps.csv"
 ptb_brm_final <- brm(as.formula(paste("PTB ~ MainHap +", covariates)), 
               data=df, family=bernoulli(),
               prior=pri_ptb,
-              chains=2, iter=3000, warmup=1000,
+              chains=4, iter=3000, warmup=1000,
               control = ctrl_ptb, init = 0, seed = 2025
 )
 
