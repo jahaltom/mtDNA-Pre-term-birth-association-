@@ -17,8 +17,39 @@ using both **Frequentist** (`glmmTMB`) and **Bayesian** (`brms`) frameworks. The
 - Sparse-cell detection
 - Automated convergence diagnostics
 
+The same script supports pooled multi-site analyses, fixed-site analyses, random-site analyses, and single-site analyses by specifying the desired model formula at runtime.
+
 ---
 
+## Workflow Diagram
+Metadata.Final.tsv
+        │
+        ▼
+Preprocessing
+    ├── Standardize continuous variables
+    ├── Set reference haplogroup
+    └── Parse model formula
+        │
+        ▼
+Frequentist models (glmmTMB)
+    ├── GA Gaussian
+    ├── GA Student-t
+    └── PTB Logistic
+        │
+        ▼
+Bayesian models (brms)
+    ├── GA Student-t
+    ├── PTB Bernoulli
+    └── Prior sensitivity analysis
+        │
+        ▼
+Outputs
+    ├── coefficient tables
+    ├── posterior probabilities
+    ├── diagnostics
+    ├── forest plots
+    ├── DHARMa plots
+    └── cohort summaries
 ## Statistical Framework
 
 ### Frequentist Models (`glmmTMB`)
@@ -69,9 +100,14 @@ student()
 
 Posterior probabilities:
 
-- `Pr(effect > +1 day)`
-- `Pr(effect < -1 day)`
-- `Pr(beta > 0)`
+- Pr(β > 0)
+- Pr(β < 0)
+- Pr(effect > +1 day)
+- Pr(effect < −1 day)
+
+Posterior probabilities are reported for all fixed effects
+(haplogroups, covariates, principal components, and site fixed effects
+when included).
 
 Effects are back-transformed to **days**.
 
@@ -87,6 +123,10 @@ Posterior probabilities:
 
 - `Pr(OR > 1)`
 
+Posterior probabilities are reported for all fixed effects
+(haplogroups, covariates, principal components, and site fixed effects
+when included).
+
 ---
 
 ## Prior Sensitivity Analysis
@@ -97,7 +137,11 @@ Posterior probabilities:
 ### Bayesian Priors and Sampler Settings
 #### Gestational Age (GA) Priors
 
-For final Bayesian GA models, haplogroup fixed effects use:
+For the final Bayesian GA model,
+all fixed-effect coefficients
+(haplogroups, covariates, PCs and fixed site effects)
+use
+
 ```
 normal(0, 0.5)
 ```
@@ -113,7 +157,7 @@ site random-effect SD ~ student_t(3, 0, 2.5)
 ```
 #### Pre-Term Birth (PTB) Priors
 
-For the final Bayesian PTB model, haplogroup fixed effects use:
+For the final Bayesian PTB model, all fixed effects use:
 ```
 normal(0, 1.0)
 ```
@@ -154,6 +198,12 @@ iter = 3000
 warmup = 1000
 ```
 ### Posterior summaries include:
+
+Bayesian models do not report p-values or adjusted p-values.
+Instead, inference is based on posterior probabilities
+(e.g. Pr(OR > 1), Pr(β > 0), and posterior credible intervals),
+which directly quantify evidence for an effect.
+
 - Posterior mean estimates
 - 95% credible intervals
 - Posterior probability metrics
@@ -205,7 +255,7 @@ Metadata.Final.tsv
 
 ## Data preprocessing
 - Categorical variables converted to factors (as.factor)
-- Continuous and ordinal variables standardized (scale())
+- Continuous and ordinal variables standardized (scale()) (mean 0, SD 1)
 - Gestational age (GAGEBRTH) standardized for model fitting and back-transformed to days for interpretation
 
 ## Running the Pipeline
@@ -276,9 +326,9 @@ Encodes:
 | `ga_brm.csv` | Bayesian GA fixed effects |
 | `ga_brm_summary.txt` | Full GA model summary |
 | `ga_brm_bayesR2.txt` | Bayesian R² |
-| `ga_brm_posterior_probs.csv` | Posterior probability table |
+| `ga_brm_posterior_probs.csv` | Posterior summaries for all fixed effects, including posterior probabilities and back-transformed gestational-age effects. |
 | `ptb_brm_summary.txt` | PTB Bayesian model summary |
-| `ptb_brm_final_fixed_effects.csv` | Final PTB coefficient table |
+| `ptb_brm_final_fixed_effects.csv` | Posterior summaries for all fixed effects,including odds ratios, credible intervals, posterior probabilities, Rhat and ESS. |
 | `ptb_brm_prior_sensitivity_haps.csv` | Prior sensitivity results |
 
 ### Diagnostics
@@ -348,7 +398,11 @@ Example:
 
 ### Multiple Testing
 
-Benjamini–Hochberg correction is applied to **MainHap effects only**.
+Benjamini–Hochberg multiple-testing correction is applied only to
+MainHap coefficients in the frequentist (glmmTMB) models.
+
+Bayesian models use posterior probabilities and do not perform
+multiple-testing correction.
 
 ---
 
