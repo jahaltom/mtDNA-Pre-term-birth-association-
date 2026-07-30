@@ -21,35 +21,48 @@ The same script supports pooled multi-site analyses, fixed-site analyses, random
 
 ---
 
-## Workflow Diagram
-Metadata.Final.tsv
-        │
-        ▼
-Preprocessing
-    ├── Standardize continuous variables
-    ├── Set reference haplogroup
-    └── Parse model formula
-        │
-        ▼
-Frequentist models (glmmTMB)
-    ├── GA Gaussian
-    ├── GA Student-t
-    └── PTB Logistic
-        │
-        ▼
-Bayesian models (brms)
-    ├── GA Student-t
-    ├── PTB Bernoulli
-    └── Prior sensitivity analysis
-        │
-        ▼
-Outputs
-    ├── coefficient tables
-    ├── posterior probabilities
-    ├── diagnostics
-    ├── forest plots
-    ├── DHARMa plots
-    └── cohort summaries
+## Analysis Workflow
+
+```mermaid
+flowchart TD
+    A[Metadata.Final.tsv] --> B[Data preprocessing]
+
+    B --> B1[Convert selected categorical variables to factors]
+    B --> B2[Standardize selected continuous covariates]
+    B --> B3[Standardize gestational age]
+    B --> B4[Set MainHap reference level]
+
+    B1 --> C[Frequentist models: glmmTMB]
+    B2 --> C
+    B3 --> C
+    B4 --> C
+
+    B1 --> D[Bayesian models: brms]
+    B2 --> D
+    B3 --> D
+    B4 --> D
+
+    C --> C1[GA Gaussian model]
+    C --> C2[GA Student-t model]
+    C --> C3[PTB binomial model]
+
+    D --> D1[GA Student-t model]
+    D --> D2[PTB Bernoulli model]
+    D --> D3[PTB prior sensitivity analysis]
+
+    C1 --> E[Model outputs]
+    C2 --> E
+    C3 --> E
+    D1 --> E
+    D2 --> E
+    D3 --> E
+
+    E --> E1[Coefficient and posterior summary tables]
+    E --> E2[Forest and diagnostic plots]
+    E --> E3[Convergence diagnostics]
+    E --> E4[Site and haplogroup summaries]
+```
+
 ## Statistical Framework
 
 ### Frequentist Models (`glmmTMB`)
