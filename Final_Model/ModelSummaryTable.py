@@ -9,7 +9,7 @@ import numpy as np
 ga_brm_file = "ga_brm_posterior_probs.csv"
 ga_tmb_G_file = "ga_glmmtmb_gaussian.csv"
 ga_tmb_T_file = "ga_glmmtmb_student_t.csv"
-ptb_brm_file = "ptb_brm_prior_sensitivity_haps.csv"
+ptb_brm_file = "ptb_brm_final_fixed_effects.csv"
 ptb_tmb_file = "ptb_glmmtmb.csv"
 rate_file = "hap_site_ptb_table.csv"
 
@@ -252,9 +252,7 @@ for p in populations:
                 "direction": ga_brm["beta_days"].apply(direction_ga),
                 "Pr_longer_GA": ga_brm["Pr_beta_gt0"],
                 "Pr_GA_gt_1_day_longer": ga_brm["Pr_days_gt_1"],
-                "Pr_GA_gt_1_day_shorter": ga_brm["Pr_days_lt_m1"],
-                "p_or_p_two": ga_brm["p_two"],
-                "padj": ga_brm["padj_signprob"]
+                "Pr_GA_gt_1_day_shorter": ga_brm["Pr_days_lt_m1"]
             })
 
             ga_tmbG = pd.read_csv(ga_tmb_G_path).copy()
@@ -334,14 +332,11 @@ for p in populations:
                 "reference_haplogroup": reference_haplogroup,
                 "model_equation": PTB_EQUATION,
                 "model": "brms",
-                "prior_setting": ptb_brm["prior_setting"],
                 "OR": ptb_brm["OR"],
-                "OR_low": ptb_brm["OR_lo"],
+                "OR_low": ptb_brm["OR_low"],
                 "OR_high": ptb_brm["OR_hi"],
                 "direction": ptb_brm["OR"].apply(direction_ptb),
-                "Pr_higher_PTB_odds": ptb_brm["Pr_OR_gt_1"],
-                "p_or_p_two": ptb_brm["p_two"],
-                "padj": ptb_brm["padj"]
+                "Pr_higher_PTB_odds": ptb_brm["Pr_OR_gt_1"]
             })
 
             ptb_tmb = pd.read_csv(ptb_tmb_path).copy()
@@ -352,7 +347,6 @@ for p in populations:
                 "reference_haplogroup": reference_haplogroup,
                 "model_equation": PTB_EQUATION,
                 "model": "glmmTMB",
-                "prior_setting": np.nan,
                 "OR": ptb_tmb["OR"],
                 "OR_low": ptb_tmb["OR_low"],
                 "OR_high": ptb_tmb["OR_hi"],
