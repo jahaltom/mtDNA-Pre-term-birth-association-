@@ -367,7 +367,7 @@ for p in populations:
             final_ptb = add_ptb_descriptives(final_ptb, rate_df)
 
             final_ptb = final_ptb.sort_values(
-                ["haplogroup", "model", "prior_setting"],
+                ["haplogroup", "model"],
                 na_position="last"
             )
 
