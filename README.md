@@ -123,7 +123,8 @@ Run ConsensusFeatureTable.py once all MLs finished.
 - Choose categorical and continuous covariates found to be important in feature selection. Include some known covariates that effect PTB (BABY_SEX, MAT_HEIGHT, PW_AGE, nDNA PCs). Don't include nDNA PCs in continuous, only place in covs (covariates) section.
 - Choose a reference haplogroup.
 - Construct an informative ID.
-- Be sure ALL models are tested on the same dataset. This will allow for AIC/BIC to be compared across models to find the best one. To do this, just be sure **columnCont** and **columnCat** contain ALL covs that will be used across ALL models. The dataset is filtered from the very beginning (Metadata.M.tsv)  to remove samples with missing data in any of the covs, then plink filtering, PCA outlier removal, WeibullFiltering, and a Final PCA. Skipping EDA and feature selection. Doing it this way preserves significantly more samples. 
+- Be sure ALL models are tested on the same dataset. This will allow for AIC/BIC to be compared across models to find the best one. To do this, just be sure **columnCont** and **columnCat** contain ALL covs that will be used across ALL models. The dataset is filtered from the very beginning (Metadata.M.tsv)  to remove samples with missing data in any of the covs, then plink filtering, PCA outlier removal, WeibullFiltering, and a Final PCA. Skipping EDA and feature selection. Doing it this way preserves significantly more samples.
+- Once you have found the model with the lowest AIC/BIC, you will run this once more, only this time **columnCont** and **columnCat** will only contain the covs in the best model. This again maximizes sample retention. 
 
 ```
 columnCat="('PhyloHap','BABY_SEX')"
