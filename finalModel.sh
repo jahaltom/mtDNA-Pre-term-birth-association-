@@ -116,4 +116,4 @@ Rscript finalModel_freq_vs_bayesian_IDENT.r REF COVARIATES
 
 
 
-cp -r model_outputs/* .
+cp -r model_outputs/* ../Final_Model
