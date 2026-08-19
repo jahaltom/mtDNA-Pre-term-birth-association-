@@ -83,7 +83,8 @@ def read_txt_shap(path):
         .sum()
         .sort_values("importance", ascending=False)
     )
-    out["rank"] = np.arange(1, len(out) + 1)
+    out["rank"] = out["importance"].rank(method="min", ascending=False)
+    out.loc[out["importance"] == 0, "rank"] = np.nan
     return out[["variable", "rank", "importance"]]
 
 def read_importance_file(path):
