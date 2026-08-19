@@ -32,7 +32,15 @@ def read_csv_shap(path):
         .sum()
         .sort_values("importance", ascending=False)
     )
-    out["rank"] = np.arange(1, len(out) + 1)
+    # Rank only features with non-zero importance
+    out["rank"] = np.nan
+    
+    nonzero = out["importance"] > 0
+    
+    out.loc[nonzero, "rank"] = (
+        out.loc[nonzero, "importance"]
+        .rank(method="min", ascending=False)
+    )
     return out[["variable", "rank", "importance"]]
 
 def read_txt_shap(path):
