@@ -113,7 +113,13 @@ python site_pc_structure_tests.py \
 module load R
 sed "s/MainHap/$target/g" finalModel_freq_vs_bayesian.r > finalModel_freq_vs_bayesian_IDENT.r
 Rscript finalModel_freq_vs_bayesian_IDENT.r REF COVARIATES
+#Base model
+Rscript finalModel_freq_vs_bayesian_IDENT.r REF "BABY_SEX + PW_AGE + MAT_HEIGHT + PC1 + PC2 + PC3"
 
 
+
+for dir in model_outputs/*/; do
+    mv "$dir" "${dir%/}_IDENT"
+done
 
 cp -r model_outputs/* ../Final_Model
