@@ -255,7 +255,8 @@ for p in populations:
                 "direction": ga_brm["beta_days"].apply(direction_ga),
                 "Pr_longer_GA": ga_brm["Pr_beta_gt0"],
                 "Pr_GA_gt_1_day_longer": ga_brm["Pr_days_gt_1"],
-                "Pr_GA_gt_1_day_shorter": ga_brm["Pr_days_lt_m1"]
+                "Pr_GA_gt_1_day_shorter": ga_brm["Pr_days_lt_m1"],
+                "IDENT": IDENT
             })
 
             ga_tmbG = pd.read_csv(ga_tmb_G_path).copy()
@@ -277,7 +278,8 @@ for p in populations:
                 "padj": ga_tmbG["padj"],
                 "AIC": ga_tmbG["AIC"] if "AIC" in ga_tmbG.columns else np.nan,
                 "BIC": ga_tmbG["BIC"] if "BIC" in ga_tmbG.columns else np.nan,
-                "logLik": ga_tmbG["logLik"] if "logLik" in ga_tmbG.columns else np.nan
+                "logLik": ga_tmbG["logLik"] if "logLik" in ga_tmbG.columns else np.nan,
+                "IDENT": IDENT
             })
             
             ga_tmbT = pd.read_csv(ga_tmb_T_path).copy()
@@ -299,7 +301,8 @@ for p in populations:
                 "padj": ga_tmbT["padj"],
                 "AIC": ga_tmbT["AIC"] if "AIC" in ga_tmbT.columns else np.nan,
                 "BIC": ga_tmbT["BIC"] if "BIC" in ga_tmbT.columns else np.nan,
-                "logLik": ga_tmbT["logLik"] if "logLik" in ga_tmbT.columns else np.nan
+                "logLik": ga_tmbT["logLik"] if "logLik" in ga_tmbT.columns else np.nan,
+                "IDENT": IDENT
             })
             
 
@@ -339,7 +342,8 @@ for p in populations:
                 "OR_low": ptb_brm["OR_low"],
                 "OR_high": ptb_brm["OR_hi"],
                 "direction": ptb_brm["OR"].apply(direction_ptb),
-                "Pr_higher_PTB_odds": ptb_brm["Pr_OR_gt_1"]
+                "Pr_higher_PTB_odds": ptb_brm["Pr_OR_gt_1"],
+                "IDENT": IDENT
             })
 
             ptb_tmb = pd.read_csv(ptb_tmb_path).copy()
@@ -359,7 +363,8 @@ for p in populations:
                 "padj": ptb_tmb["padj"],
                 "AIC": ptb_tmb["AIC"] if "AIC" in ptb_tmb.columns else np.nan,
                 "BIC": ptb_tmb["BIC"] if "BIC" in ptb_tmb.columns else np.nan,
-                "logLik": ptb_tmb["logLik"] if "logLik" in ptb_tmb.columns else np.nan
+                "logLik": ptb_tmb["logLik"] if "logLik" in ptb_tmb.columns else np.nan,
+                "IDENT": IDENT
             })
 
             final_ptb = pd.concat(
