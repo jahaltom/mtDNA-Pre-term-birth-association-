@@ -119,7 +119,7 @@ Rscript finalModel_freq_vs_bayesian_IDENT.r REF "BABY_SEX + PW_AGE + MAT_HEIGHT 
 
 
 for dir in model_outputs/*/; do
-    mv "$dir" "${dir%/}_IDENT"
+    mv "$dir" "${dir%/}@IDENT"
 done
 
 cp -r model_outputs/* ../Final_Model
