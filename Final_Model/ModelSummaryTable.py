@@ -218,7 +218,10 @@ for p in populations:
 
         parts = file.split("_")
         reference_haplogroup = parts[0]
-        covariates = "_".join(parts[1:])
+        covariatesIDENT = "_".join(parts[1:])
+        parts2=covariatesIDENT.split("@")
+        covariates=parts2[0]
+        IDENT=parts2[1]
 
         GA_EQUATION = f"GA ~ Haplogroup + {covariates}"
         PTB_EQUATION = f"PTB ~ Haplogroup + {covariates}"
