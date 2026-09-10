@@ -11,7 +11,7 @@ BASE_MODEL = (
     "GA ~ Haplogroup + BABY_SEX_PW_AGE_MAT_HEIGHT_PC1_PC2_PC3"
 )
 
-MODEL_TYPE = "glmmTMB"
+MODEL_TYPE = "glmmTMB_gaussian"
 
 PADJ_CUTOFF = 0.05
 EFFECT_CHANGE_CUTOFF = 10.0   # percent
