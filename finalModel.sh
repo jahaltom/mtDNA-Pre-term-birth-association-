@@ -122,4 +122,7 @@ for dir in model_outputs/*/; do
     mv "$dir" "${dir%/}@IDENT"
 done
 
-cp -r model_outputs/* ../Final_Model
+
+mkdir -p ../Final_Model_Results
+
+cp -r model_outputs/* ../Final_Model_Results
