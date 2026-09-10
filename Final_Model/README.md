@@ -545,12 +545,13 @@ Output Files:
 ModelSummaryTable.py: A Python script was developed to automatically summarize results from all final association models across populations and reference haplogroups. The script recursively identified each completed model run, extracted Bayesian (brms) and frequentist (glmmTMB) results for gestational age (GA) and preterm birth (PTB), standardized effect estimates and confidence/credible intervals into a common format, and annotated each result with the corresponding population, reference haplogroup, model equation, and covariate set. For PTB analyses, haplogroup-specific sample counts, PTB rates, term birth counts, and descriptive summaries were merged from precomputed haplogroup frequency tables. For GA, haplogroup-specific sample counts are added to the table. Model fit statistics (AIC, BIC, and log-likelihood), when available, were also retained. Individual results were then concatenated into comprehensive summary tables for GA and PTB separately, providing a unified output for downstream interpretation and manuscript preparation.
 - Script needs to be placed in the directory before Population/mtDNA-Pre-term-birth-association-/Final_Model_Results
 - Update populations variable in this script accordingly.
-- This output will be used to find the best model (Alt vs base) by looking for a >=10% odds-ratio/Effect-size shift (ES_ShiftCheck.py and OR_ShiftCheck.py) from the base for significant haplogroups. If such a shift were to occur, it would mean the cov in the alt model is confounding with haplogroup and should be included in the final model.
-
-```
+  ```
 populations = [
     "African",
     "AMANHI-Pemba",
     "GAPPS-Zambia"
 ]
 ```
+- This output will be used to find the best model (Alt vs base) by looking for a >=10% odds-ratio/Effect-size shift (ES_ShiftCheck.py and OR_ShiftCheck.py) from the base for significant haplogroups. If such a shift were to occur, it would mean the cov in the alt model is confounding with haplogroup and should be included in the final model.
+
+
