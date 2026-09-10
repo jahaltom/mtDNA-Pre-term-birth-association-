@@ -553,6 +553,6 @@ populations = [
     "GAPPS-Zambia"
 ]
 ```
-- This output will be used to find the best model (Alt vs base) by looking for a >=10% odds-ratio/Effect-size shift (ES_ShiftCheck.py and OR_ShiftCheck.py) from the base for significant haplogroups. If such a shift were to occur, it would mean the cov in the alt model is confounding with haplogroup and should be included in the final model.
+- This output will be used to find the best model (Alt vs base) by looking for a >=10% odds-ratio/Effect-size shift (ES_ShiftCheck.py and OR_ShiftCheck.py) from the base for significant haplogroups (padj< 0.05). If such a shift were to occur, it would mean the cov in the alt model is confounding with haplogroup and should be included in the final model.
 
 
