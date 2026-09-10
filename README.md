@@ -125,7 +125,7 @@ Run ConsensusFeatureTable.py once all MLs finished.
 - Construct an informative ID.
 - The dataset is filtered from the very beginning (Metadata.M.tsv)  to remove samples with missing data in any of the covs, then plink filtering, PCA outlier removal, WeibullFiltering, and a Final PCA. Skipping EDA and feature selection. Doing it this way preserves significantly more samples.
 - The alt model you run here (PTB/GA ~ Haplogroup + BABY_SEX + MAT_HEIGHT + BMI + PW_AGE + nDNA PCs) will also get run with the base model (PTB/GA ~ Haplogroup + BABY_SEX + MAT_HEIGHT + PW_AGE + nDNA PCs) on the same dataset. 
-- Once complete OR_ShiftCheck.py and EF_ShiftCheck.py can be run to check for a >=10% shift in odds-ratio/Effect-size from the base for significant haplogeoups. If such a shift were to occur, it would mean the cov in the alt model is confounding with haplogroup and should be included in the final model. 
+- Once complete OR_ShiftCheck.py and ES_ShiftCheck.py can be run to check for a >=10% shift in odds-ratio/Effect-size from the base for significant haplogeoups. If such a shift were to occur, it would mean the cov in the alt model is confounding with haplogroup and should be included in the final model. 
 - See Final_Model tab for more info.
 
 ```
