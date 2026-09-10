@@ -132,7 +132,32 @@ def empty_rate_table():
         "ptb_percent"
     ])
 
+def add_ga_descriptives(final_ga, rate_df):
 
+    if rate_df.empty:
+        final_ga["hap_n_total"] = np.nan
+        return final_ga
+
+    hap_rates = rate_df[
+        [
+            "haplogroup",
+            "population",
+            "n_total"
+        ]
+    ].copy()
+
+    hap_rates = hap_rates.rename(columns={
+        "n_total": "hap_n_total"
+    })
+
+    final_ga = final_ga.merge(
+        hap_rates,
+        on=["haplogroup", "population"],
+        how="left"
+    )
+
+    return final_ga
+    
 def add_ptb_descriptives(final_ptb, rate_df):
     if rate_df.empty:
         for col in [
@@ -310,7 +335,11 @@ for p in populations:
                 [ga_brm_final, ga_tmb_G_final,ga_tmb_T_final],
                 ignore_index=True
             )
-
+            # Add haplogroup sample size
+            final_ga = add_ga_descriptives(
+                final_ga,
+                rate_df
+            )
             final_ga = final_ga.sort_values(["haplogroup", "model"])
 
             final_ga[final_ga.select_dtypes(include="number").columns] = (
