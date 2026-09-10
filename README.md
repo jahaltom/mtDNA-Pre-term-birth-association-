@@ -120,18 +120,19 @@ Run ConsensusFeatureTable.py once all MLs finished.
 #### Final Model
 ##### This is the final model that will associate mtDNA haplogroup with PTB/GA. (finalModel.sh)
 - Specify target (MainHap,SubHap,PhyloHap).
-- Choose categorical and continuous covariates found to be important in feature selection. Include some known covariates that effect PTB (BABY_SEX, MAT_HEIGHT, PW_AGE, nDNA PCs). Don't include nDNA PCs in continuous, only place in covs (covariates) section.
+- Choose categorical and continuous covariates found to be important in feature selection. Include some known covariates that effect PTB (BABY_SEX, MAT_HEIGHT, PW_AGE, nDNA PCs). Don't include nDNA PCs in continuous (columnCont), only place in covs (covariates) section.
 - Choose a reference haplogroup.
 - Construct an informative ID.
-- Be sure ALL models are tested on the same dataset. This will allow for AIC/BIC to be compared across models to find the best one. To do this, just be sure **columnCont** and **columnCat** contain ALL covs that will be used across ALL models. The dataset is filtered from the very beginning (Metadata.M.tsv)  to remove samples with missing data in any of the covs, then plink filtering, PCA outlier removal, WeibullFiltering, and a Final PCA. Skipping EDA and feature selection. Doing it this way preserves significantly more samples.
-- Once you have found the model with the lowest AIC/BIC, you will run this once more, only this time **columnCont** and **columnCat** will only contain the covs in the best model. This again maximizes sample retention.
+- The dataset is filtered from the very beginning (Metadata.M.tsv)  to remove samples with missing data in any of the covs, then plink filtering, PCA outlier removal, WeibullFiltering, and a Final PCA. Skipping EDA and feature selection. Doing it this way preserves significantly more samples.
+- The alt model you run here (PTB/GA ~ Haplogroup + BABY_SEX + MAT_HEIGHT + BMI + PW_AGE + nDNA PCs) will also get run with the base model (PTB/GA ~ Haplogroup + BABY_SEX + MAT_HEIGHT + PW_AGE + nDNA PCs) on the same dataset. 
+- Once complete OR_ShiftCheck.py and EF_ShiftCheck.py can be run to check for a >=10% shift in odds-ratio/Effect-size from the base for significant haplogeoups. If such a shift were to occur, it would mean the cov in the alt model is confounding with haplogroup and should be included in the final model. 
 - See Final_Model tab for more info.
 
 ```
 columnCat="('PhyloHap','BABY_SEX')"
-columnCont="('PW_AGE','MAT_HEIGHT')"
+columnCont="('PW_AGE','MAT_HEIGHT','BMI')"
 target="PhyloHap"
-covs='"BABY_SEX + PW_AGE + MAT_HEIGHT + PC1 + PC2 + PC3"'
+covs='"BABY_SEX + PW_AGE + MAT_HEIGHT + BMI + PC1 + PC2 + PC3"'
 ref='"M3"'
 ID="PCsM3"
 
