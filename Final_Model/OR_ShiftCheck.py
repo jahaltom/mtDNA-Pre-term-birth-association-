@@ -271,7 +271,7 @@ if len(flagged) > 0:
                 "population",
                 "haplogroup",
                 "reference_haplogroup",
-                "IDENT"
+                "IDENT",
                 "comparison_model_equation",
                 "base_OR",
                 "comparison_OR",
