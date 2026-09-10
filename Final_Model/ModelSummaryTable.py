@@ -194,7 +194,7 @@ def add_ptb_descriptives(final_ptb, rate_df):
 for p in populations:
 
     model_root = Path(
-        p + "/mtDNA-Pre-term-birth-association-/Final_Model"
+        p + "/mtDNA-Pre-term-birth-association-/Final_Model_Results"
     )
 
     if not model_root.exists():
