@@ -569,3 +569,10 @@ All fixed-effect priors apply to haplogroup and included covariates (e.g., PCs, 
 - This output will be used to find the best model (Alt vs base) by looking for a >=10% odds-ratio/Effect-size shift (ES_ShiftCheck.py and OR_ShiftCheck.py) from the base for significant haplogroups (padj< 0.05). If such a shift were to occur, it would mean the cov in the alt model is confounding with haplogroup and should be included in the final model.
 
 
+
+### Publication-Ready Summary Tables: FinalTable_PubReady.py
+This script generates publication-ready summary tables for maternal mtDNA haplogroup associations with preterm birth (PTB). It combines frequentist glmmTMB and Bayesian brms results with haplogroup sample sizes and PTB frequencies, reporting odds ratios, 95% confidence/credible intervals, adjusted p-values, and posterior probabilities. Results are formatted into publication-quality PNG and PDF tables, with the underlying combined results also exported as a CSV.
+
+![Pemba L3 Publication Table](Pemba_L2a_publication_table.png)
+
+
