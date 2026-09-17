@@ -554,6 +554,13 @@ populations = [
 ]
 ```
 
+### Statistical Models
+
+| Outcome | Frequentist (glmmTMB) | Bayesian (brms) |
+|---|---|---|
+| Gestational age (GA) | Gaussian and Student-t | Student-t |
+| Preterm birth (PTB) | Binomial (logit) | Bernoulli (logit) |
+
 ### Bayesian Priors for ModelSummaryTable.py
 
 | Model | Parameter | Prior |
@@ -571,7 +578,7 @@ All fixed-effect priors apply to haplogroup and included covariates (e.g., PCs, 
 
 
 ### Publication-Ready Summary Tables: FinalTable_PubReady.py
-This script generates publication-ready summary tables for maternal mtDNA haplogroup associations with preterm birth (PTB). It combines frequentist glmmTMB and Bayesian brms results with haplogroup sample sizes and PTB frequencies, reporting odds ratios, 95% confidence/credible intervals, adjusted p-values, and posterior probabilities. Results are formatted into publication-quality PNG and PDF tables, with the underlying combined results also exported as a CSV.
+This script generates publication-ready summary tables for maternal mtDNA haplogroup associations with preterm birth (PTB) using ModelSummaryTable.py. It combines frequentist glmmTMB and Bayesian brms results with haplogroup sample sizes and PTB frequencies, reporting odds ratios, 95% confidence/credible intervals, adjusted p-values, and posterior probabilities. Results are formatted into publication-quality PNG and PDF tables, with the underlying combined results also exported as a CSV.
 
 ![Pemba L3 Publication Table](Pemba_L2a_publication_table.png)
 
