@@ -553,8 +553,6 @@ populations = [
     "GAPPS-Zambia"
 ]
 ```
-- This output will be used to find the best model (Alt vs base) by looking for a >=10% odds-ratio/Effect-size shift (ES_ShiftCheck.py and OR_ShiftCheck.py) from the base for significant haplogroups (padj< 0.05). If such a shift were to occur, it would mean the cov in the alt model is confounding with haplogroup and should be included in the final model.
-
 
 ### Bayesian Priors for ModelSummaryTable.py
 
@@ -566,5 +564,8 @@ populations = [
 | GA / PTB | Site random-effect SD, if included | Student-t(3, 0, 2.5) |
 
 All fixed-effect priors apply to haplogroup and included covariates (e.g., PCs, clinical covariates, sex, and fixed site effects).  
-PTB prior-sensitivity analyses additionally evaluate Normal(0, 0.5), Normal(0, 2.5), and brms default priors; the final PTB model uses Normal(0, 1.0).
+
+
+- This output will be used to find the best model (Alt vs base) by looking for a >=10% odds-ratio/Effect-size shift (ES_ShiftCheck.py and OR_ShiftCheck.py) from the base for significant haplogroups (padj< 0.05). If such a shift were to occur, it would mean the cov in the alt model is confounding with haplogroup and should be included in the final model.
+
 
