@@ -1,7 +1,7 @@
 # mtDNA Pre-term birth association
 
 ```
-snakemake -j 22 -s Prepare_1KGP --latency-wait 60 --cluster "sbatch -t 02:00:00 -c 24 -N 1"
+snakemake -j 24 -s Prepare_1KGP --use-conda --rerun-incomplete --latency-wait 60 --cluster "sbatch -t 05:00:00 -c {threads} -N 1"
 ```
 
 
