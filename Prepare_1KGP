@@ -1,30 +1,305 @@
-#Make list 1-22
-chr_num = [str(x) for x in range(1, 23)]
+# ============================================================
+# 1000 Genomes download + PLINK2 conversion
+# ============================================================
+
+CHR = [str(x) for x in range(1, 23)]
+
+VCF_DIR = "1000GP_Data"
+PLINK_DIR = "1000GP_PLINK"
+PLINK2 = "/home/haltomj/bin/plink2_latest/plink2"
 
 rule all:
     input:
-        expand("1000G_chr{chr}.pgen", chr=chr_num),
-        expand("1000G_chr{chr}.pvar", chr=chr_num),
-        expand("1000G_chr{chr}.psam", chr=chr_num)
+        # Converted 1000G chromosomes
+        expand(f"{PLINK_DIR}/1000G_chr{{chr}}.pgen", chr=CHR),
+        expand(f"{PLINK_DIR}/1000G_chr{{chr}}.pvar", chr=CHR),
+        expand(f"{PLINK_DIR}/1000G_chr{{chr}}.psam", chr=CHR),
+
+        # Per-chromosome shared SNP lists
+        expand("shared/shared_chr{chr}.ids", chr=CHR),
+
+        # Combined shared SNP list
+        "shared/shared_all.ids",
+
+        # Cohort restricted to shared SNPs
+        "merged/cohort_shared.pgen",
+        "merged/cohort_shared.pvar",
+        "merged/cohort_shared.psam",
+
+        # 1000G chromosomes restricted to shared SNPs
+        expand("shared_1kg/1000G_chr{chr}.pgen", chr=CHR),
+        expand("shared_1kg/1000G_chr{chr}.pvar", chr=CHR),
+        expand("shared_1kg/1000G_chr{chr}.psam", chr=CHR),
+
+        # Final joint dataset
+        "merged/joint_1000G_cohort.bed",
+        "merged/joint_1000G_cohort.bim",
+        "merged/joint_1000G_cohort.fam"
+
+
+
+# ============================================================
+# Download 1000 Genomes GRCh38 VCFs
+# ============================================================
 
 rule Download1KGP:
-    input:
-        "ALL.chr{chr}.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf.gz"
     output:
-        pgen="1000G_chr{chr}.pgen",
-        pvar="1000G_chr{chr}.pvar",
-        psam="1000G_chr{chr}.psam"
+        vcf=(
+            f"{VCF_DIR}/"
+            "ALL.chr{chr}.shapeit2_integrated_snvindels_v2a_27022019."
+            "GRCh38.phased.vcf.gz"
+        )
     shell:
+        r"""
+        mkdir -p {VCF_DIR}
+
+        wget --continue -O {output.vcf} ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/release/20190312_biallelic_SNV_and_INDEL/ALL.chr{wildcards.chr}.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf.gz
         """
-            #For each chromosome Chr1–22:
-            #Download 1000 genomes VCF
-            #wget ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/release/20190312_biallelic_SNV_and_INDEL/ALL.chr{wildcards.chr}.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf.gz
-            #Convert 1000G VCF to PLINK
-            plink2 \
-              --vcf {input} \
-              --double-id \
-              --max-alleles 2 \
-              --snps-only just-acgt \
-              --make-pgen \
-              --out 1000G_chr{wildcards.chr}
+
+
+# ============================================================
+# Convert 1000 Genomes VCF -> PLINK2
+#
+# Variant IDs are rewritten as:
+# CHR:POS:REF:ALT
+#
+# Example:
+# 22:10651162:C:A
+#
+# This matches your cohort variant-ID format.
+# ============================================================
+
+rule Convert1KGP:
+    input:
+        vcf=(
+            f"{VCF_DIR}/"
+            "ALL.chr{chr}.shapeit2_integrated_snvindels_v2a_27022019."
+            "GRCh38.phased.vcf.gz"
+        )
+    output:
+        pgen=f"{PLINK_DIR}/1000G_chr{{chr}}.pgen",
+        pvar=f"{PLINK_DIR}/1000G_chr{{chr}}.pvar",
+        psam=f"{PLINK_DIR}/1000G_chr{{chr}}.psam"
+    shell:
+        r"""
+        mkdir -p {PLINK_DIR}
+
+        {PLINK2} \
+          --vcf {input.vcf} \
+          --double-id \
+          --max-alleles 2 \
+          --snps-only just-acgt \
+          --set-all-var-ids '@:#:$r:$a' \
+          --make-pgen \
+          --out {PLINK_DIR}/1000G_chr{wildcards.chr}
+        """
+            
+rule SharedSNPs:
+    input:
+        pvar=f"{PLINK_DIR}/1000G_chr{{chr}}.pvar",
+        bim="plink2.bim"
+    output:
+        "shared/shared_chr{chr}.ids"
+    shell:
+        r"""
+        mkdir -p shared
+
+        # 1KGP SNP IDs
+        awk '!/^#/ {{print $3}}' {input.pvar} \
+            | sort -u \
+            > shared/1kg_chr{wildcards.chr}.ids
+
+        # Cohort SNP IDs for this chromosome
+        awk -v chr={wildcards.chr} '
+            $1==chr &&
+            length($5)==1 &&
+            length($6)==1 &&
+            $5 ~ /^[ACGT]$/ &&
+            $6 ~ /^[ACGT]$/ {{
+                print $2
+            }}' {input.bim} \
+            | sort -u \
+            > shared/cohort_chr{wildcards.chr}.ids
+
+        # Intersection
+        comm -12 \
+            shared/cohort_chr{wildcards.chr}.ids \
+            shared/1kg_chr{wildcards.chr}.ids \
+            > {output}
+        """
+rule CombineSharedSNPs:
+    input:
+        expand("shared/shared_chr{chr}.ids", chr=CHR)
+    output:
+        "shared/shared_all.ids"
+    shell:
+        r"""
+        cat {input} | sort -u > {output}
+        """
+rule ExtractCohortShared:
+    input:
+        shared="shared/shared_all.ids",
+        bed="plink2.bed",
+        bim="plink2.bim",
+        fam="plink2.fam"
+    output:
+        pgen="merged/cohort_shared.pgen",
+        pvar="merged/cohort_shared.pvar",
+        psam="merged/cohort_shared.psam"
+    shell:
+        r"""
+        mkdir -p merged
+
+        {PLINK2} \
+          --bfile plink2 \
+          --extract {input.shared} \
+          --chr 1-22 \
+          --make-pgen \
+          --out merged/cohort_shared
+        """
+rule Extract1KGPShared:
+    input:
+        pgen=f"{PLINK_DIR}/1000G_chr{{chr}}.pgen",
+        pvar=f"{PLINK_DIR}/1000G_chr{{chr}}.pvar",
+        psam=f"{PLINK_DIR}/1000G_chr{{chr}}.psam",
+        shared="shared/shared_chr{chr}.ids"
+    output:
+        pgen="shared_1kg/1000G_chr{chr}.pgen",
+        pvar="shared_1kg/1000G_chr{chr}.pvar",
+        psam="shared_1kg/1000G_chr{chr}.psam"
+    shell:
+        r"""
+        mkdir -p shared_1kg
+
+        {PLINK2} \
+          --pfile {PLINK_DIR}/1000G_chr{wildcards.chr} \
+          --extract {input.shared} \
+          --make-pgen \
+          --out shared_1kg/1000G_chr{wildcards.chr}
+        """
+# ============================================================
+# Concatenate 1000G chromosomes 1-22
+# PLINK2 Alpha 7.11 supports this because it is concatenation.
+# ============================================================
+
+rule Merge1KGPChromosomes:
+    input:
+        pgen=expand("shared_1kg/1000G_chr{chr}.pgen", chr=CHR),
+        pvar=expand("shared_1kg/1000G_chr{chr}.pvar", chr=CHR),
+        psam=expand("shared_1kg/1000G_chr{chr}.psam", chr=CHR)
+
+    output:
+        pgen="merged/1000G_shared.pgen",
+        pvar="merged/1000G_shared.pvar",
+        psam="merged/1000G_shared.psam"
+
+    shell:
+        r"""
+        mkdir -p merged
+
+        > merged/1kg_merge_list.txt
+
+        for CHR in {{2..22}}; do
+            echo "shared_1kg/1000G_chr${{CHR}}" \
+                >> merged/1kg_merge_list.txt
+        done
+
+        {PLINK2} \
+          --pfile shared_1kg/1000G_chr1 \
+          --pmerge-list merged/1kg_merge_list.txt \
+          --make-pgen \
+          --out merged/1000G_shared
+        """
+
+
+# ============================================================
+# Convert 1000G and cohort shared datasets to BED
+# ============================================================
+
+rule ConvertForMerge:
+    input:
+        kg_pgen="merged/1000G_shared.pgen",
+        kg_pvar="merged/1000G_shared.pvar",
+        kg_psam="merged/1000G_shared.psam",
+
+        cohort_pgen="merged/cohort_shared.pgen",
+        cohort_pvar="merged/cohort_shared.pvar",
+        cohort_psam="merged/cohort_shared.psam"
+
+    output:
+        kg_bed="merged/1000G_shared_bed.bed",
+        kg_bim="merged/1000G_shared_bed.bim",
+        kg_fam="merged/1000G_shared_bed.fam",
+
+        cohort_bed="merged/cohort_shared_bed.bed",
+        cohort_bim="merged/cohort_shared_bed.bim",
+        cohort_fam="merged/cohort_shared_bed.fam"
+
+    shell:
+        r"""
+        {PLINK2} \
+          --pfile merged/1000G_shared \
+          --make-bed \
+          --out merged/1000G_shared_bed
+
+        {PLINK2} \
+          --pfile merged/cohort_shared \
+          --make-bed \
+          --out merged/cohort_shared_bed
+        """
+
+
+# ============================================================
+# Sample-wise merge with stable PLINK 1.9
+# ============================================================
+
+rule MergeCohortAnd1KGP:
+    input:
+        kg_bed="merged/1000G_shared_bed.bed",
+        kg_bim="merged/1000G_shared_bed.bim",
+        kg_fam="merged/1000G_shared_bed.fam",
+
+        cohort_bed="merged/cohort_shared_bed.bed",
+        cohort_bim="merged/cohort_shared_bed.bim",
+        cohort_fam="merged/cohort_shared_bed.fam"
+
+    output:
+        bed="merged/joint_1000G_cohort.bed",
+        bim="merged/joint_1000G_cohort.bim",
+        fam="merged/joint_1000G_cohort.fam"
+
+    resources:
+        mem_mb=300000
+
+    shell:
+        r"""
+        plink \
+          --bfile merged/1000G_shared_bed \
+          --bmerge merged/cohort_shared_bed \
+          --make-bed \
+          --out merged/joint_1000G_cohort
+        """
+
+
+# ============================================================
+# Convert final joint dataset back to PGEN
+# ============================================================
+
+rule JointBackToPGEN:
+    input:
+        bed="merged/joint_1000G_cohort.bed",
+        bim="merged/joint_1000G_cohort.bim",
+        fam="merged/joint_1000G_cohort.fam"
+
+    output:
+        pgen="merged/joint_1000G_cohort.pgen",
+        pvar="merged/joint_1000G_cohort.pvar",
+        psam="merged/joint_1000G_cohort.psam"
+
+    shell:
+        r"""
+        {PLINK2} \
+          --bfile merged/joint_1000G_cohort \
+          --make-pgen \
+          --out merged/joint_1000G_cohort
         """
