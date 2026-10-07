@@ -1,5 +1,11 @@
 # mtDNA Pre-term birth association
 
+## Run Haplogrep3 to assign haplogroups to samples.
+
+```
+./haplogrep3 classify  --extend-report --tree phylotree-rcrs@17.2 --in merged_chrM_22175.vcf --out haplogrep3OUT_22175
+```
+
 # Get plink2's most up2date ver
 ```
 mkdir -p ~/bin/plink2_latest
@@ -50,13 +56,35 @@ qc/maternal_ptb.fam
 snakemake -j 22 -s snakefile --use-conda  --latency-wait 60 --cluster "sbatch -t 05:00:00 -c 8 -N 1"
 ```
 
+# 1KGP outler removal and assigment 
+```
+python globalPCA_pipeline.py --stage initial
+```
+# Build the ancestry-cleaned study PLINK cohort
+```
+/home/haltomj/bin/plink2_latest/plink2 \
+  --bfile qc/maternal_ptb \
+  --keep qc/maternal_ptb_globalPCA.keep \
+  --make-bed \
+  --out qc/maternal_ptb_globalPCA
+  ```
 
-## Run Haplogrep3 to assign haplogroups to samples.
+You now substitute:
+```
+qc/maternal_ptb_globalPCA
+```
+for:
+```
+qc/maternal_ptb
+```
+in your Snakemake workflow
+Have it write:
+pca/joint_global_final.eigenvec
+pca/joint_global_final.eigenval
 
 ```
-./haplogrep3 classify  --extend-report --tree phylotree-rcrs@17.2 --in merged_chrM_22175.vcf --out haplogrep3OUT_22175
+python globalPCA_pipeline.py --stage final
 ```
-
 ## Metadata curration and filtering. 
 This script merges Haplogrep3 output with metadata files (MOMI_derived_data.csv and samples.tab), filters for high-quality haplogroup calls (Quality ≥ 0.9) and live births (PREG_OUTCOME = 2), and assigns main/sub-haplogroups. It sets ALCOHOL_FREQ, SMOK_FREQ, and SNIFF_FREQ to 0 when ALCOHOL, SMOKE_HIST, and SNIFF_TOBA are "never," calculates BMI, and categorizes population by site. Makes SuperHap, SuperHap2, and PhyloHap (for south asian only) classification based on mtDNA phylogeny https://forensicgenomics.github.io/mitoLeaf/. All other haplogroups classified as "Other". Use MainHap and SubHap for African. Finally, it splits the dataset into mother and child subsets and writes them to Metadata.M.tsv and Metadata.C.tsv.
 ```
