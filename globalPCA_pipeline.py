@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 METADATA_FILE = "momi_mothers_merged.csv"
 
 # Change if your 1000 Genomes annotation file has another name.
-PANEL_FILE = "integrated_call_samples_v3.20130502.ALL.panel"
+PANEL_FILE = "1KGP.metadata.tsv"
 
 # First/global QC PCA from the original eligible maternal cohort
 INITIAL_PCA_FILE = "pca/joint_global.eigenvec"
@@ -257,96 +257,273 @@ def read_metadata():
 # HELPER: READ 1000G PANEL
 # ============================================================
 
+# ============================================================
+# HELPER: READ 1000 GENOMES METADATA
+#
+# Expected input columns:
+#
+# Sample name
+# Population code
+# Population name
+# Superpopulation code
+# Superpopulation name
+#
+# Example:
+# HG00315   FIN   Finnish   EUR   European Ancestry
+#
+# Some samples are also present in other projects such as SGDP,
+# producing comma-separated annotations such as:
+#
+# FIN,FinnishSGDP
+#
+# For this analysis we use the FIRST annotation, which
+# corresponds to the 1000 Genomes population.
+# ============================================================
+
 def read_1000g_panel():
 
     panel = pd.read_csv(
         PANEL_FILE,
-        sep=r"\s+",
-        dtype=str
+        sep="\t",
+        dtype=str,
+        low_memory=False
     )
 
-    rename_panel = {}
+    print("\n========================================")
+    print("1000 GENOMES METADATA")
+    print("========================================")
 
-    for col in panel.columns:
-
-        lower = col.lower()
-
-        if lower in [
-            "sample",
-            "sample_id",
-            "iid"
-        ]:
-
-            rename_panel[col] = "IID"
-
-        elif lower in [
-            "pop",
-            "population"
-        ]:
-
-            rename_panel[col] = "Population"
-
-        elif lower in [
-            "super_pop",
-            "superpopulation",
-            "super_population"
-        ]:
-
-            rename_panel[col] = "Superpopulation"
-
-
-    panel = panel.rename(
-        columns=rename_panel
+    print(
+        "Rows in metadata:",
+        len(panel)
     )
 
+    print(
+        "\nColumns:"
+    )
+
+    print(
+        panel.columns.tolist()
+    )
+
+
+    # --------------------------------------------------------
+    # Required columns
+    # --------------------------------------------------------
 
     required = [
-        "IID",
-        "Population",
-        "Superpopulation"
+        "Sample name",
+        "Population code",
+        "Population name",
+        "Superpopulation code",
+        "Superpopulation name"
     ]
 
     missing = [
-        x
-        for x in required
-        if x not in panel.columns
+        col
+        for col in required
+        if col not in panel.columns
     ]
 
     if missing:
 
         raise ValueError(
-            "1000G panel is missing required columns: "
+            "1KGP metadata is missing required columns: "
             + ", ".join(missing)
         )
 
 
-    panel["IID"] = clean_string_series(
-        panel["IID"]
+    # --------------------------------------------------------
+    # Keep relevant columns
+    # --------------------------------------------------------
+
+    panel = panel[
+        [
+            "Sample name",
+            "Population code",
+            "Population name",
+            "Superpopulation code",
+            "Superpopulation name"
+        ]
+    ].copy()
+
+
+    # --------------------------------------------------------
+    # Rename to standard names used by the PCA script
+    # --------------------------------------------------------
+
+    panel = panel.rename(
+        columns={
+            "Sample name":
+                "IID",
+
+            "Population code":
+                "Population",
+
+            "Population name":
+                "Population_name",
+
+            "Superpopulation code":
+                "Superpopulation",
+
+            "Superpopulation name":
+                "Superpopulation_name"
+        }
     )
 
-    panel["Population"] = clean_string_series(
-        panel["Population"]
-    )
 
-    panel["Superpopulation"] = clean_string_series(
-        panel["Superpopulation"]
-    )
+    # --------------------------------------------------------
+    # Clean whitespace
+    # --------------------------------------------------------
 
+    for col in [
+        "IID",
+        "Population",
+        "Population_name",
+        "Superpopulation",
+        "Superpopulation_name"
+    ]:
 
-    if panel["IID"].duplicated().any():
-
-        raise ValueError(
-            "1000G panel contains duplicate IID values."
+        panel[col] = (
+            panel[col]
+            .astype("string")
+            .str.strip()
         )
 
 
-    return panel[
-        [
-            "IID",
-            "Population",
+    # --------------------------------------------------------
+    # Some metadata rows contain annotations from more than
+    # one project.
+    #
+    # Example:
+    #
+    # Population:
+    # FIN,FinnishSGDP
+    #
+    # Superpopulation name:
+    # European Ancestry,West Eurasia (SGDP)
+    #
+    # Since this PCA uses the 1000 Genomes reference panel,
+    # retain the FIRST annotation.
+    # --------------------------------------------------------
+
+    for col in [
+        "Population",
+        "Population_name",
+        "Superpopulation",
+        "Superpopulation_name"
+    ]:
+
+        panel[col] = (
+            panel[col]
+            .str.split(",")
+            .str[0]
+            .str.strip()
+        )
+
+
+    # --------------------------------------------------------
+    # Remove missing sample IDs
+    # --------------------------------------------------------
+
+    panel = panel[
+        panel["IID"].notna()
+    ].copy()
+
+
+    # --------------------------------------------------------
+    # Verify unique sample IDs
+    # --------------------------------------------------------
+
+    duplicate_ids = panel[
+        panel.duplicated(
+            subset="IID",
+            keep=False
+        )
+    ].copy()
+
+
+    print(
+        "\nDuplicate Sample name rows:",
+        len(duplicate_ids)
+    )
+
+
+    if len(duplicate_ids) > 0:
+
+        duplicate_ids.to_csv(
+            OUTDIR /
+            "duplicate_1KGP_metadata_IDs.csv",
+            index=False
+        )
+
+        raise ValueError(
+            "1KGP metadata contains duplicate Sample name "
+            "values. See duplicate_1KGP_metadata_IDs.csv."
+        )
+
+
+    # --------------------------------------------------------
+    # Basic QC
+    # --------------------------------------------------------
+
+    print(
+        "\n1000G superpopulations:"
+    )
+
+    print(
+        panel[
             "Superpopulation"
         ]
-    ].copy()
+        .value_counts(
+            dropna=False
+        )
+        .sort_index()
+    )
+
+
+    print(
+        "\n1000G populations:"
+    )
+
+    print(
+        panel[
+            "Population"
+        ]
+        .value_counts(
+            dropna=False
+        )
+        .sort_index()
+    )
+
+
+    print(
+        "\nPopulation labels:"
+    )
+
+    print(
+        panel[
+            [
+                "Population",
+                "Population_name",
+                "Superpopulation",
+                "Superpopulation_name"
+            ]
+        ]
+        .drop_duplicates()
+        .sort_values(
+            [
+                "Superpopulation",
+                "Population"
+            ]
+        )
+        .to_string(
+            index=False
+        )
+    )
+
+
+    return panel
 
 
 # ============================================================
