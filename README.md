@@ -1,7 +1,53 @@
 # mtDNA Pre-term birth association
 
+# Get plink2's most up2date ver
 ```
-snakemake -j 24 -s Prepare_1KGP --use-conda --rerun-incomplete --latency-wait 60 --cluster "sbatch -t 05:00:00 -c {threads} -N 1"
+mkdir -p ~/bin/plink2_latest
+cd ~/bin/plink2_latest
+
+wget -O plink2.zip 'PASTE_THE_DOWNLOAD_URL_HERE' https://s3.amazonaws.com/plink2-assets/alpha7/plink2_linux_avx2_20261001.zip
+unzip plink2.zip
+chmod +x plink2
+
+./plink2 --version
+
+export PATH="$HOME/bin/plink2_latest:$PATH"
+
+which plink2
+plink2 --version
+
+
+```
+# Use raw plink2.bed/.bim/.fam to make missingness report.
+```
+mkdir -p qc
+
+/home/haltomj/bin/plink2_latest/plink2 \
+  --bfile plink2 \
+  --missing sample-only \
+  --out qc/cohort_raw_missing
+```
+# Run masterMetadata.py to make  momi_mothers_merged.csv. FIlteres live brioths and QUlity > .90. 
+
+# Subset
+```
+/home/haltomj/bin/plink2_latest/plink2 \
+  --bfile plink2 \
+  --keep qc/maternal_ptb.keep \
+  --make-bed \
+  --out qc/maternal_ptb
+
+```
+# This dmakes 
+```
+qc/maternal_ptb.bed
+qc/maternal_ptb.bim
+qc/maternal_ptb.fam
+```
+
+
+```
+snakemake -j 22 -s snakefile --use-conda  --latency-wait 60 --cluster "sbatch -t 05:00:00 -c 8 -N 1"
 ```
 
 
