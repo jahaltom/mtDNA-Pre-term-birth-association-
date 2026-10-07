@@ -10,32 +10,13 @@ PLINK2 = "/home/haltomj/bin/plink2_latest/plink2"
 
 rule all:
     input:
-        # Converted 1000G chromosomes
-        expand(f"{PLINK_DIR}/1000G_chr{{chr}}.pgen", chr=CHR),
-        expand(f"{PLINK_DIR}/1000G_chr{{chr}}.pvar", chr=CHR),
-        expand(f"{PLINK_DIR}/1000G_chr{{chr}}.psam", chr=CHR),
+        "merged/joint_1000G_cohort.pgen",
+        "merged/joint_1000G_cohort.pvar",
+        "merged/joint_1000G_cohort.psam",
 
-        # Per-chromosome shared SNP lists
-        expand("shared/shared_chr{chr}.ids", chr=CHR),
-
-        # Combined shared SNP list
-        "shared/shared_all.ids",
-
-        # Cohort restricted to shared SNPs
-        "merged/cohort_shared.pgen",
-        "merged/cohort_shared.pvar",
-        "merged/cohort_shared.psam",
-
-        # 1000G chromosomes restricted to shared SNPs
-        expand("shared_1kg/1000G_chr{chr}.pgen", chr=CHR),
-        expand("shared_1kg/1000G_chr{chr}.pvar", chr=CHR),
-        expand("shared_1kg/1000G_chr{chr}.psam", chr=CHR),
-
-        # Final joint dataset
-        "merged/joint_1000G_cohort.bed",
-        "merged/joint_1000G_cohort.bim",
-        "merged/joint_1000G_cohort.fam"
-
+        "pca/joint_global.eigenvec",
+        "pca/joint_global.eigenval",
+        "qc/joint_postqc_missing.smiss"
 
 
 # ============================================================
@@ -97,7 +78,7 @@ rule Convert1KGP:
 rule SharedSNPs:
     input:
         pvar=f"{PLINK_DIR}/1000G_chr{{chr}}.pvar",
-        bim="plink2.bim"
+        bim="qc/maternal_ptb.bim"
     output:
         "shared/shared_chr{chr}.ids"
     shell:
@@ -109,7 +90,7 @@ rule SharedSNPs:
             | sort -u \
             > shared/1kg_chr{wildcards.chr}.ids
 
-        # Cohort SNP IDs for this chromosome
+        # Maternal cohort SNP IDs for this chromosome
         awk -v chr={wildcards.chr} '
             $1==chr &&
             length($5)==1 &&
@@ -127,46 +108,18 @@ rule SharedSNPs:
             shared/1kg_chr{wildcards.chr}.ids \
             > {output}
         """
-rule CombineSharedSNPs:
-    input:
-        expand("shared/shared_chr{chr}.ids", chr=CHR)
-    output:
-        "shared/shared_all.ids"
-    shell:
-        r"""
-        cat {input} | sort -u > {output}
-        """
-rule ExtractCohortShared:
-    input:
-        shared="shared/shared_all.ids",
-        bed="plink2.bed",
-        bim="plink2.bim",
-        fam="plink2.fam"
-    output:
-        pgen="merged/cohort_shared.pgen",
-        pvar="merged/cohort_shared.pvar",
-        psam="merged/cohort_shared.psam"
-    shell:
-        r"""
-        mkdir -p merged
-
-        {PLINK2} \
-          --bfile plink2 \
-          --extract {input.shared} \
-          --chr 1-22 \
-          --make-pgen \
-          --out merged/cohort_shared
-        """
 rule Extract1KGPShared:
     input:
         pgen=f"{PLINK_DIR}/1000G_chr{{chr}}.pgen",
         pvar=f"{PLINK_DIR}/1000G_chr{{chr}}.pvar",
         psam=f"{PLINK_DIR}/1000G_chr{{chr}}.psam",
         shared="shared/shared_chr{chr}.ids"
+
     output:
-        pgen="shared_1kg/1000G_chr{chr}.pgen",
-        pvar="shared_1kg/1000G_chr{chr}.pvar",
-        psam="shared_1kg/1000G_chr{chr}.psam"
+        bed="shared_1kg/1000G_chr{chr}.bed",
+        bim="shared_1kg/1000G_chr{chr}.bim",
+        fam="shared_1kg/1000G_chr{chr}.fam"
+
     shell:
         r"""
         mkdir -p shared_1kg
@@ -174,122 +127,85 @@ rule Extract1KGPShared:
         {PLINK2} \
           --pfile {PLINK_DIR}/1000G_chr{wildcards.chr} \
           --extract {input.shared} \
-          --make-pgen \
+          --make-bed \
           --out shared_1kg/1000G_chr{wildcards.chr}
         """
-# ============================================================
-# Concatenate 1000G chromosomes 1-22
-# PLINK2 Alpha 7.11 supports this because it is concatenation.
-# ============================================================
-
-rule Merge1KGPChromosomes:
+rule ExtractCohortSharedChr:
     input:
-        pgen=expand("shared_1kg/1000G_chr{chr}.pgen", chr=CHR),
-        pvar=expand("shared_1kg/1000G_chr{chr}.pvar", chr=CHR),
-        psam=expand("shared_1kg/1000G_chr{chr}.psam", chr=CHR)
+        bed="qc/maternal_ptb.bed",
+        bim="qc/maternal_ptb.bim",
+        fam="qc/maternal_ptb.fam",
+        shared="shared/shared_chr{chr}.ids"
 
     output:
-        pgen="merged/1000G_shared.pgen",
-        pvar="merged/1000G_shared.pvar",
-        psam="merged/1000G_shared.psam"
+        bed="shared_cohort/cohort_chr{chr}.bed",
+        bim="shared_cohort/cohort_chr{chr}.bim",
+        fam="shared_cohort/cohort_chr{chr}.fam"
 
     shell:
         r"""
-        mkdir -p merged
-
-        > merged/1kg_merge_list.txt
-
-        for CHR in {{2..22}}; do
-            echo "shared_1kg/1000G_chr${{CHR}}" \
-                >> merged/1kg_merge_list.txt
-        done
+        mkdir -p shared_cohort
 
         {PLINK2} \
-          --pfile shared_1kg/1000G_chr1 \
-          --pmerge-list merged/1kg_merge_list.txt \
-          --make-pgen \
-          --out merged/1000G_shared
+          --bfile qc/maternal_ptb \
+          --chr {wildcards.chr} \
+          --extract {input.shared} \
+          --make-bed \
+          --out shared_cohort/cohort_chr{wildcards.chr}
         """
-
-
-# ============================================================
-# Convert 1000G and cohort shared datasets to BED
-# ============================================================
-
-rule ConvertForMerge:
+rule MergeJointChr:
     input:
-        kg_pgen="merged/1000G_shared.pgen",
-        kg_pvar="merged/1000G_shared.pvar",
-        kg_psam="merged/1000G_shared.psam",
+        kg_bed="shared_1kg/1000G_chr{chr}.bed",
+        kg_bim="shared_1kg/1000G_chr{chr}.bim",
+        kg_fam="shared_1kg/1000G_chr{chr}.fam",
 
-        cohort_pgen="merged/cohort_shared.pgen",
-        cohort_pvar="merged/cohort_shared.pvar",
-        cohort_psam="merged/cohort_shared.psam"
+        cohort_bed="shared_cohort/cohort_chr{chr}.bed",
+        cohort_bim="shared_cohort/cohort_chr{chr}.bim",
+        cohort_fam="shared_cohort/cohort_chr{chr}.fam"
 
     output:
-        kg_bed="merged/1000G_shared_bed.bed",
-        kg_bim="merged/1000G_shared_bed.bim",
-        kg_fam="merged/1000G_shared_bed.fam",
-
-        cohort_bed="merged/cohort_shared_bed.bed",
-        cohort_bim="merged/cohort_shared_bed.bim",
-        cohort_fam="merged/cohort_shared_bed.fam"
-
-    shell:
-        r"""
-        {PLINK2} \
-          --pfile merged/1000G_shared \
-          --make-bed \
-          --out merged/1000G_shared_bed
-
-        {PLINK2} \
-          --pfile merged/cohort_shared \
-          --make-bed \
-          --out merged/cohort_shared_bed
-        """
-
-
-# ============================================================
-# Sample-wise merge with stable PLINK 1.9
-# ============================================================
-
-rule MergeCohortAnd1KGP:
-    input:
-        kg_bed="merged/1000G_shared_bed.bed",
-        kg_bim="merged/1000G_shared_bed.bim",
-        kg_fam="merged/1000G_shared_bed.fam",
-
-        cohort_bed="merged/cohort_shared_bed.bed",
-        cohort_bim="merged/cohort_shared_bed.bim",
-        cohort_fam="merged/cohort_shared_bed.fam"
-
-    output:
-        bed="merged/joint_1000G_cohort.bed",
-        bim="merged/joint_1000G_cohort.bim",
-        fam="merged/joint_1000G_cohort.fam"
+        bed="joint_chr/joint_chr{chr}.bed",
+        bim="joint_chr/joint_chr{chr}.bim",
+        fam="joint_chr/joint_chr{chr}.fam"
 
     resources:
-        mem_mb=300000
+        mem_mb=75000
 
     shell:
         r"""
+        mkdir -p joint_chr
+
         plink \
-          --bfile merged/1000G_shared_bed \
-          --bmerge merged/cohort_shared_bed \
+          --bfile shared_1kg/1000G_chr{wildcards.chr} \
+          --bmerge shared_cohort/cohort_chr{wildcards.chr} \
           --make-bed \
-          --out merged/joint_1000G_cohort
+          --out joint_chr/joint_chr{wildcards.chr}
         """
-
-
-# ============================================================
-# Convert final joint dataset back to PGEN
-# ============================================================
-
-rule JointBackToPGEN:
+rule JointChrToPGEN:
     input:
-        bed="merged/joint_1000G_cohort.bed",
-        bim="merged/joint_1000G_cohort.bim",
-        fam="merged/joint_1000G_cohort.fam"
+        bed="joint_chr/joint_chr{chr}.bed",
+        bim="joint_chr/joint_chr{chr}.bim",
+        fam="joint_chr/joint_chr{chr}.fam"
+
+    output:
+        pgen="joint_chr_pgen/joint_chr{chr}.pgen",
+        pvar="joint_chr_pgen/joint_chr{chr}.pvar",
+        psam="joint_chr_pgen/joint_chr{chr}.psam"
+
+    shell:
+        r"""
+        mkdir -p joint_chr_pgen
+
+        {PLINK2} \
+          --bfile joint_chr/joint_chr{wildcards.chr} \
+          --make-pgen \
+          --out joint_chr_pgen/joint_chr{wildcards.chr}
+        """
+rule MergeJointChromosomes:
+    input:
+        pgen=expand("joint_chr_pgen/joint_chr{chr}.pgen", chr=CHR),
+        pvar=expand("joint_chr_pgen/joint_chr{chr}.pvar", chr=CHR),
+        psam=expand("joint_chr_pgen/joint_chr{chr}.psam", chr=CHR)
 
     output:
         pgen="merged/joint_1000G_cohort.pgen",
@@ -298,8 +214,198 @@ rule JointBackToPGEN:
 
     shell:
         r"""
+        mkdir -p merged
+
+        > merged/joint_chr_merge_list.txt
+
+        for CHR in {{2..22}}; do
+            echo "joint_chr_pgen/joint_chr${{CHR}}" \
+                >> merged/joint_chr_merge_list.txt
+        done
+
         {PLINK2} \
-          --bfile merged/joint_1000G_cohort \
+          --pfile joint_chr_pgen/joint_chr1 \
+          --pmerge-list merged/joint_chr_merge_list.txt \
           --make-pgen \
           --out merged/joint_1000G_cohort
+        """
+
+
+# ============================================================
+# Initial missingness report on merged cohort + 1000G
+# ============================================================
+
+rule JointMissingness:
+    input:
+        pgen="merged/joint_1000G_cohort.pgen",
+        pvar="merged/joint_1000G_cohort.pvar",
+        psam="merged/joint_1000G_cohort.psam"
+    output:
+        smiss="qc/joint_missing.smiss",
+        vmiss="qc/joint_missing.vmiss"
+    shell:
+        r"""
+        mkdir -p qc
+
+        {PLINK2} \
+          --pfile merged/joint_1000G_cohort \
+          --missing \
+          --out qc/joint_missing
+        """
+
+# ============================================================
+# Variant QC
+#
+# geno 0.02 = remove variants missing in >2% of samples
+# maf 0.05  = retain common SNPs for ancestry PCA
+# ============================================================
+
+rule JointVariantQC:
+    input:
+        pgen="merged/joint_1000G_cohort.pgen",
+        pvar="merged/joint_1000G_cohort.pvar",
+        psam="merged/joint_1000G_cohort.psam",
+        smiss="qc/joint_missing.smiss",
+        vmiss="qc/joint_missing.vmiss"
+    output:
+        pgen="qc/joint_variant_qc.pgen",
+        pvar="qc/joint_variant_qc.pvar",
+        psam="qc/joint_variant_qc.psam"
+    shell:
+        r"""
+        {PLINK2} \
+          --pfile merged/joint_1000G_cohort \
+          --geno 0.02 \
+          --maf 0.05 \
+          --make-pgen \
+          --out qc/joint_variant_qc
+        """
+
+# ============================================================
+# Sample missingness after variant QC
+# ============================================================
+
+rule PostVariantMissingness:
+    input:
+        pgen="qc/joint_variant_qc.pgen",
+        pvar="qc/joint_variant_qc.pvar",
+        psam="qc/joint_variant_qc.psam"
+    output:
+        smiss="qc/joint_variant_qc_missing.smiss"
+    shell:
+        r"""
+        {PLINK2} \
+          --pfile qc/joint_variant_qc \
+          --missing sample-only \
+          --out qc/joint_variant_qc_missing
+        """
+
+# ============================================================
+# Sample QC
+#
+# mind 0.05 = remove samples missing >5% of retained variants
+# ============================================================
+
+rule JointSampleQC:
+    input:
+        pgen="qc/joint_variant_qc.pgen",
+        pvar="qc/joint_variant_qc.pvar",
+        psam="qc/joint_variant_qc.psam",
+        smiss="qc/joint_variant_qc_missing.smiss"
+    output:
+        pgen="qc/joint_sample_qc.pgen",
+        pvar="qc/joint_sample_qc.pvar",
+        psam="qc/joint_sample_qc.psam"
+    shell:
+        r"""
+        {PLINK2} \
+          --pfile qc/joint_variant_qc \
+          --mind 0.05 \
+          --make-pgen \
+          --out qc/joint_sample_qc
+        """
+# ============================================================
+# Missingness report after sample + variant QC
+# ============================================================
+
+rule PostQCMissingness:
+    input:
+        pgen="qc/joint_sample_qc.pgen",
+        pvar="qc/joint_sample_qc.pvar",
+        psam="qc/joint_sample_qc.psam"
+    output:
+        smiss="qc/joint_postqc_missing.smiss"
+    shell:
+        r"""
+        {PLINK2} \
+          --pfile qc/joint_sample_qc \
+          --missing sample-only \
+          --out qc/joint_postqc_missing
+        """
+# ============================================================
+# Long-range LD regions to exclude from PCA marker selection
+# GRCh38
+# ============================================================
+
+rule LongRangeLDRegions:
+    output:
+        "qc/long_range_ld.txt"
+    shell:
+        r"""
+        mkdir -p qc
+
+        echo -e "6\t25000000\t35000000" \
+          > {output}
+        """
+
+# ============================================================
+# LD pruning for ancestry PCA
+# ============================================================
+
+rule LDPrune:
+    input:
+        pgen="qc/joint_sample_qc.pgen",
+        pvar="qc/joint_sample_qc.pvar",
+        psam="qc/joint_sample_qc.psam",
+        regions="qc/long_range_ld.txt"
+    output:
+        prune_in="qc/joint_ld.prune.in",
+        prune_out="qc/joint_ld.prune.out"
+    shell:
+        r"""
+        {PLINK2} \
+          --pfile qc/joint_sample_qc \
+          --exclude range {input.regions} \
+          --indep-pairwise 200 50 0.2 \
+          --out qc/joint_ld
+        """
+
+# ============================================================
+# Global joint PCA
+#
+# Study cohort + 1000 Genomes together
+# No projection
+# ============================================================
+
+rule GlobalPCA:
+    input:
+        pgen="qc/joint_sample_qc.pgen",
+        pvar="qc/joint_sample_qc.pvar",
+        psam="qc/joint_sample_qc.psam",
+        prune="qc/joint_ld.prune.in"
+    output:
+        eigenvec="pca/joint_global.eigenvec",
+        eigenval="pca/joint_global.eigenval"
+    threads:
+        8
+    shell:
+        r"""
+        mkdir -p pca
+
+        {PLINK2} \
+          --pfile qc/joint_sample_qc \
+          --extract {input.prune} \
+          --pca 20 approx \
+          --threads {threads} \
+          --out pca/joint_global
         """
