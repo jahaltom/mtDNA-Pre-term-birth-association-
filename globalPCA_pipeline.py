@@ -494,6 +494,8 @@ def plot_pca(kg, study, variance_pct, pc_x, pc_y, outfile, title, flagged_ids=No
 
     print("Saved plot:", outfile)
 
+
+
 def plot_population_pca(kg, study, variance_pct, pc_x, pc_y, outfile, title, superpop):
     kg_plot = kg[kg["Superpopulation"].eq(superpop)].copy()
     study_plot = study[study["Expected_superpop"].eq(superpop)].copy()
@@ -511,6 +513,31 @@ def plot_population_pca(kg, study, variance_pct, pc_x, pc_y, outfile, title, sup
             s=25,
             alpha=0.55,
             label=f"1000G {population}"
+        )
+
+    # 1000G population centroids
+    for population, g in kg_plot.groupby("Population"):
+        cx = g[pc_x].mean()
+        cy = g[pc_y].mean()
+
+        ax.scatter(
+            cx,
+            cy,
+            s=220,
+            marker="*",
+            edgecolors="black",
+            linewidths=1.2,
+            zorder=10
+        )
+
+        ax.annotate(
+            population,
+            (cx, cy),
+            xytext=(6, 6),
+            textcoords="offset points",
+            fontsize=10,
+            fontweight="bold",
+            zorder=11
         )
 
     # Study cohorts
