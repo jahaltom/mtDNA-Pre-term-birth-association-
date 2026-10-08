@@ -505,51 +505,39 @@ def plot_population_pca(kg, study, variance_pct, pc_x, pc_y, outfile, title, sup
 
     fig, ax = plt.subplots(figsize=(12, 8))
 
-    # 1000G individual populations
-    for population, g in kg_plot.groupby("Population"):
-        ax.scatter(
-            g[pc_x],
-            g[pc_y],
-            s=25,
-            alpha=0.55,
-            label=f"1000G {population}"
-        )
-
-    # 1000G population centroids
-    for population, g in kg_plot.groupby("Population"):
-        cx = g[pc_x].mean()
-        cy = g[pc_y].mean()
-
-        ax.scatter(
-            cx,
-            cy,
-            s=220,
-            marker="*",
-            edgecolors="black",
-            linewidths=1.2,
-            zorder=10
-        )
-
-        ax.annotate(
-            population,
-            (cx, cy),
-            xytext=(6, 6),
-            textcoords="offset points",
-            fontsize=10,
-            fontweight="bold",
-            zorder=11
-        )
-
-    # Study cohorts
+    # --------------------------------------------------------
+    # Plot study cohort FIRST (background)
+    # --------------------------------------------------------
     for site, g in study_plot.groupby("merge_site"):
         ax.scatter(
             g[pc_x],
             g[pc_y],
-            s=30,
-            alpha=0.70,
+            s=14,
+            alpha=0.25,
             marker="x",
-            label=site
+            label=site,
+            zorder=1
         )
+
+    # --------------------------------------------------------
+    # Plot 1000G SECOND (foreground)
+    # --------------------------------------------------------
+    # Plot 1000G second (foreground) as hollow circles
+    for i, (population, g) in enumerate(kg_plot.groupby("Population")):
+        ax.scatter(
+            g[pc_x],
+            g[pc_y],
+            s=28,
+            facecolors="none",
+            edgecolors=f"C{i}",
+            linewidths=1.1,
+            alpha=0.9,
+            marker="o",
+            label=f"1000G {population}",
+            zorder=3
+        )
+
+  
 
     ax.set_xlabel(f"{pc_x} ({variance_pct[pc_x_index]:.2f}%)")
     ax.set_ylabel(f"{pc_y} ({variance_pct[pc_y_index]:.2f}%)")
