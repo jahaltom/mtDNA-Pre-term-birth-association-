@@ -23,8 +23,11 @@ which plink2
 plink2 --version
 
 
-```
-# Use raw plink2.bed/.bim/.fam to make missingness report.
+
+# ============================================================
+# 1. RAW COHORT MISSINGNESS
+# Used by masterMetadata.py to choose the best replicate
+# ============================================================
 ```
 mkdir -p qc
 
@@ -32,59 +35,109 @@ mkdir -p qc
   --bfile plink2 \
   --missing sample-only \
   --out qc/cohort_raw_missing
+ ``` 
+# ============================================================
+# 2. BUILD FILTERED MATERNAL METADATA
+#
+# Includes:
+# - replicate selection
+# - MOMI matching
+# - live births
+# - Haplogrep3 Quality >= 0.90
+#
+# Produces:
+# momi_mothers_merged.csv
+# qc/maternal_ptb.keep
+# ============================================================
 ```
-# Run masterMetadata.py to make  momi_mothers_merged.csv. FIlteres live brioths and QUlity > .90. 
-
-# Subset
+python masterMetadata.py
+```
+# ============================================================
+# 3. CREATE INITIAL MATERNAL PLINK COHORT
+# ============================================================
 ```
 /home/haltomj/bin/plink2_latest/plink2 \
   --bfile plink2 \
   --keep qc/maternal_ptb.keep \
   --make-bed \
   --out qc/maternal_ptb
-
-```
-# This dmakes 
-```
-qc/maternal_ptb.bed
-qc/maternal_ptb.bim
-qc/maternal_ptb.fam
+#Those should match.
+wc -l qc/maternal_ptb.keep
+wc -l qc/maternal_ptb.fam
 ```
 
+# ============================================================
+# 4. INITIAL STUDY + 1000G PCA
+#
+# Uses:
+# qc/maternal_ptb
+#
+# Produces:
+# pca/joint_global.eigenvec
+# pca/joint_global.eigenval
+# ============================================================
 
 ```
-snakemake -j 22 -s snakefile --use-conda  --latency-wait 60 --cluster "sbatch -t 05:00:00 -c 8 -N 1"
+snakemake -j 22 -s snakefile --use-conda  --config run=initial --latency-wait 60 --cluster "sbatch -t 05:00:00 -c 8 -N 1"
 ```
 
-# 1KGP outler removal and assigment 
+# ============================================================
+# 5. GLOBAL ANCESTRY QC
+#
+# Uses first PCA.
+# Flags broad ancestry mismatches.
+#
+# Produces:
+# qc/maternal_ptb_globalPCA.keep
+# ============================================================
 ```
 python globalPCA_pipeline.py --stage initial
 ```
-# Build the ancestry-cleaned study PLINK cohort
+# ============================================================
+# 6. CREATE ANCESTRY-CLEAN MATERNAL COHORT
+# ============================================================
 ```
 /home/haltomj/bin/plink2_latest/plink2 \
   --bfile qc/maternal_ptb \
   --keep qc/maternal_ptb_globalPCA.keep \
   --make-bed \
   --out qc/maternal_ptb_globalPCA
-  ```
 
-You now substitute:
+wc -l qc/maternal_ptb_globalPCA.fam
 ```
-qc/maternal_ptb_globalPCA
-```
-for:
-```
-qc/maternal_ptb
-```
-in your Snakemake workflow
-Have it write:
-pca/joint_global_final.eigenvec
-pca/joint_global_final.eigenval
 
+# ============================================================
+# 7. FINAL CLEAN STUDY + 1000G PCA
+#
+# Uses:
+# qc/maternal_ptb_globalPCA
+#
+# Produces:
+# pca/joint_global_final.eigenvec
+# pca/joint_global_final.eigenval
+# ============================================================
+
+```
+snakemake -j 22 -s snakefile --use-conda  --config run=final --latency-wait 60 --cluster "sbatch -t 05:00:00 -c 8 -N 1"
+```
+
+
+# ============================================================
+# 8. FINAL 1000G ANNOTATION + ULTIMATE METADATA
+# ============================================================
 ```
 python globalPCA_pipeline.py --stage final
 ```
+
+
+
+
+
+
+
+
+
+
 ## Metadata curration and filtering. 
 This script merges Haplogrep3 output with metadata files (MOMI_derived_data.csv and samples.tab), filters for high-quality haplogroup calls (Quality ≥ 0.9) and live births (PREG_OUTCOME = 2), and assigns main/sub-haplogroups. It sets ALCOHOL_FREQ, SMOK_FREQ, and SNIFF_FREQ to 0 when ALCOHOL, SMOKE_HIST, and SNIFF_TOBA are "never," calculates BMI, and categorizes population by site. Makes SuperHap, SuperHap2, and PhyloHap (for south asian only) classification based on mtDNA phylogeny https://forensicgenomics.github.io/mitoLeaf/. All other haplogroups classified as "Other". Use MainHap and SubHap for African. Finally, it splits the dataset into mother and child subsets and writes them to Metadata.M.tsv and Metadata.C.tsv.
 ```
