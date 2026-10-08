@@ -6,51 +6,7 @@ import numpy as np
 ###########The subject ID in samples.tab  is BABY, PArticipant and ORIG_ID in momi_combined.data.tsv!!!!!!!!!!!!!!!!!!!!!!!!
 
 #Read in metadata
-md=pd.read_csv('samples.tab',sep='\t')  
-md = md.rename(columns={'id': 'Sample_ID'})
-
-haplo=pd.read_csv('/scr1/users/haltomj/PTB/haplogrep3OUT_22175',sep='\t')  
-haplo = haplo.rename(columns={'SampleID': 'Sample_ID'})
-haplo=pd.merge(md,haplo,on=["Sample_ID"])
-
-haplo=haplo.drop_duplicates(subset=['Subject_ID'])
-
-
-
-
-
-
-
-
-#Read in other metadata 
-md=pd.read_csv('/scr1/users/haltomj/PTB/MOMI_derived_data.csv')  
-md=md.drop_duplicates() 
-
-
-
-# #Only live births
-md=md[md["PREG_OUTCOME"]==2]
-
-
-
-#Merge haplogroups with metadata
-mdPAR = md.rename(columns={'PARTICIPANT_ID': 'Subject_ID'})
-x=pd.merge(mdPAR,haplo,on=["Subject_ID"])
-
-
-mdBABY = md.rename(columns={'BABY_ID': 'Subject_ID'})
-x2=pd.merge(mdBABY,haplo,on=["Subject_ID"])
-
-mdORIG = md.rename(columns={'ORIG_ID': 'Subject_ID'})
-haplo['Subject_ID'] = haplo['Subject_ID'].str.replace('-M','')
-haplo['Subject_ID'] = haplo['Subject_ID'].str.replace('-C','')
-x3=pd.merge(mdORIG,haplo,on=["Subject_ID"])
-
-
-df=pd.concat([x,x2,x3])
-df=df.drop_duplicates(subset=['Subject_ID'])
-#Only high quality haplogroup calls. 
-df=df[df["Quality"]>=0.9]
+df=pd.read_csv('momi_mothers_ultimate.csv')  
 
 
 
@@ -184,11 +140,9 @@ df["PhyloHap"] = df["Haplogroup"].apply(assign_phylohap)
 
 
 
-#Sep M and C 
-
-dfM=df[df["M/C"]=="M"]
-dfM.to_csv("Metadata.M.tsv", index=False, sep='\t')  
 
 
-dfC=df[df["M/C"]=="C"]
-dfC.to_csv("Metadata.C.tsv", index=False, sep='\t')  
+df.to_csv("Metadata.M.tsv", index=False, sep='\t')  
+
+
+ 
