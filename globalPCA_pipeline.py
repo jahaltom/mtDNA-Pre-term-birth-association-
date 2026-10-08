@@ -494,7 +494,51 @@ def plot_pca(kg, study, variance_pct, pc_x, pc_y, outfile, title, flagged_ids=No
 
     print("Saved plot:", outfile)
 
+def plot_population_pca(kg, study, variance_pct, pc_x, pc_y, outfile, title, superpop):
+    kg_plot = kg[kg["Superpopulation"].eq(superpop)].copy()
+    study_plot = study[study["Expected_superpop"].eq(superpop)].copy()
 
+    pc_x_index = int(pc_x.replace("PC", "")) - 1
+    pc_y_index = int(pc_y.replace("PC", "")) - 1
+
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    # 1000G individual populations
+    for population, g in kg_plot.groupby("Population"):
+        ax.scatter(
+            g[pc_x],
+            g[pc_y],
+            s=25,
+            alpha=0.55,
+            label=f"1000G {population}"
+        )
+
+    # Study cohorts
+    for site, g in study_plot.groupby("merge_site"):
+        ax.scatter(
+            g[pc_x],
+            g[pc_y],
+            s=30,
+            alpha=0.70,
+            marker="x",
+            label=site
+        )
+
+    ax.set_xlabel(f"{pc_x} ({variance_pct[pc_x_index]:.2f}%)")
+    ax.set_ylabel(f"{pc_y} ({variance_pct[pc_y_index]:.2f}%)")
+    ax.set_title(title)
+
+    ax.legend(
+        bbox_to_anchor=(1.02, 1),
+        loc="upper left",
+        fontsize=8
+    )
+
+    plt.tight_layout()
+    plt.savefig(outfile, dpi=300, bbox_inches="tight")
+    plt.close()
+
+    print("Saved plot:", outfile)
 def print_pca_summary(pca, kg, study, unknown):
     print("\n========================================")
     print("JOINT PCA SUMMARY")
@@ -886,7 +930,39 @@ elif args.stage == "final":
             outfile=OUTDIR / f"FINAL_{pc_x}_{pc_y}.png",
             title=f"Final cleaned study cohort + 1000G: {pc_x} vs {pc_y}"
         )
+    # --------------------------------------------------------
+    # Final population-level 1000G PCA plots
+    # --------------------------------------------------------
 
+    population_plot_pairs = [
+        ("PC1", "PC2"),
+        ("PC1", "PC3"),
+        ("PC2", "PC3")
+    ]
+
+    for pc_x, pc_y in population_plot_pairs:
+
+        plot_population_pca(
+            kg=kg,
+            study=study,
+            variance_pct=variance_pct,
+            pc_x=pc_x,
+            pc_y=pc_y,
+            outfile=OUTDIR / f"FINAL_SAS_POPULATIONS_{pc_x}_{pc_y}.png",
+            title=f"South Asia cohorts + 1000G populations: {pc_x} vs {pc_y}",
+            superpop="SAS"
+        )
+
+        plot_population_pca(
+            kg=kg,
+            study=study,
+            variance_pct=variance_pct,
+            pc_x=pc_x,
+            pc_y=pc_y,
+            outfile=OUTDIR / f"FINAL_AFR_POPULATIONS_{pc_x}_{pc_y}.png",
+            title=f"African cohorts + 1000G populations: {pc_x} vs {pc_y}",
+            superpop="AFR"
+        )
     # --------------------------------------------------------
     # Population-level 1000G reference models
     # --------------------------------------------------------
