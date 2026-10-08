@@ -80,6 +80,59 @@ args = parser.parse_args()
 # ============================================================
 # HELPERS
 # ============================================================
+def build_pooled_population_model(kg):
+    groups = {}
+    covariance_sum = None
+    total_df = 0
+
+    for population, g in kg.groupby("Population"):
+        X = g[DISTANCE_PCS].apply(pd.to_numeric, errors="coerce").dropna().to_numpy()
+
+        if len(X) < len(DISTANCE_PCS) + 3:
+            print("WARNING: skipping population", population, "because N =", len(X))
+            continue
+
+        centroid = X.mean(axis=0)
+        covariance = np.cov(X, rowvar=False)
+
+        groups[population] = {
+            "centroid": centroid,
+            "n": len(X)
+        }
+
+        weighted_cov = covariance * (len(X) - 1)
+
+        if covariance_sum is None:
+            covariance_sum = weighted_cov
+        else:
+            covariance_sum += weighted_cov
+
+        total_df += len(X) - 1
+
+    pooled_covariance = covariance_sum / total_df
+
+    mean_variance = np.trace(pooled_covariance) / pooled_covariance.shape[0]
+    epsilon = max(mean_variance, 1e-12) * 1e-6
+    pooled_covariance += np.eye(pooled_covariance.shape[0]) * epsilon
+
+    pooled_inv_cov = np.linalg.pinv(pooled_covariance)
+
+    return groups, pooled_covariance, pooled_inv_cov
+def pooled_population_distances(row, candidate_pops, population_models, pooled_inv_cov):
+    x = row[DISTANCE_PCS].astype(float).to_numpy()
+    distances = {}
+
+    for pop in candidate_pops:
+        if pop not in population_models:
+            continue
+
+        distances[pop] = mahalanobis_distance(
+            x,
+            population_models[pop]["centroid"],
+            pooled_inv_cov
+        )
+
+    return distances
 
 def clean_string_series(x):
     return x.astype("string").str.strip()
@@ -845,10 +898,13 @@ elif args.stage == "final":
         .tolist()
     )
 
-    reference_stats = build_reference_stats(
-        kg,
-        populations=all_1000g_pops
-    )
+    population_models, pooled_covariance, pooled_inv_cov = build_pooled_population_model(kg)
+    
+    print("\n========================================")
+    print("POOLED 1KGP POPULATION MODEL")
+    print("========================================")
+    print("Populations:", len(population_models))
+    print("Reference samples:", sum(x["n"] for x in population_models.values()))
 
     reference_distances = calculate_loo_reference_distances(
         kg,
@@ -923,10 +979,11 @@ elif args.stage == "final":
 
     for _, row in study.iterrows():
 
-        distances = population_distances(
+        distances = pooled_population_distances(
             row,
             all_1000g_pops,
-            reference_stats
+            population_models,
+            pooled_inv_cov
         )
 
         if len(distances) == 0:
@@ -987,7 +1044,7 @@ elif args.stage == "final":
                 pd.NA
             ),
 
-            "Nearest_1KGP_Mahalanobis": nearest_distance,
+            "Nearest_1KGP_PooledMahalanobis": nearest_distance,
 
             "Second_1KGP_Pop": second_pop,
             "Second_1KGP_Pop_Name": pop_to_name.get(second_pop, pd.NA),
@@ -1016,7 +1073,7 @@ elif args.stage == "final":
         }
 
         for pop, distance in distances.items():
-            result[f"Mahalanobis_{pop}"] = distance
+            result[f"PooledMahalanobis_{pop}"] = distance
 
         results.append(result)
 
@@ -1046,10 +1103,11 @@ elif args.stage == "final":
         else:
             continue
 
-        distances = population_distances(
+        distances = pooled_population_distances(
             row,
             candidate_pops,
-            reference_stats
+            population_models,
+            pooled_inv_cov
         )
 
         if len(distances) == 0:
