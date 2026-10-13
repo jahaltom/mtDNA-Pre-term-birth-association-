@@ -1,15 +1,26 @@
+# Maternal PTB Cohort Preparation and Ancestry QC Pipeline
 
+This workflow prepares the maternal pregnancy cohort for downstream mtDNA haplogroup / preterm birth analyses and nuclear ancestry QC.
 
+The pipeline is divided into three major components:
 
+1. Maternal cohort construction and genotype sample selection
+2. Joint study + 1000 Genomes genotype QC/PCA
+3. Final ancestry annotation and metadata generation
 
+---
 
+# PLINK2 Setup
 
-# Get plink2's most up2date version
-```
+Install the current PLINK2 release:
+
+```bash
 mkdir -p ~/bin/plink2_latest
 cd ~/bin/plink2_latest
 
-wget -O plink2.zip 'PASTE_THE_DOWNLOAD_URL_HERE' https://s3.amazonaws.com/plink2-assets/alpha7/plink2_linux_avx2_20261001.zip
+wget -O plink2.zip \
+  https://s3.amazonaws.com/plink2-assets/alpha7/plink2_linux_avx2_20261001.zip
+
 unzip plink2.zip
 chmod +x plink2
 
@@ -22,10 +33,7 @@ plink2 --version
 ```
 
 
-# ============================================================
-# 1. RAW COHORT MISSINGNESS
-# Used by masterMetadata.py to choose the best replicate
-# ============================================================
+# RAW COHORT MISSINGNESS
 ```
 mkdir -p qc
 
@@ -33,23 +41,77 @@ mkdir -p qc
   --bfile plink2 \
   --missing sample-only \
   --out qc/cohort_raw_missing
- ``` 
-# ============================================================
-# 2. BUILD FILTERED MATERNAL METADATA
-#
+ ```
+
+---
+
+## 1. Maternal Cohort Construction
+
+### Script purpose
+
+The maternal cohort preparation script reconciles pregnancy metadata, sequencing/sample metadata, mtDNA copy-number metadata, raw nuclear-genotype missingness, and Haplogrep3 results to produce one high-quality maternal genotype record per pregnancy.
+
+The main outputs are:
+
+- `momi_mothers_merged.csv`
+- `qc/maternal_ptb.keep`
+
+`momi_mothers_merged.csv` contains the maternal pregnancy metadata used by the downstream ancestry pipeline.
+
+`qc/maternal_ptb.keep` contains the selected maternal PLINK sample IDs used to generate the maternal nuclear-genotype cohort.
+
+---
+
+## Input files
+
+The script uses the following files:
+
+| File | Purpose |
+|---|---|
+| `momi_pregnancy_level.csv` | Pregnancy-level MOMI clinical and outcome metadata |
+| `momi_pregnancy_level_dictionary.csv` | Maps MOMI variable names to the desired original variable names |
+| `samples.tab` | Sample metadata including genotype ID, site, pregnancy ID, mother/child status, Subject_ID, sex, and vial |
+| `momi_mtcn_per_sample.csv` | mtDNA copy-number/sample metadata including Gencove genotype IDs and biospecimen information |
+| `qc/cohort_raw_missing.smiss` | Raw nuclear-genotype sample missingness from PLINK |
+| `haplogrep3OUT_22175` | Haplogrep3 maternal mtDNA haplogroup calls and quality scores |
+
+---
+
+## Cohort preparation steps
+
+### 1. Standardize metadata
+
+MOMI variables are renamed using `momi_pregnancy_level_dictionary.csv`.
+
+Sample identifiers and key metadata fields are cleaned and standardized. Blank strings and values such as `NA`, `N/A`, `nan`, `None`, and `.` are treated as missing.
+
+`SPOTBio` samples are removed from `samples.tab`, and `THSTI` records are removed from the MOMI pregnancy metadata.
+
+---
+
+### 2. Define the biological sample key
+
+The primary biological key used for genotype sample selection is:
+
+```text
+SITE_CODE + ORIG_ID + MC
+
+
+
 # Includes:
-# - replicate selection
-# - MOMI matching
-# - live births
-# - Haplogrep3 Quality >= 0.90
-#
-# Produces:
-# momi_mothers_merged.csv
-# qc/maternal_ptb.keep
+# - selection of one best genotype record per biological sample/replicate group
+# - one-to-one matching of selected maternal samples to MOMI pregnancy metadata
+# - restriction to live births (PREG_OUTCOME == 2)
+# - restriction to high-confidence Haplogrep3 calls (Quality >= 0.90)
+
+
 # ============================================================
 ```
-python masterMetadata.py
+python MetadataUltimate.py
 ```
+
+
+
 # ============================================================
 # 3. CREATE INITIAL MATERNAL PLINK COHORT
 # ============================================================
