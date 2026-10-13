@@ -10,7 +10,7 @@ The pipeline is divided into three major components:
 
 ---
 
-# PLINK2 Setup
+## PLINK2 Setup
 
 Install the current PLINK2 release:
 
@@ -33,7 +33,7 @@ plink2 --version
 ```
 
 
-# RAW COHORT MISSINGNESS
+## RAW COHORT MISSINGNESS
 ```
 mkdir -p qc
 
@@ -62,7 +62,7 @@ The main outputs are:
 
 ---
 
-## Input files
+### Input files
 
 The script uses the following files:
 
@@ -77,7 +77,7 @@ The script uses the following files:
 
 ---
 
-## Cohort preparation steps
+### Cohort preparation steps
 
 ### 1. Standardize metadata
 
