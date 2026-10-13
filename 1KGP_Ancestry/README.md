@@ -95,26 +95,43 @@ The primary biological key used for genotype sample selection is:
 
 ```text
 SITE_CODE + ORIG_ID + MC
+```
 
 
+### Includes:
+ - selection of one best genotype record per biological sample/replicate group
+ - one-to-one matching of selected maternal samples to MOMI pregnancy metadata
+ - restriction to live births (PREG_OUTCOME == 2)
+ - restriction to high-confidence Haplogrep3 calls (Quality >= 0.90)
 
-# Includes:
-# - selection of one best genotype record per biological sample/replicate group
-# - one-to-one matching of selected maternal samples to MOMI pregnancy metadata
-# - restriction to live births (PREG_OUTCOME == 2)
-# - restriction to high-confidence Haplogrep3 calls (Quality >= 0.90)
+### Sample reconciliation, replicate selection, and mother-child pairing
 
+Multiple genotype records can exist for the same biological pregnancy/person because of technical replicates or multiple biospecimen types. To avoid duplicate representation while retaining the highest-quality genotype data, samples are grouped using the biological key:
 
-# ============================================================
+`SITE_CODE + ORIG_ID + MC`
+
+where `MC` distinguishes maternal (`M`) and child (`C`) samples.
+
+Among multiple usable genotype records representing the same biological key, the sample with the lowest PLINK `F_MISS` is selected. Lower `F_MISS` indicates fewer missing genotype calls and therefore better genotype completeness. Alternate genotype IDs and biospecimen information are retained for QC and traceability.
+
+After representative samples are selected, maternal and child records are separated and paired by:
+
+`merge_site + merge_ORIG_ID`
+
+This links each selected maternal genotype to the corresponding child genotype when available, while preserving pregnancies without an available child sample.
+
+### Run with
 ```
 python MetadataUltimate.py
 ```
 
 
 
-# ============================================================
-# 3. CREATE INITIAL MATERNAL PLINK COHORT
-# ============================================================
+
+##  CREATE INITIAL MATERNAL PLINK COHORT
+
+The maternal PLINK keep file (maternal_ptb.keep) generated during metadata preparation is used to subset the full nuclear-genotype dataset to the selected maternal analysis cohort.
+
 ```
 /home/haltomj/bin/plink2_latest/plink2 \
   --bfile plink2 \
@@ -126,18 +143,52 @@ wc -l qc/maternal_ptb.keep
 wc -l qc/maternal_ptb.fam
 ```
 
-# ============================================================
-# 4. INITIAL STUDY + 1000G PCA
-#
-# Uses:
-# qc/maternal_ptb
-#
-# Produces:
-# pca/joint_global.eigenvec
-# pca/joint_global.eigenval
-# ============================================================
 
-```
+
+
+
+# 2. Joint Study + 1000 Genomes Genotype QC and PCA
+
+## Purpose
+
+The Snakefile performs joint nuclear-genome quality control and principal component analysis (PCA) using the maternal study cohort together with 1000 Genomes Project reference samples.
+
+
+
+**Initial PCA**
+   - starts from the full maternal genotype cohort
+   - performs joint study + 1000 Genomes PCA
+   - provides the PCA coordinates used to identify broad ancestry mismatches
+
+
+The same Snakefile is used for both passes by changing --config run=initial to --config run=final
+
+Uses:
+- qc/maternal_ptb
+
+Produces:
+- pca/joint_global.eigenvec
+- pca/joint_global.eigenval
+
+Initial PCA workflow
+The initial run performs the following steps:
+1. Download 1000 Genomes GRCh38 reference genotypes for chromosomes 1-22.
+2. Convert the 1000 Genomes VCF files to PLINK2 format.
+3. Restrict the 1000 Genomes data to biallelic A/C/G/T SNPs.
+4. Standardize variant IDs using chromosome, position, reference allele, and alternate allele.
+5. Identify SNPs shared between the maternal study cohort and 1000 Genomes.
+6. Extract the shared SNPs from both datasets.
+7. Merge the maternal study cohort and 1000 Genomes chromosome-by-chromosome.
+8. Merge chromosomes 1-22 into one joint autosomal genotype dataset.
+9. Calculate initial sample and variant genotype missingness.
+10. Apply variant-level QC using --geno 0.02 and --maf 0.05.
+11. Recalculate sample missingness after variant filtering.
+12. Apply sample-level QC using --mind 0.05.
+13. Calculate post-QC sample missingness.
+14. Exclude the chromosome 6 long-range LD region at 25-35 Mb.
+15. Perform genome-wide LD pruning using --indep-pairwise 200 50 0.2.
+16. Calculate 20 principal components using the QC-filtered, LD-pruned joint dataset.
+```bash
 snakemake -j 22 -s snakefile --use-conda  --config run=initial --latency-wait 60 --cluster "sbatch -t 05:00:00 -c 8 -N 1"
 ```
 
