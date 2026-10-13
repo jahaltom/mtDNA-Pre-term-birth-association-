@@ -139,7 +139,7 @@ python globalPCA_pipeline.py --stage final
 
 
 ## Metadata curration and filtering. 
-This script merges Haplogrep3 output with metadata files (MOMI_derived_data.csv and samples.tab), filters for high-quality haplogroup calls (Quality ≥ 0.9) and live births (PREG_OUTCOME = 2), and assigns main/sub-haplogroups. It sets ALCOHOL_FREQ, SMOK_FREQ, and SNIFF_FREQ to 0 when ALCOHOL, SMOKE_HIST, and SNIFF_TOBA are "never," calculates BMI, and categorizes population by site. Makes SuperHap, SuperHap2, and PhyloHap (for south asian only) classification based on mtDNA phylogeny https://forensicgenomics.github.io/mitoLeaf/. All other haplogroups classified as "Other". Use MainHap and SubHap for African. Finally, it splits the dataset into mother and child subsets and writes them to Metadata.M.tsv and Metadata.C.tsv.
+Takes in (momi_mothers_ultimate.csv), and assigns main/sub-haplogroups. It sets ALCOHOL_FREQ, SMOK_FREQ, and SNIFF_FREQ to 0 when ALCOHOL, SMOKE_HIST, and SNIFF_TOBA are "never," calculates BMI, and categorizes population by site. Makes SuperHap, SuperHap2, and PhyloHap (for south asian only) classification based on mtDNA phylogeny https://forensicgenomics.github.io/mitoLeaf/. All other haplogroups classified as "Other". Use MainHap and SubHap for African. Writes all to Metadata.M.tsv.
 ```
 python  scripts/MetadataMerge.py
 ```
