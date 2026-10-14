@@ -1316,7 +1316,38 @@ elif args.stage == "final":
         raise ValueError(
             f"{missing_annotation} final metadata rows are missing 1KGP reference annotation."
         )
-
+    # --------------------------------------------------------
+    # ADD MATERNAL WEIGHT
+    # --------------------------------------------------------
+    
+    weight = pd.read_csv("MOMI_derived_data.csv", low_memory=False)
+    
+    weight["MAT_WEIGHT"] = pd.to_numeric(weight["MAT_WEIGHT"], errors="coerce")
+    weight = weight[weight["MAT_WEIGHT"].notna()].copy()
+    
+    # Keep first non-missing weight per mother/pregnancy (Is the earliest Enrolment by VDT_ENR)
+    weight = weight.drop_duplicates(["SITE_CODE", "ORIG_ID"], keep="first")
+    weight = weight[["SITE_CODE", "ORIG_ID", "MAT_WEIGHT"]]
+    
+    weight["SITE_CODE"] = weight["SITE_CODE"].astype(str).str.strip()
+    weight["ORIG_ID"] = weight["ORIG_ID"].astype(str).str.strip()
+    
+    ultimate["SITE_CODE_momi"] = ultimate["SITE_CODE_momi"].astype(str).str.strip()
+    ultimate["ORIG_ID_momi"] = ultimate["ORIG_ID_momi"].astype(str).str.strip()
+    
+    ultimate = ultimate.merge(
+        weight,
+        left_on=["SITE_CODE_momi", "ORIG_ID_momi"],
+        right_on=["SITE_CODE", "ORIG_ID"],
+        how="left",
+        validate="one_to_one"
+    )
+    
+    ultimate = ultimate.drop(columns=["SITE_CODE", "ORIG_ID"])
+    
+    print("\nMaternal weights added:", ultimate["MAT_WEIGHT"].notna().sum())
+    print("Maternal weights missing:", ultimate["MAT_WEIGHT"].isna().sum())
+    ultimate = ultimate.rename(columns={"merge_site": "site"})
     ultimate.to_csv(
         ULTIMATE_METADATA_FILE,
         index=False
@@ -1360,8 +1391,9 @@ elif args.stage == "final":
     )
 
     print("\nFinal mothers by site:")
+    print("\nFinal mothers by site:")
     print(
-        ultimate["merge_site"]
+        ultimate["site"]
         .value_counts()
         .sort_index()
     )
