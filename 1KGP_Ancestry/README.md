@@ -122,7 +122,7 @@ This links each selected maternal genotype to the corresponding child genotype w
 
 ### Run with
 ```
-python MetadataUltimate.py
+python MetadataPrep.py
 ```
 
 
