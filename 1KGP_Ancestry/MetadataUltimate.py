@@ -8,7 +8,7 @@ import pandas as pd
 MOMI_FILE = "momi_pregnancy_level.csv"
 SAMPLES_FILE = "samples.tab"
 MTCN_FILE = "momi_mtcn_per_sample.csv"
-MISSINGNESS_FILE = "qc/cohort_raw_missing.smiss"
+MISSINGNESS_FILE = "/scr1/users/haltomj/PTB/Data/qc/cohort_raw_missing.smiss"
 HAPLOGREP_FILE = "haplogrep3OUT_22175"
 DICT= "momi_pregnancy_level_dictionary.csv"
 OUTPUT_FILE = "momi_mothers_merged.csv"
