@@ -1,6 +1,6 @@
 # Maternal PTB Cohort Preparation and Ancestry QC Pipeline
 
-This workflow prepares the maternal pregnancy cohort for downstream mtDNA haplogroup / preterm birth analyses and nuclear ancestry QC.
+This workflow prepares the maternal pregnancy cohort for downstream mtDNA haplogroup / preterm birth analyses and performs nuclear ancestry QC and 1000 Genomes Project assigment.
 
 The pipeline is divided into three major components:
 
