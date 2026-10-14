@@ -147,9 +147,9 @@ wc -l qc/maternal_ptb.fam
 
 
 
-# 2. Joint Study + 1000 Genomes Genotype QC and PCA
+## 2. Joint Study + 1000 Genomes Genotype QC and PCA
 
-## Purpose
+### Purpose
 
 The Snakefile performs joint nuclear-genome quality control and principal component analysis (PCA) using the maternal study cohort together with 1000 Genomes Project reference samples.
 
@@ -192,21 +192,38 @@ The initial run performs the following steps:
 snakemake -j 22 -s snakefile --use-conda  --config run=initial --latency-wait 60 --cluster "sbatch -t 05:00:00 -c 8 -N 1"
 ```
 
-# ============================================================
-# 5. GLOBAL ANCESTRY QC
-#
-# Uses first PCA.
-# Flags broad ancestry mismatches.
-#
-# Produces:
-# qc/maternal_ptb_globalPCA.keep
-# ============================================================
+
+###  Initial Global Ancestry QC and Outlier Removal
+
+### Purpose
+
+This step uses the **initial joint maternal study + 1000 Genomes PCA** to identify and remove maternal study samples with broad nuclear ancestry that is inconsistent with the ancestry expected for their study cohort.
+
+The PCA itself is not recalculated in this step. Instead, `globalPCA_pipeline.py --stage initial`:
+
+- reads the initial joint PCA coordinates
+- attaches study-site and 1000 Genomes ancestry labels
+- assigns each study sample an expected broad ancestry group
+- builds broad AFR and SAS reference models from 1000 Genomes samples
+- calculates multivariate ancestry distance using PC1-PC5
+- defines conservative ancestry-outlier thresholds
+- flags samples that fall outside the expected ancestry distribution
+- generates diagnostic PCA plots and QC tables
+- removes flagged study samples from the retained cohort
+- validates the retained sample IDs against the maternal PLINK `.fam`
+- writes a cleaned PLINK keep file for the next stage
+
+Main output:
 ```
+qc/maternal_ptb_globalPCA.keep
+```
+Run:
+
+```bash
 python globalPCA_pipeline.py --stage initial
 ```
-# ============================================================
-# 6. CREATE ANCESTRY-CLEAN MATERNAL COHORT
-# ============================================================
+
+### CREATE ANCESTRY-CLEAN MATERNAL COHORT
 ```
 /home/haltomj/bin/plink2_latest/plink2 \
   --bfile qc/maternal_ptb \
@@ -217,26 +234,49 @@ python globalPCA_pipeline.py --stage initial
 wc -l qc/maternal_ptb_globalPCA.fam
 ```
 
-# ============================================================
-# 7. FINAL CLEAN STUDY + 1000G PCA
-#
-# Uses:
-# qc/maternal_ptb_globalPCA
-#
-# Produces:
-# pca/joint_global_final.eigenvec
-# pca/joint_global_final.eigenval
-# ============================================================
+
+## 3. Final ancestry annotation and metadata generation
+
+
+### Purpose
+
+After broad ancestry outliers have been identified and removed, the joint study + 1000 Genomes PCA workflow is repeated using the cleaned maternal genotype cohort.
+
+The purpose of this second PCA is to recalculate the global ancestry axes after removing the broad ancestry outliers detected during the initial ancestry-QC step.
+
+This produces the final cleaned joint PCA used for downstream ancestry annotation.
+
+The study genotype input is:
+
+```text
+qc/maternal_ptb_globalPCA
+```
 
 ```
 snakemake -j 22 -s snakefile --use-conda  --config run=final --latency-wait 60 --cluster "sbatch -t 05:00:00 -c 8 -N 1"
 ```
 
 
-# ============================================================
-# 8. FINAL 1000G ANNOTATION + ULTIMATE METADATA
-# ============================================================
-```
+### Final Ancestry Annotation and Maternal Metadata Generation
+
+### Purpose
+
+This final stage interprets the **cleaned joint maternal study + 1000 Genomes PCA** generated in the previous step and produces the final ancestry annotations and maternal analysis metadata.
+
+Unlike the initial ancestry-QC stage, this step is not focused on removing broad ancestry outliers. Instead, it uses the cleaned PCA to:
+
+- visualize the final study + 1000 Genomes ancestry structure
+- compare study samples with individual 1000 Genomes reference populations
+- assign the nearest 1000 Genomes population reference to each maternal sample
+- calculate ancestry-distance metrics
+- evaluate broad superpopulation concordance
+- attach final global PC coordinates to the maternal metadata
+- merge maternal weight
+- generate the final analysis-ready metadata file
+
+Run:
+
+```bash
 python globalPCA_pipeline.py --stage final
 ```
 
