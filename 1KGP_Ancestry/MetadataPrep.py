@@ -149,14 +149,53 @@ haplogrep = pd.read_csv(
 )
 
 # Update MOMI columns
+# Update MOMI columns
 dictFile = pd.read_csv(
     DICT,
     dtype=str,
     low_memory=False
 )
-rename_map = dict(zip(dictFile["var_base"], dictFile["original_name"].str.upper()))
+
+rename_map = dict(
+    zip(
+        dictFile["var_base"],
+        dictFile["original_name"].str.upper()
+    )
+)
+
 momi = momi.rename(columns=rename_map)
 
+original_momi_n = len(momi)
+
+
+# ============================================================
+# SINGLETON PREGNANCY FILTER
+# ============================================================
+
+momi["SINGLE_TWIN"] = pd.to_numeric(
+    momi["SINGLE_TWIN"],
+    errors="coerce"
+)
+
+before_singleton = len(momi)
+
+momi = momi[
+    momi["SINGLE_TWIN"].eq(1)
+].copy()
+
+print("\n========================================")
+print("SINGLETON PREGNANCY FILTER")
+print("========================================")
+
+print(
+    "Non-singleton or missing SINGLE_TWIN rows removed:",
+    before_singleton - len(momi)
+)
+
+print(
+    "Singleton pregnancies remaining:",
+    len(momi)
+)
 
 
 
@@ -166,6 +205,11 @@ print("========================================")
 
 print(
     "Original MOMI rows:",
+    original_momi_n
+)
+
+print(
+    "Singleton MOMI rows:",
     len(momi)
 )
 
@@ -1316,8 +1360,10 @@ print(
 # BUILD CHILD LOOKUP
 #
 # Pair on:
-#
 # merge_site + merge_ORIG_ID
+#
+# Keep selected child genotype information PLUS all alternate
+# genotype/biospecimen provenance.
 # ============================================================
 
 child_lookup = (
@@ -1328,29 +1374,36 @@ child_lookup = (
             "id",
             "Other_ids",
             "biospecimen",
-            "F_MISS"
+            "F_MISS",
+            "All_biospecimens",
+            "All_id_biospecimen_pairs",
+            "N_records",
+            "N_biospecimens",
+            "Multiple_biospecimens",
+            "Technical_or_duplicate_records"
         ]
     ]
     .rename(
         columns={
-            "id":
-                "Child_id",
-
-            "Other_ids":
-                "Child_Other_ids",
-
-            "biospecimen":
-                "Child_biospecimen",
-
-            "F_MISS":
-                "Child_F_MISS"
+            "id": "Child_id",
+            "Other_ids": "Child_Other_ids",
+            "biospecimen": "Child_biospecimen",
+            "F_MISS": "Child_F_MISS",
+            "All_biospecimens": "Child_All_biospecimens",
+            "All_id_biospecimen_pairs": "Child_All_id_biospecimen_pairs",
+            "N_records": "Child_N_records",
+            "N_biospecimens": "Child_N_biospecimens",
+            "Multiple_biospecimens": "Child_Multiple_biospecimens",
+            "Technical_or_duplicate_records": "Child_Technical_or_duplicate_records"
         }
     )
 )
 
 
-# This should normally already be one child per pregnancy,
-# but aggregate defensively.
+# ============================================================
+# AGGREGATE CHILD INFORMATION BY PREGNANCY
+# ============================================================
+
 child_lookup = (
     child_lookup
     .groupby(
@@ -1361,17 +1414,19 @@ child_lookup = (
         as_index=False
     )
     .agg({
-        "Child_id":
-            collapse_ids,
+        "Child_id": collapse_ids,
+        "Child_Other_ids": collapse_ids,
+        "Child_biospecimen": collapse_ids,
+        "Child_F_MISS": "min",
 
-        "Child_Other_ids":
-            collapse_ids,
+        "Child_All_biospecimens": collapse_ids,
+        "Child_All_id_biospecimen_pairs": collapse_ids,
 
-        "Child_biospecimen":
-            collapse_ids,
+        "Child_N_records": "max",
+        "Child_N_biospecimens": "max",
 
-        "Child_F_MISS":
-            "min"
+        "Child_Multiple_biospecimens": "max",
+        "Child_Technical_or_duplicate_records": "max"
     })
 )
 
@@ -1750,7 +1805,14 @@ print(
     .fillna(False)
     .sum()
 )
-
+print(
+    "Matched children selected from multiple-biospecimen groups:",
+    matched[
+        "Child_Multiple_biospecimens"
+    ]
+    .fillna(False)
+    .sum()
+)
 # ============================================================
 # MERGE HAPLOGREP3 RESULTS
 #
