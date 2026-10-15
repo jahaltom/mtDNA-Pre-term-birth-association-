@@ -266,7 +266,7 @@ The final PLINK keep file therefore contains 9,530 unique maternal genotype IDs.
 
 ```bash
 python MetadataPrep.py
-
+```
 
 ##  CREATE INITIAL MATERNAL PLINK COHORT
 
@@ -275,7 +275,7 @@ The maternal PLINK keep file (maternal_ptb.keep) generated during metadata prepa
 ```
 /home/haltomj/bin/plink2_latest/plink2 \
   --bfile plink2 \
-  --keep qc/maternal_ptb.keep \
+  --keep metadata/qc/maternal_ptb.keep \
   --make-bed \
   --out qc/maternal_ptb
 #Those should match.
@@ -291,46 +291,108 @@ wc -l qc/maternal_ptb.fam
 
 ### Purpose
 
-The Snakefile performs joint nuclear-genome quality control and principal component analysis (PCA) using the maternal study cohort together with 1000 Genomes Project reference samples.
+The Snakefile performs joint autosomal nuclear-genotype quality control and principal component analysis (PCA) using the maternal study cohort together with 1000 Genomes Project (1000G) reference samples.
 
+The joint PCA is run in two passes:
 
+### Initial PCA
 
-**Initial PCA**
-   - starts from the full maternal genotype cohort
-   - performs joint study + 1000 Genomes PCA
-   - provides the PCA coordinates used to identify broad ancestry mismatches
+The initial run starts from the full maternal genotype cohort:
 
+`qc/maternal_ptb`
 
-The same Snakefile is used for both passes by changing --config run=initial to --config run=final
+It performs joint study + 1000G genotype QC and PCA to generate broad ancestry coordinates used for identifying study samples that are inconsistent with their expected population structure.
 
-Uses:
-- qc/maternal_ptb
+Primary PCA outputs:
 
-Produces:
-- pca/joint_global.eigenvec
-- pca/joint_global.eigenval
+- `pca/joint_global.eigenvec`
+- `pca/joint_global.eigenval`
 
-Initial PCA workflow
+### Final PCA
+
+After broad ancestry QC, the retained maternal study samples are written to:
+
+`qc/maternal_ptb_globalPCA`
+
+The same Snakefile is then rerun using this ancestry-filtered maternal cohort.
+
+Primary final PCA outputs:
+
+- `pca/joint_global_final.eigenvec`
+- `pca/joint_global_final.eigenval`
+
+The run mode is controlled using:
+
+- `--config run=initial`
+- `--config run=final`
+
+---
+
+### Initial PCA workflow
+
 The initial run performs the following steps:
-1. Download 1000 Genomes GRCh38 reference genotypes for chromosomes 1-22.
-2. Convert the 1000 Genomes VCF files to PLINK2 format.
-3. Restrict the 1000 Genomes data to biallelic A/C/G/T SNPs.
-4. Standardize variant IDs using chromosome, position, reference allele, and alternate allele.
-5. Identify SNPs shared between the maternal study cohort and 1000 Genomes.
-6. Extract the shared SNPs from both datasets.
-7. Merge the maternal study cohort and 1000 Genomes chromosome-by-chromosome.
-8. Merge chromosomes 1-22 into one joint autosomal genotype dataset.
-9. Calculate initial sample and variant genotype missingness.
-10. Apply variant-level QC using --geno 0.02 and --maf 0.05.
-11. Recalculate sample missingness after variant filtering.
-12. Apply sample-level QC using --mind 0.05.
-13. Calculate post-QC sample missingness.
-14. Exclude the chromosome 6 long-range LD region at 25-35 Mb.
-15. Perform genome-wide LD pruning using --indep-pairwise 200 50 0.2.
-16. Calculate 20 principal components using the QC-filtered, LD-pruned joint dataset.
+
+1. Download 1000 Genomes GRCh38 reference VCFs for autosomes 1–22.
+
+2. Convert each 1000G chromosome to PLINK2 format.
+
+3. Restrict the 1000G reference to biallelic A/C/G/T SNPs and standardize 1000G variant IDs as:
+
+   `CHR:POS:REF:ALT`
+
+4. Identify autosomal biallelic A/C/G/T SNP IDs shared between the maternal study cohort and 1000G.
+
+5. Extract the shared SNPs independently from the study and 1000G datasets.
+
+6. Merge the study cohort and 1000G reference chromosome-by-chromosome.
+
+7. Convert the chromosome-level merged datasets to PLINK2 PGEN format.
+
+8. Merge chromosomes 1–22 into a single joint study + 1000G genotype dataset.
+
+9. Calculate joint sample and variant genotype missingness before QC.
+
+10. Apply variant-level QC:
+
+   - `--geno 0.02`: remove variants with >2% missing genotype calls
+   - `--maf 0.05`: retain variants with minor allele frequency >=5%
+
+11. Recalculate sample missingness after variant-level filtering.
+
+12. Apply sample-level QC:
+
+   - `--mind 0.05`: remove samples with >5% missing genotype calls
+
+13. Calculate post-QC sample missingness for QC documentation.
+
+14. Exclude the GRCh38 chromosome 6 region 25–35 Mb from the set of variants considered for LD pruning. This region is excluded from PCA marker selection because of extended linkage disequilibrium; it is not removed from the underlying QC genotype dataset.
+
+15. Perform genome-wide LD pruning using:
+
+   `--indep-pairwise 200 50 0.2`
+
+   corresponding to:
+
+   - 200-variant window
+   - 50-variant step
+   - LD threshold of r² = 0.2
+
+16. Extract the LD-pruned variants and calculate 20 principal components using:
+
+   `--pca 20 approx`
+
+---
+
+### Run initial PCA
+
 ```bash
-snakemake -j 22 -s snakefile --use-conda  --config run=initial --latency-wait 60 --cluster "sbatch -t 05:00:00 -c 8 -N 1"
-```
+snakemake \
+  -j 22 \
+  -s snakefile \
+  --use-conda \
+  --config run=initial \
+  --latency-wait 60 \
+  --cluster "sbatch -t 05:00:00 -c 8 -N 1"
 
 
 ###  Initial Global Ancestry QC and Outlier Removal
