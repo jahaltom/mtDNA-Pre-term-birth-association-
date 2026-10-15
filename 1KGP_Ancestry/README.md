@@ -393,7 +393,7 @@ snakemake \
   --config run=initial \
   --latency-wait 60 \
   --cluster "sbatch -t 05:00:00 -c 8 -N 1"
-
+```
 
 ###  Initial Global Ancestry QC and Outlier Removal
 
