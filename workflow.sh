@@ -13,24 +13,7 @@ conda activate ML
 
 
 
-# Define Categorical features
-#Excluded: 'SNIFF_TOBA','PASSIVE_SMOK','ALCOHOL','SMOK_TYP'
-columnsCat=CAT
-# Define Continuous  features
-#Excluded:  'SNIFF_FREQ','ALCOHOL_FREQ','SMOK_YR'
-columnsCont=CONT
 target=TARGET
-
-# Convert the array to a comma-separated string
-columnCat_string=$( echo "${columnsCat[*]}")
-columnCont_string=$( echo "${columnsCont[*]}")
-
-
-
-
-
-
-
 
 
 
@@ -76,8 +59,5 @@ python scripts/outlierPCA.py
 
 
 
-
-
-
 # Call the Python script with the column string as an argument
-python scripts/WeibullFiltering.py "$columnCat_string" "$columnCont_string" "$target" > out.txt
+python scripts/WeibullFiltering.py "$target" > out.txt
