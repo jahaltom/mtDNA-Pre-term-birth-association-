@@ -13,11 +13,28 @@ pd.set_option('display.max_rows', None)
 # Show all columns
 pd.set_option('display.max_columns', None)
 
-catigoricalFeat= [item for item in sys.argv[1].split(',') if item != '']  #
-contFeat= [item for item in sys.argv[2].split(',') if item != '']  #
-target=sys.argv[3]
+# Read surviving categorical features
+with open("SurvivingFeatures_Categorical.txt") as f:
+    catigoricalFeat = [
+        line.strip()
+        for line in f
+        if line.strip()
+    ]
 
+# Read surviving continuous features
+with open("SurvivingFeatures_Continuous.txt") as f:
+    contFeat = [
+        line.strip()
+        for line in f
+        if line.strip()
+    ]
 
+# Target haplogroup variable still comes from command-line argument 1
+target = sys.argv[1]
+
+# Make sure target is included in categorical features
+if target not in catigoricalFeat:
+    catigoricalFeat.append(target)
 
 md =pd.read_csv("MetadataOutlierRemoved.tsv",sep='\t')
 
