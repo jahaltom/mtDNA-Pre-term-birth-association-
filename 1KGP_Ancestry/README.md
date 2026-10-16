@@ -6,7 +6,7 @@ The pipeline is divided into three major components:
 
 1. Maternal cohort construction and genotype sample selection
 2. Study + 1000 Genomes genotype QC and reference projection
-3. Final ancestry annotation and metadata generation
+3. Global ancestry QC, reference annotation, and final metadata generation
 
 ---
 
@@ -32,18 +32,19 @@ which plink2
 plink2 --version
 ```
 
-
 ## RAW COHORT MISSINGNESS
-```
+
+```bash
 mkdir -p qc
 
 /home/haltomj/bin/plink2_latest/plink2 \
   --bfile plink2 \
   --missing sample-only \
   --out qc/cohort_raw_missing
- ```
+```
 
 ---
+
 ## 1. Maternal Cohort Construction
 
 ### Script purpose
@@ -268,24 +269,23 @@ The final PLINK keep file therefore contains 9,530 unique maternal genotype IDs.
 python MetadataPrep.py
 ```
 
-##  CREATE INITIAL MATERNAL PLINK COHORT
+## CREATE INITIAL MATERNAL PLINK COHORT
 
-The maternal PLINK keep file (maternal_ptb.keep) generated during metadata preparation is used to subset the full nuclear-genotype dataset to the selected maternal analysis cohort.
+The maternal PLINK keep file (`maternal_ptb.keep`) generated during metadata preparation is used to subset the full nuclear-genotype dataset to the selected maternal analysis cohort.
 
-```
+```bash
 /home/haltomj/bin/plink2_latest/plink2 \
   --bfile plink2 \
   --keep metadata/qc/maternal_ptb.keep \
   --make-bed \
   --out qc/maternal_ptb
-#Those should match.
+
+# These should match.
 wc -l qc/maternal_ptb.keep
 wc -l qc/maternal_ptb.fam
 ```
 
-
-
-
+---
 
 ## 2. Study + 1000 Genomes Genotype QC and Reference Projection
 
@@ -295,131 +295,89 @@ The Snakefile performs joint autosomal nuclear-genotype quality control using th
 
 After joint genotype QC and LD pruning, principal components are calculated using only the 1000G reference samples. The maternal study samples are then projected onto these fixed 1000G-defined PCA axes.
 
-The workflow is run in two passes:
+The 1000G reference PCA and study projection are generated once.
 
-### Initial reference PCA and projection
+The same fixed 1000G-defined PCA space is then used for both ancestry QC and final ancestry annotation.
 
-The initial run starts from the full maternal genotype cohort:
+### Reference PCA and projection
+
+The workflow starts from the full maternal genotype cohort:
 
 `qc/maternal_ptb`
 
-It performs joint study + 1000G genotype QC, calculates the PCA axes from the 1000G reference samples only, and projects the study samples onto those axes.
+It performs joint study + 1000G genotype QC, calculates the PCA axes from the 1000G reference samples only, and projects both the study samples and 1000G samples onto those fixed reference axes.
 
-These projected coordinates are used for broad ancestry QC and identification of study samples that are inconsistent with their expected population structure.
+These projected coordinates are used for broad ancestry QC and downstream ancestry annotation.
 
-The projected PCA coordinates are written to:
+Primary projection outputs:
 
 - `pca/1000G_projection.eigenvec`
 - `pca/1000G_projection.eigenval`
 
-### Final reference PCA and projection
-
-After broad ancestry QC, the retained maternal study samples are written to:
-
-`qc/maternal_ptb_globalPCA`
-
-The same Snakefile is rerun using this ancestry-filtered maternal cohort.
-
-The 1000G PCA axes are recalculated using the QC-filtered marker set from the final run, and the retained study samples are projected onto those reference axes.
-
-Primary final outputs:
-
-- `pca/1000G_projection_final.eigenvec`
-- `pca/1000G_projection_final.eigenval`
-
-The run mode is controlled using:
-
-- `--config run=initial`
-- `--config run=final`
+Because the study samples do not define the PCA axes, removing ancestry outliers does not require a second PCA or projection run.
 
 ---
 
-### Initial workflow
+### Reference PCA and projection workflow
 
-The initial run performs the following steps:
+The Snakefile performs the following steps:
 
 1. Download 1000 Genomes GRCh38 reference VCFs for autosomes 1–22.
-
 2. Convert each 1000G chromosome to PLINK2 format.
-
-3. Restrict the 1000G reference to biallelic A/C/G/T SNPs and standardize 1000G variant IDs as:
-
-   `CHR:POS:REF:ALT`
-
+3. Restrict the 1000G reference to biallelic A/C/G/T SNPs and standardize 1000G variant IDs as `CHR:POS:REF:ALT`.
 4. Identify autosomal biallelic A/C/G/T SNP IDs shared between the maternal study cohort and 1000G.
-
 5. Extract the shared SNPs independently from the study and 1000G datasets.
-
 6. Merge the study cohort and 1000G reference chromosome-by-chromosome.
-
 7. Convert the chromosome-level merged datasets to PLINK2 PGEN format.
-
 8. Merge chromosomes 1–22 into a single joint study + 1000G genotype dataset.
-
 9. Calculate joint sample and variant genotype missingness before QC.
-
 10. Apply variant-level QC:
-
-   - `--geno 0.02`: remove variants with >2% missing genotype calls
-   - `--maf 0.05`: retain variants with minor allele frequency >=5%
-
+    - `--geno 0.02`: remove variants with >2% missing genotype calls
+    - `--maf 0.05`: retain variants with minor allele frequency >=5%
 11. Recalculate sample missingness after variant-level filtering.
-
 12. Apply sample-level QC:
-
-   - `--mind 0.05`: remove samples with >5% missing genotype calls
-
+    - `--mind 0.05`: remove samples with >5% missing genotype calls
 13. Calculate post-QC sample missingness for QC documentation.
-
 14. Exclude the GRCh38 chromosome 6 region 25–35 Mb from the set of variants considered for LD pruning. This region is excluded from PCA marker selection because of extended linkage disequilibrium; it is not removed from the underlying QC genotype dataset.
-
-15. Perform genome-wide LD pruning using:
-
-   `--indep-pairwise 200 50 0.2`
-
-   corresponding to:
-
-   - 200-variant window
-   - 50-variant step
-   - LD threshold of r² = 0.2
-
+15. Perform genome-wide LD pruning using `--indep-pairwise 200 50 0.2`, corresponding to:
+    - 200-variant window
+    - 50-variant step
+    - LD threshold of r² = 0.2
 16. Using the LD-pruned SNP set, calculate 20 principal components from the 1000G reference samples only.
-
 17. Save the 1000G PCA allele weights and 1000G allele frequencies required for projection.
-
 18. Project both the maternal study samples and the 1000G reference samples onto the fixed 1000G PCA axes using the saved allele weights and reference allele frequencies.
-
 19. Write the projected PCA coordinates to:
-
-   - `pca/1000G_projection.eigenvec`
-   - `pca/1000G_projection.eigenval`
+    - `pca/1000G_projection.eigenvec`
+    - `pca/1000G_projection.eigenval`
 
 The PCA axes are defined by the 1000G reference panel, and the study samples are projected onto those fixed reference axes.
 
 ---
 
-### Run initial reference PCA and projection
+### Run reference PCA and projection
 
 ```bash
 snakemake \
   -j 22 \
   -s snakefile \
   --use-conda \
-  --config run=initial \
   --latency-wait 60 \
   --cluster "sbatch -t 05:00:00 -c 8 -N 1"
 ```
 
+---
 
-###  Initial Global Ancestry QC and Outlier Removal
+## 3. Global ancestry QC, reference annotation, and final metadata generation
 
 ### Purpose
 
-This step uses the **initial 1000G reference PCA projection** to identify and remove maternal study samples with broad nuclear ancestry that is inconsistent with the ancestry expected for their study cohort.
+`globalPCA_pipeline.py` uses the fixed 1000G-reference projection generated by the Snakefile to perform both broad ancestry QC and final ancestry annotation in a single run.
 
-The PCA itself is not recalculated in this step. Instead, `globalPCA_pipeline.py --stage initial`:
+The PCA itself is not recalculated. The same fixed 1000G-defined PCA coordinate system is used throughout the analysis.
 
-- reads the initial 1000G-projected PCA coordinates
+The script:
+
+- reads the fixed 1000G-projected PCA coordinates
 - attaches study-site and 1000 Genomes ancestry labels
 - assigns each study sample an expected broad ancestry group
 - builds broad AFR and SAS reference models from 1000 Genomes samples
@@ -429,18 +387,39 @@ The PCA itself is not recalculated in this step. Instead, `globalPCA_pipeline.py
 - generates diagnostic PCA plots and QC tables
 - removes flagged study samples from the retained cohort
 - validates the retained sample IDs against the maternal PLINK `.fam`
-- writes a cleaned PLINK keep file for the next stage
+- writes the ancestry-clean PLINK keep file
+- immediately continues using the retained study samples in the same fixed PCA space
+- compares retained study samples with individual 1000 Genomes reference populations
+- identifies the nearest 1000 Genomes population reference
+- calculates ancestry-distance metrics
+- evaluates broad superpopulation concordance
+- attaches `Global_PC1`–`Global_PC20` to the maternal metadata
+- merges maternal weight
+- generates the final analysis-ready metadata file
 
-Main output:
-```
+The broad ancestry-QC threshold is defined from leave-one-out 1000G reference distances using:
+
+`OUTLIER_QUANTILE = 0.999`
+
+and ancestry distance is calculated using:
+
+`PC1`–`PC5`
+
+Main outputs:
+
+```text
 qc/maternal_ptb_globalPCA.keep
+pca/global_qc/final_1KGP_nearest_reference.csv
+metadata/momi_mothers_ultimate.csv
 ```
-Run:
+
+### Run
 
 ```bash
-python globalPCA_pipeline.py --stage initial
+python globalPCA_pipeline.py
 ```
 
+---
 
 ### Broad ancestry QC visualization
 
@@ -456,9 +435,13 @@ PCA visualization after removing flagged ancestry outliers:
 
 ![After ancestry QC](plots/AFTER_REMOVAL_PC1_PC2.png)
 
+---
 
-### CREATE ANCESTRY-CLEAN MATERNAL COHORT
-```
+### Optional: create ancestry-clean maternal PLINK cohort
+
+The ancestry-clean PLINK dataset may be created for downstream genotype analyses. It is not required for the PCA or final ancestry annotation because `globalPCA_pipeline.py` directly retains the ancestry-clean study samples in the original fixed 1000G projection.
+
+```bash
 /home/haltomj/bin/plink2_latest/plink2 \
   --bfile qc/maternal_ptb \
   --keep qc/maternal_ptb_globalPCA.keep \
@@ -468,48 +451,55 @@ PCA visualization after removing flagged ancestry outliers:
 wc -l qc/maternal_ptb_globalPCA.fam
 ```
 
+---
 
-## 3. Final ancestry annotation and metadata generation
+### Final ancestry annotation
 
+After ancestry outliers are removed in memory, the script continues directly to final ancestry annotation without recalculating the PCA.
 
-### Purpose
+The retained study samples are compared with individual 1000 Genomes reference populations in the same fixed PCA coordinate system.
 
-After broad ancestry outliers have been identified and removed, the 1000G reference PCA and projection workflow is repeated using the cleaned maternal genotype cohort.
+For each retained maternal sample, the script records:
 
-The purpose of this second run is to recalculate the 1000G reference PCA using the final QC-filtered marker set and project the ancestry-clean maternal cohort onto the resulting reference axes.
+- nearest 1000G population reference
+- nearest 1000G superpopulation
+- second-nearest 1000G population reference
+- Mahalanobis distance metrics
+- empirical reference percentile
+- distance-to-threshold ratio
+- expected-superpopulation concordance
+- nearest reference restricted to the expected AFR or SAS superpopulation
+- projected global PC coordinates
 
-This produces the final 1000G-reference projected PCA coordinates used for downstream ancestry annotation.
+Nearest 1000G population labels are descriptive measures of genetic reference similarity and should not be interpreted as literal ethnicity or population identity.
 
-The study genotype input is:
+The final maternal metadata file is:
 
 ```text
-qc/maternal_ptb_globalPCA
+metadata/momi_mothers_ultimate.csv
 ```
 
-```
-snakemake -j 22 -s snakefile --use-conda  --config run=final --latency-wait 60 --cluster "sbatch -t 05:00:00 -c 8 -N 1"
-```
+This file contains the retained ancestry-QC maternal cohort together with the projected global PCs and 1000G reference annotations for downstream association analyses.
 
+---
 
-### Final Ancestry Annotation and Maternal Metadata Generation
-
-### Purpose
-
-This final stage interprets the **cleaned 1000G-reference projected PCA** generated in the previous step and produces the final ancestry annotations and maternal analysis metadata.
-
-Unlike the initial ancestry-QC stage, this step is not focused on removing broad ancestry outliers. Instead, it uses the cleaned PCA to:
-
-- visualize the final study + 1000 Genomes ancestry structure
-- compare study samples with individual 1000 Genomes reference populations
-- assign the nearest 1000 Genomes population reference to each maternal sample
-- calculate ancestry-distance metrics
-- evaluate broad superpopulation concordance
-- attach final global PC coordinates to the maternal metadata
-- merge maternal weight
-- generate the final analysis-ready metadata file
-
-Run:
+## Complete workflow
 
 ```bash
-python globalPCA_pipeline.py --stage final
+python MetadataPrep.py
+
+/home/haltomj/bin/plink2_latest/plink2 \
+  --bfile plink2 \
+  --keep metadata/qc/maternal_ptb.keep \
+  --make-bed \
+  --out qc/maternal_ptb
+
+snakemake \
+  -j 22 \
+  -s snakefile \
+  --use-conda \
+  --latency-wait 60 \
+  --cluster "sbatch -t 05:00:00 -c 8 -N 1"
+
+python globalPCA_pipeline.py
 ```
