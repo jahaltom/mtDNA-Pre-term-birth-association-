@@ -287,36 +287,42 @@ wc -l qc/maternal_ptb.fam
 
 
 
-## 2. Joint Study + 1000 Genomes Genotype QC and PCA
+## 2. Study + 1000 Genomes Genotype QC and Reference Projection
 
 ### Purpose
 
-The Snakefile performs joint autosomal nuclear-genotype quality control and principal component analysis (PCA) using the maternal study cohort together with 1000 Genomes Project (1000G) reference samples.
+The Snakefile performs joint autosomal nuclear-genotype quality control using the maternal study cohort together with 1000 Genomes Project (1000G) reference samples.
 
-The joint PCA is run in two passes:
+After joint genotype QC and LD pruning, principal components are calculated using only the 1000G reference samples. The maternal study samples are then projected onto these fixed 1000G-defined PCA axes.
 
-### Initial PCA
+The workflow is run in two passes:
+
+### Initial reference PCA and projection
 
 The initial run starts from the full maternal genotype cohort:
 
 `qc/maternal_ptb`
 
-It performs joint study + 1000G genotype QC and PCA to generate broad ancestry coordinates used for identifying study samples that are inconsistent with their expected population structure.
+It performs joint study + 1000G genotype QC, calculates the PCA axes from the 1000G reference samples only, and projects the study samples onto those axes.
 
-Primary PCA outputs:
+These projected coordinates are used for broad ancestry QC and identification of study samples that are inconsistent with their expected population structure.
+
+For pipeline compatibility, the projected PCA coordinates retain the existing filenames:
 
 - `pca/joint_global.eigenvec`
 - `pca/joint_global.eigenval`
 
-### Final PCA
+### Final reference PCA and projection
 
 After broad ancestry QC, the retained maternal study samples are written to:
 
 `qc/maternal_ptb_globalPCA`
 
-The same Snakefile is then rerun using this ancestry-filtered maternal cohort.
+The same Snakefile is rerun using this ancestry-filtered maternal cohort.
 
-Primary final PCA outputs:
+The 1000G PCA axes are recalculated using the QC-filtered marker set from the final run, and the retained study samples are projected onto those reference axes.
+
+Primary final outputs:
 
 - `pca/joint_global_final.eigenvec`
 - `pca/joint_global_final.eigenval`
@@ -328,7 +334,7 @@ The run mode is controlled using:
 
 ---
 
-### Initial PCA workflow
+### Initial workflow
 
 The initial run performs the following steps:
 
@@ -377,13 +383,22 @@ The initial run performs the following steps:
    - 50-variant step
    - LD threshold of r² = 0.2
 
-16. Extract the LD-pruned variants and calculate 20 principal components using:
+16. Using the LD-pruned SNP set, calculate 20 principal components from the 1000G reference samples only.
 
-   `--pca 20 approx`
+17. Save the 1000G PCA allele weights and 1000G allele frequencies required for projection.
+
+18. Project both the maternal study samples and the 1000G reference samples onto the fixed 1000G PCA axes using the saved allele weights and reference allele frequencies.
+
+19. Write the projected PCA coordinates to:
+
+   - `pca/joint_global.eigenvec`
+   - `pca/joint_global.eigenval`
+
+The filenames retain `joint_global` for compatibility with downstream scripts, although the PCA axes are now defined by the 1000G reference panel rather than estimated jointly from study and reference samples.
 
 ---
 
-### Run initial PCA
+### Run initial reference PCA and projection
 
 ```bash
 snakemake \
@@ -394,6 +409,7 @@ snakemake \
   --latency-wait 60 \
   --cluster "sbatch -t 05:00:00 -c 8 -N 1"
 ```
+
 
 ###  Initial Global Ancestry QC and Outlier Removal
 
@@ -424,6 +440,22 @@ Run:
 ```bash
 python globalPCA_pipeline.py --stage initial
 ```
+
+
+### Broad ancestry QC visualization
+
+Initial projected PCA:
+
+![Before ancestry QC](pca/global_qc/BEFORE_PC1_PC2.png)
+
+Samples flagged by the ancestry-QC criterion are outlined in black:
+
+![PCA with ancestry outliers flagged](pca/global_qc/BEFORE_FLAGGED_PC1_PC2.png)
+
+PCA visualization after removing flagged ancestry outliers:
+
+![After ancestry QC](pca/global_qc/AFTER_REMOVAL_PC1_PC2.png)
+
 
 ### CREATE ANCESTRY-CLEAN MATERNAL COHORT
 ```
