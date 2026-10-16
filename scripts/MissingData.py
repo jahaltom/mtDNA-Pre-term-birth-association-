@@ -152,7 +152,7 @@ plt.clf()
 # REMOVE SAMPLES MISSING ANY SURVIVING FEATURE
 # ============================================================
 
-md=md.dropna(subset=["GAGEBRTH","PTB"])
+md=md.dropna(subset=["GAGEBRTH_NEW","PTB"])
 
 # Treat -77 as missing for the surviving features
 complete_case_mask = (
