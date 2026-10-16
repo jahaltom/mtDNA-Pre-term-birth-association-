@@ -15,11 +15,8 @@ import matplotlib.pyplot as plt
 METADATA_FILE = "metadata/momi_mothers_merged.csv"
 PANEL_FILE = "metadata/1KGP.metadata.tsv"
 
-INITIAL_PCA_FILE = "pca/1000G_projection.eigenvec"
-INITIAL_EIGENVAL_FILE = "pca/1000G_projection.eigenval"
-
-FINAL_PCA_FILE = "pca/1000G_projection_final.eigenvec"
-FINAL_EIGENVAL_FILE = "pca/1000G_projection_final.eigenval"
+PCA_FILE = "pca/1000G_projection.eigenvec"
+EIGENVAL_FILE = "pca/1000G_projection.eigenval"
 
 OUTDIR = Path("pca/global_qc")
 OUTDIR.mkdir(parents=True, exist_ok=True)
@@ -589,8 +586,8 @@ if args.stage == "initial":
     print("# INITIAL GLOBAL ANCESTRY QC")
     print("########################################")
 
-    pca = read_pca(INITIAL_PCA_FILE)
-    eigenvalues, variance_pct = read_eigenvalues(INITIAL_EIGENVAL_FILE)
+    pca = read_pca(PCA_FILE)
+    eigenvalues, variance_pct = read_eigenvalues(EIGENVAL_FILE)
 
     pca, kg, study, unknown = label_projected_pca(pca, meta, panel)
 
@@ -887,11 +884,10 @@ if args.stage == "initial":
 
     print("\nNEXT STEP:")
     print(
-        "Create qc/maternal_ptb_globalPCA with this keep file, "
-        "then rerun the 1000G reference PCA and projection to generate:"
+        "Run the final annotation stage using the same fixed "
+        "1000G reference projection:"
     )
-    print(FINAL_PCA_FILE)
-    print(FINAL_EIGENVAL_FILE)
+    print("python globalPCA_pipeline.py --stage final")
 
 
 # ============================================================
@@ -904,25 +900,79 @@ elif args.stage == "final":
     print("# FINAL CLEAN GLOBAL PCA ANNOTATION")
     print("########################################")
 
-    if not Path(FINAL_PCA_FILE).exists():
-        raise FileNotFoundError(
-            f"Final PCA file does not exist: {FINAL_PCA_FILE}\n"
-            "Run the second 1000G reference PCA and projection first."
+    # --------------------------------------------------------
+    # Reuse the original fixed 1000G reference projection.
+    #
+    # The study samples did not define the PCA axes, so ancestry
+    # QC does not require PCA to be recalculated after removing
+    # study outliers.
+    # --------------------------------------------------------
+
+    pca = read_pca(PCA_FILE)
+    eigenvalues, variance_pct = read_eigenvalues(EIGENVAL_FILE)
+
+    pca, kg, study, unknown = label_projected_pca(
+        pca,
+        meta,
+        panel
+    )
+
+    # --------------------------------------------------------
+    # Load ancestry-QC retained study IDs
+    # --------------------------------------------------------
+
+    keep = pd.read_csv(
+        INITIAL_KEEP_FILE,
+        sep=r"\s+",
+        header=None,
+        names=["FID", "IID"],
+        dtype=str
+    )
+
+    keep["IID"] = (
+        keep["IID"]
+        .astype(str)
+        .str.strip()
+    )
+
+    retained_ids = set(keep["IID"])
+
+    study_before = len(study)
+
+    study = study[
+        study["IID"].isin(retained_ids)
+    ].copy()
+
+    print("\n========================================")
+    print("FINAL RETAINED STUDY COHORT")
+    print("========================================")
+    print("Study samples in original projection:", study_before)
+    print("Study samples retained after ancestry QC:", len(study))
+    print("Study samples removed:", study_before - len(study))
+
+    missing_from_projection = retained_ids - set(study["IID"])
+
+    if missing_from_projection:
+        raise ValueError(
+            f"{len(missing_from_projection)} retained study IDs are "
+            "missing from the original 1000G projection."
         )
 
-    if not Path(FINAL_EIGENVAL_FILE).exists():
-        raise FileNotFoundError(
-            f"Final eigenvalue file does not exist: {FINAL_EIGENVAL_FILE}"
-        )
+    # Recombine retained study samples with all 1000G reference samples
+    # for final labeled output and visualization.
+    final_pca = pd.concat(
+        [kg, study],
+        ignore_index=True
+    )
 
-    pca = read_pca(FINAL_PCA_FILE)
-    eigenvalues, variance_pct = read_eigenvalues(FINAL_EIGENVAL_FILE)
+    print_pca_summary(
+        final_pca,
+        kg,
+        study,
+        unknown.iloc[0:0].copy()
+    )
 
-    pca, kg, study, unknown = label_projected_pca(pca, meta, panel)
-
-    print_pca_summary(pca, kg, study, unknown)
-
-    pca.to_csv(
+    final_pca.to_csv(
         OUTDIR / "final_1000G_projection_labeled.csv",
         index=False
     )
