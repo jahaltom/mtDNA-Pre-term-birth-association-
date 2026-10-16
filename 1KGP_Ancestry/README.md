@@ -1,11 +1,11 @@
 # Maternal PTB Cohort Preparation and Ancestry QC Pipeline
 
-This workflow prepares the maternal pregnancy cohort for downstream mtDNA haplogroup / preterm birth analyses and performs nuclear ancestry QC and 1000 Genomes Project assigment.
+This workflow prepares the maternal pregnancy cohort for downstream mtDNA haplogroup / preterm birth analyses and performs nuclear ancestry QC using projection onto 1000 Genomes Project reference PCA axes.
 
 The pipeline is divided into three major components:
 
 1. Maternal cohort construction and genotype sample selection
-2. Joint study + 1000 Genomes genotype QC/PCA
+2. Study + 1000 Genomes genotype QC and reference projection
 3. Final ancestry annotation and metadata generation
 
 ---
@@ -307,10 +307,10 @@ It performs joint study + 1000G genotype QC, calculates the PCA axes from the 10
 
 These projected coordinates are used for broad ancestry QC and identification of study samples that are inconsistent with their expected population structure.
 
-For pipeline compatibility, the projected PCA coordinates retain the existing filenames:
+The projected PCA coordinates are written to:
 
-- `pca/joint_global.eigenvec`
-- `pca/joint_global.eigenval`
+- `pca/1000G_projection.eigenvec`
+- `pca/1000G_projection.eigenval`
 
 ### Final reference PCA and projection
 
@@ -324,8 +324,8 @@ The 1000G PCA axes are recalculated using the QC-filtered marker set from the fi
 
 Primary final outputs:
 
-- `pca/joint_global_final.eigenvec`
-- `pca/joint_global_final.eigenval`
+- `pca/1000G_projection_final.eigenvec`
+- `pca/1000G_projection_final.eigenval`
 
 The run mode is controlled using:
 
@@ -391,10 +391,10 @@ The initial run performs the following steps:
 
 19. Write the projected PCA coordinates to:
 
-   - `pca/joint_global.eigenvec`
-   - `pca/joint_global.eigenval`
+   - `pca/1000G_projection.eigenvec`
+   - `pca/1000G_projection.eigenval`
 
-The filenames retain `joint_global` for compatibility with downstream scripts, although the PCA axes are now defined by the 1000G reference panel rather than estimated jointly from study and reference samples.
+The PCA axes are defined by the 1000G reference panel, and the study samples are projected onto those fixed reference axes.
 
 ---
 
@@ -415,11 +415,11 @@ snakemake \
 
 ### Purpose
 
-This step uses the **initial joint maternal study + 1000 Genomes PCA** to identify and remove maternal study samples with broad nuclear ancestry that is inconsistent with the ancestry expected for their study cohort.
+This step uses the **initial 1000G reference PCA projection** to identify and remove maternal study samples with broad nuclear ancestry that is inconsistent with the ancestry expected for their study cohort.
 
 The PCA itself is not recalculated in this step. Instead, `globalPCA_pipeline.py --stage initial`:
 
-- reads the initial joint PCA coordinates
+- reads the initial 1000G-projected PCA coordinates
 - attaches study-site and 1000 Genomes ancestry labels
 - assigns each study sample an expected broad ancestry group
 - builds broad AFR and SAS reference models from 1000 Genomes samples
@@ -474,11 +474,11 @@ wc -l qc/maternal_ptb_globalPCA.fam
 
 ### Purpose
 
-After broad ancestry outliers have been identified and removed, the joint study + 1000 Genomes PCA workflow is repeated using the cleaned maternal genotype cohort.
+After broad ancestry outliers have been identified and removed, the 1000G reference PCA and projection workflow is repeated using the cleaned maternal genotype cohort.
 
-The purpose of this second PCA is to recalculate the global ancestry axes after removing the broad ancestry outliers detected during the initial ancestry-QC step.
+The purpose of this second run is to recalculate the 1000G reference PCA using the final QC-filtered marker set and project the ancestry-clean maternal cohort onto the resulting reference axes.
 
-This produces the final cleaned joint PCA used for downstream ancestry annotation.
+This produces the final 1000G-reference projected PCA coordinates used for downstream ancestry annotation.
 
 The study genotype input is:
 
@@ -495,7 +495,7 @@ snakemake -j 22 -s snakefile --use-conda  --config run=final --latency-wait 60 -
 
 ### Purpose
 
-This final stage interprets the **cleaned joint maternal study + 1000 Genomes PCA** generated in the previous step and produces the final ancestry annotations and maternal analysis metadata.
+This final stage interprets the **cleaned 1000G-reference projected PCA** generated in the previous step and produces the final ancestry annotations and maternal analysis metadata.
 
 Unlike the initial ancestry-QC stage, this step is not focused on removing broad ancestry outliers. Instead, it uses the cleaned PCA to:
 
@@ -513,4 +513,3 @@ Run:
 ```bash
 python globalPCA_pipeline.py --stage final
 ```
-
