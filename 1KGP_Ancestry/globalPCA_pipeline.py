@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-
-import argparse
 from pathlib import Path
 
 import numpy as np
@@ -56,22 +53,6 @@ AFR_POPS = ["ACB", "ASW", "ESN", "GWD", "LWK", "MSL", "YRI"]
 SAS_POPS = ["BEB", "GIH", "ITU", "PJL", "STU"]
 
 
-# ============================================================
-# ARGUMENTS
-# ============================================================
-
-parser = argparse.ArgumentParser(
-    description="1000G reference PCA projection ancestry QC and final maternal metadata annotation."
-)
-
-parser.add_argument(
-    "--stage",
-    required=True,
-    choices=["initial", "final"],
-    help="initial = identify/remove broad ancestry outliers; final = annotate cleaned second PCA"
-)
-
-args = parser.parse_args()
 
 
 # ============================================================
@@ -577,884 +558,837 @@ panel = read_1000g_panel()
 
 
 # ============================================================
-# INITIAL STAGE
+# GLOBAL ANCESTRY QC
 # ============================================================
 
-if args.stage == "initial":
+# ============================================================
+# GLOBAL ANCESTRY QC
+# ============================================================
 
-    print("\n########################################")
-    print("# INITIAL GLOBAL ANCESTRY QC")
-    print("########################################")
+print("\n########################################")
+print("# GLOBAL ANCESTRY QC")
+print("########################################")
 
-    pca = read_pca(PCA_FILE)
-    eigenvalues, variance_pct = read_eigenvalues(EIGENVAL_FILE)
+pca = read_pca(PCA_FILE)
+eigenvalues, variance_pct = read_eigenvalues(EIGENVAL_FILE)
 
-    pca, kg, study, unknown = label_projected_pca(pca, meta, panel)
+pca, kg, study, unknown = label_projected_pca(pca, meta, panel)
 
-    print_pca_summary(pca, kg, study, unknown)
+print_pca_summary(pca, kg, study, unknown)
 
-    pca.to_csv(
-        OUTDIR / "initial_1000G_projection_labeled.csv",
-        index=False
+pca.to_csv(
+    OUTDIR / "initial_1000G_projection_labeled.csv",
+    index=False
+)
+
+plot_pairs = [
+    ("PC1", "PC2"),
+    ("PC1", "PC3"),
+    ("PC2", "PC3"),
+    ("PC1", "PC4"),
+    ("PC2", "PC4")
+]
+
+# --------------------------------------------------------
+# BEFORE plots
+# --------------------------------------------------------
+
+for pc_x, pc_y in plot_pairs:
+    plot_pca(
+        kg=kg,
+        study=study,
+        variance_pct=variance_pct,
+        pc_x=pc_x,
+        pc_y=pc_y,
+        outfile=OUTDIR / f"BEFORE_{pc_x}_{pc_y}.png",
+        title=f"Before global ancestry QC: {pc_x} vs {pc_y}"
     )
 
-    plot_pairs = [
-        ("PC1", "PC2"),
-        ("PC1", "PC3"),
-        ("PC2", "PC3"),
-        ("PC1", "PC4"),
-        ("PC2", "PC4")
-    ]
+# --------------------------------------------------------
+# Broad AFR / SAS reference models
+# --------------------------------------------------------
 
-    # --------------------------------------------------------
-    # BEFORE plots
-    # --------------------------------------------------------
+superpop_models = {
+    "AFR": build_superpop_reference(kg, "AFR"),
+    "SAS": build_superpop_reference(kg, "SAS")
+}
 
-    for pc_x, pc_y in plot_pairs:
-        plot_pca(
-            kg=kg,
-            study=study,
-            variance_pct=variance_pct,
-            pc_x=pc_x,
-            pc_y=pc_y,
-            outfile=OUTDIR / f"BEFORE_{pc_x}_{pc_y}.png",
-            title=f"Before global ancestry QC: {pc_x} vs {pc_y}"
+superpop_reference_distances = {
+    "AFR": calculate_superpop_loo_distances(kg, "AFR"),
+    "SAS": calculate_superpop_loo_distances(kg, "SAS")
+}
+
+superpop_thresholds = {
+    superpop: float(np.quantile(distances, OUTLIER_QUANTILE))
+    for superpop, distances in superpop_reference_distances.items()
+}
+
+threshold_table = []
+
+for superpop in ["AFR", "SAS"]:
+    threshold_table.append({
+        "Superpopulation": superpop,
+        "N_reference": superpop_models[superpop]["n"],
+        "Quantile": OUTLIER_QUANTILE,
+        "Threshold": superpop_thresholds[superpop]
+    })
+
+threshold_df = pd.DataFrame(threshold_table)
+
+threshold_df.to_csv(
+    OUTDIR / "initial_1000G_superpopulation_thresholds.csv",
+    index=False
+)
+
+print("\n========================================")
+print("1000G SUPERPOPULATION QC THRESHOLDS")
+print("========================================")
+print(threshold_df.to_string(index=False))
+
+# --------------------------------------------------------
+# Evaluate every study sample
+# --------------------------------------------------------
+
+results = []
+
+for _, row in study.iterrows():
+
+    expected = row["Expected_superpop"]
+
+    if expected not in ["AFR", "SAS"]:
+        print(
+            "WARNING: no expected superpopulation for",
+            row["IID"],
+            row["merge_site"]
         )
+        continue
 
-    # --------------------------------------------------------
-    # Broad AFR / SAS reference models
-    # --------------------------------------------------------
+    x = row[DISTANCE_PCS].astype(float).to_numpy()
 
-    superpop_models = {
-        "AFR": build_superpop_reference(kg, "AFR"),
-        "SAS": build_superpop_reference(kg, "SAS")
-    }
+    model = superpop_models[expected]
+    distance = mahalanobis_distance(x, model["centroid"], model["inv_cov"])
 
-    superpop_reference_distances = {
-        "AFR": calculate_superpop_loo_distances(kg, "AFR"),
-        "SAS": calculate_superpop_loo_distances(kg, "SAS")
-    }
+    threshold = superpop_thresholds[expected]
+    reference_distances = superpop_reference_distances[expected]
+    percentile = empirical_percentile(distance, reference_distances)
+    distance_ratio = distance / threshold
+    global_outlier = distance > threshold
 
-    superpop_thresholds = {
-        superpop: float(np.quantile(distances, OUTLIER_QUANTILE))
-        for superpop, distances in superpop_reference_distances.items()
-    }
+    results.append({
+        "IID": row["IID"],
+        "merge_site": row["merge_site"],
+        "Expected_superpop": expected,
+        "Superpop_Mahalanobis": distance,
+        "Superpop_Threshold": threshold,
+        "Superpop_Empirical_Percentile": percentile,
+        "Distance_over_Threshold": distance_ratio,
+        "Global_PCA_outlier": global_outlier
+    })
 
-    threshold_table = []
+qc = pd.DataFrame(results)
+qc = qc.sort_values("Distance_over_Threshold", ascending=False)
 
-    for superpop in ["AFR", "SAS"]:
-        threshold_table.append({
-            "Superpopulation": superpop,
-            "N_reference": superpop_models[superpop]["n"],
-            "Quantile": OUTLIER_QUANTILE,
-            "Threshold": superpop_thresholds[superpop]
-        })
+qc.to_csv(
+    OUTDIR / "initial_global_PCA_ancestry_QC.csv",
+    index=False
+)
 
-    threshold_df = pd.DataFrame(threshold_table)
+# --------------------------------------------------------
+# Diagnostics
+# --------------------------------------------------------
 
-    threshold_df.to_csv(
-        OUTDIR / "initial_1000G_superpopulation_thresholds.csv",
-        index=False
-    )
+print("\n========================================")
+print("GLOBAL ANCESTRY QC DISTRIBUTION")
+print("========================================")
 
-    print("\n========================================")
-    print("1000G SUPERPOPULATION QC THRESHOLDS")
-    print("========================================")
-    print(threshold_df.to_string(index=False))
+print(
+    qc.groupby("Expected_superpop")[
+        ["Superpop_Mahalanobis", "Distance_over_Threshold"]
+    ].describe()
+)
 
-    # --------------------------------------------------------
-    # Evaluate every study sample
-    # --------------------------------------------------------
-
-    results = []
-
-    for _, row in study.iterrows():
-
-        expected = row["Expected_superpop"]
-
-        if expected not in ["AFR", "SAS"]:
-            print(
-                "WARNING: no expected superpopulation for",
-                row["IID"],
-                row["merge_site"]
-            )
-            continue
-
-        x = row[DISTANCE_PCS].astype(float).to_numpy()
-
-        model = superpop_models[expected]
-        distance = mahalanobis_distance(x, model["centroid"], model["inv_cov"])
-
-        threshold = superpop_thresholds[expected]
-        reference_distances = superpop_reference_distances[expected]
-        percentile = empirical_percentile(distance, reference_distances)
-        distance_ratio = distance / threshold
-        global_outlier = distance > threshold
-
-        results.append({
-            "IID": row["IID"],
-            "merge_site": row["merge_site"],
-            "Expected_superpop": expected,
-            "Superpop_Mahalanobis": distance,
-            "Superpop_Threshold": threshold,
-            "Superpop_Empirical_Percentile": percentile,
-            "Distance_over_Threshold": distance_ratio,
-            "Global_PCA_outlier": global_outlier
-        })
-
-    qc = pd.DataFrame(results)
-    qc = qc.sort_values("Distance_over_Threshold", ascending=False)
-
-    qc.to_csv(
-        OUTDIR / "initial_global_PCA_ancestry_QC.csv",
-        index=False
-    )
-
-    # --------------------------------------------------------
-    # Diagnostics
-    # --------------------------------------------------------
-
-    print("\n========================================")
-    print("GLOBAL ANCESTRY QC DISTRIBUTION")
-    print("========================================")
-
-    print(
-        qc.groupby("Expected_superpop")[
-            ["Superpop_Mahalanobis", "Distance_over_Threshold"]
-        ].describe()
-    )
-
-    print("\nFlagged by expected ancestry:")
-    print(
-        pd.crosstab(
-            qc["Expected_superpop"],
-            qc["Global_PCA_outlier"]
-        )
-    )
-
-    print("\nFlagged by study site:")
-    print(
-        pd.crosstab(
-            qc["merge_site"],
-            qc["Global_PCA_outlier"]
-        )
-    )
-
-    # --------------------------------------------------------
-    # Flag outliers
-    # --------------------------------------------------------
-
-    flagged = qc[
+print("\nFlagged by expected ancestry:")
+print(
+    pd.crosstab(
+        qc["Expected_superpop"],
         qc["Global_PCA_outlier"]
-    ].copy()
+    )
+)
 
-    flagged.to_csv(
-        OUTDIR / "initial_global_PCA_outliers.csv",
+print("\nFlagged by study site:")
+print(
+    pd.crosstab(
+        qc["merge_site"],
+        qc["Global_PCA_outlier"]
+    )
+)
+
+# --------------------------------------------------------
+# Flag outliers
+# --------------------------------------------------------
+
+flagged = qc[
+    qc["Global_PCA_outlier"]
+].copy()
+
+flagged.to_csv(
+    OUTDIR / "initial_global_PCA_outliers.csv",
+    index=False
+)
+
+print("\n========================================")
+print("INITIAL GLOBAL ANCESTRY OUTLIERS")
+print("========================================")
+
+print("Study samples tested:", len(qc))
+print("Outliers flagged:", len(flagged))
+
+print("\nOutliers by site:")
+print(flagged["merge_site"].value_counts().sort_index())
+
+# --------------------------------------------------------
+# BEFORE plots with flagged samples
+# --------------------------------------------------------
+
+for pc_x, pc_y in plot_pairs:
+    plot_pca(
+        kg=kg,
+        study=study,
+        variance_pct=variance_pct,
+        pc_x=pc_x,
+        pc_y=pc_y,
+        outfile=OUTDIR / f"BEFORE_FLAGGED_{pc_x}_{pc_y}.png",
+        title=f"Initial PCA with ancestry outliers flagged: {pc_x} vs {pc_y}",
+        flagged_ids=flagged["IID"].tolist()
+    )
+
+# --------------------------------------------------------
+# Remove flagged study samples
+# --------------------------------------------------------
+
+flagged_ids = set(flagged["IID"])
+
+clean_study = study[
+    ~study["IID"].isin(flagged_ids)
+].copy()
+
+# --------------------------------------------------------
+# AFTER plots using same initial PCA coordinates
+# --------------------------------------------------------
+
+for pc_x, pc_y in plot_pairs:
+    plot_pca(
+        kg=kg,
+        study=clean_study,
+        variance_pct=variance_pct,
+        pc_x=pc_x,
+        pc_y=pc_y,
+        outfile=OUTDIR / f"AFTER_REMOVAL_{pc_x}_{pc_y}.png",
+        title=f"After removing global ancestry outliers: {pc_x} vs {pc_y}"
+    )
+
+# --------------------------------------------------------
+# PLINK keep file
+#
+# Use actual FID/IID pairs from original maternal .fam.
+# --------------------------------------------------------
+
+fam = pd.read_csv(
+    "qc/maternal_ptb.fam",
+    sep=r"\s+",
+    header=None,
+    dtype=str
+)
+
+fam.columns = [
+    "FID",
+    "IID",
+    "PAT",
+    "MAT",
+    "SEX",
+    "PHENO"
+]
+
+fam["IID"] = fam["IID"].astype(str).str.strip()
+
+retained_ids = set(
+    clean_study["IID"]
+    .astype(str)
+    .str.strip()
+)
+
+clean_keep = fam[
+    fam["IID"].isin(retained_ids)
+][
+    ["FID", "IID"]
+].copy()
+
+missing_from_fam = retained_ids - set(clean_keep["IID"])
+
+print("\nRetained study IDs:", len(retained_ids))
+print("Retained IDs found in maternal FAM:", len(clean_keep))
+print("Retained IDs missing from maternal FAM:", len(missing_from_fam))
+
+if len(missing_from_fam) > 0:
+    pd.Series(
+        sorted(missing_from_fam),
+        name="IID"
+    ).to_csv(
+        OUTDIR / "retained_PCA_IDs_missing_from_maternal_fam.csv",
         index=False
     )
 
-    print("\n========================================")
-    print("INITIAL GLOBAL ANCESTRY OUTLIERS")
-    print("========================================")
-
-    print("Study samples tested:", len(qc))
-    print("Outliers flagged:", len(flagged))
-
-    print("\nOutliers by site:")
-    print(flagged["merge_site"].value_counts().sort_index())
-
-    # --------------------------------------------------------
-    # BEFORE plots with flagged samples
-    # --------------------------------------------------------
-
-    for pc_x, pc_y in plot_pairs:
-        plot_pca(
-            kg=kg,
-            study=study,
-            variance_pct=variance_pct,
-            pc_x=pc_x,
-            pc_y=pc_y,
-            outfile=OUTDIR / f"BEFORE_FLAGGED_{pc_x}_{pc_y}.png",
-            title=f"Initial PCA with ancestry outliers flagged: {pc_x} vs {pc_y}",
-            flagged_ids=flagged["IID"].tolist()
-        )
-
-    # --------------------------------------------------------
-    # Remove flagged study samples
-    # --------------------------------------------------------
-
-    flagged_ids = set(flagged["IID"])
-
-    clean_study = study[
-        ~study["IID"].isin(flagged_ids)
-    ].copy()
-
-    # --------------------------------------------------------
-    # AFTER plots using same initial PCA coordinates
-    # --------------------------------------------------------
-
-    for pc_x, pc_y in plot_pairs:
-        plot_pca(
-            kg=kg,
-            study=clean_study,
-            variance_pct=variance_pct,
-            pc_x=pc_x,
-            pc_y=pc_y,
-            outfile=OUTDIR / f"AFTER_REMOVAL_{pc_x}_{pc_y}.png",
-            title=f"After removing global ancestry outliers: {pc_x} vs {pc_y}"
-        )
-
-    # --------------------------------------------------------
-    # PLINK keep file
-    #
-    # Use actual FID/IID pairs from original maternal .fam.
-    # --------------------------------------------------------
-
-    fam = pd.read_csv(
-        "qc/maternal_ptb.fam",
-        sep=r"\s+",
-        header=None,
-        dtype=str
+    raise ValueError(
+        "Some retained PCA IDs are not present in qc/maternal_ptb.fam."
     )
 
-    fam.columns = [
-        "FID",
-        "IID",
-        "PAT",
-        "MAT",
-        "SEX",
-        "PHENO"
-    ]
+clean_keep.to_csv(
+    INITIAL_KEEP_FILE,
+    sep="\t",
+    index=False,
+    header=False
+)
 
-    fam["IID"] = fam["IID"].astype(str).str.strip()
+clean_study.to_csv(
+    OUTDIR / "initial_globalPCA_retained_study.csv",
+    index=False
+)
 
-    retained_ids = set(
-        clean_study["IID"]
-        .astype(str)
-        .str.strip()
-    )
+print("\n========================================")
+print("INITIAL GLOBAL PCA QC COMPLETE")
+print("========================================")
 
-    clean_keep = fam[
-        fam["IID"].isin(retained_ids)
-    ][
-        ["FID", "IID"]
-    ].copy()
+print("Study samples before ancestry QC:", len(study))
+print("Global ancestry outliers removed:", len(flagged))
+print("Study samples retained:", len(clean_study))
 
-    missing_from_fam = retained_ids - set(clean_keep["IID"])
+print("\nPLINK keep file:")
+print(INITIAL_KEEP_FILE)
+print("\nProceeding directly to final ancestry annotation...")
 
-    print("\nRetained study IDs:", len(retained_ids))
-    print("Retained IDs found in maternal FAM:", len(clean_keep))
-    print("Retained IDs missing from maternal FAM:", len(missing_from_fam))
-
-    if len(missing_from_fam) > 0:
-        pd.Series(
-            sorted(missing_from_fam),
-            name="IID"
-        ).to_csv(
-            OUTDIR / "retained_PCA_IDs_missing_from_maternal_fam.csv",
-            index=False
-        )
-
-        raise ValueError(
-            "Some retained PCA IDs are not present in qc/maternal_ptb.fam."
-        )
-
-    clean_keep.to_csv(
-        INITIAL_KEEP_FILE,
-        sep="\t",
-        index=False,
-        header=False
-    )
-
-    clean_study.to_csv(
-        OUTDIR / "initial_globalPCA_retained_study.csv",
-        index=False
-    )
-
-    print("\n========================================")
-    print("INITIAL GLOBAL PCA QC COMPLETE")
-    print("========================================")
-
-    print("Study samples before ancestry QC:", len(study))
-    print("Global ancestry outliers removed:", len(flagged))
-    print("Study samples retained:", len(clean_study))
-
-    print("\nPLINK keep file:")
-    print(INITIAL_KEEP_FILE)
-
-    print("\nNEXT STEP:")
-    print(
-        "Run the final annotation stage using the same fixed "
-        "1000G reference projection:"
-    )
-    print("python globalPCA_pipeline.py --stage final")
 
 
 # ============================================================
-# FINAL STAGE
+# FINAL ANCESTRY ANNOTATION
 # ============================================================
 
-elif args.stage == "final":
+print("\n########################################")
+print("# FINAL ANCESTRY ANNOTATION")
+print("########################################")
 
-    print("\n########################################")
-    print("# FINAL CLEAN GLOBAL PCA ANNOTATION")
-    print("########################################")
+# The ancestry-clean study cohort was already created above.
+# Reuse the same fixed 1000G projection; no second PCA or
+# projection is required.
 
-    # --------------------------------------------------------
-    # Reuse the original fixed 1000G reference projection.
-    #
-    # The study samples did not define the PCA axes, so ancestry
-    # QC does not require PCA to be recalculated after removing
-    # study outliers.
-    # --------------------------------------------------------
+study = clean_study.copy()
 
-    pca = read_pca(PCA_FILE)
-    eigenvalues, variance_pct = read_eigenvalues(EIGENVAL_FILE)
+print("\n========================================")
+print("FINAL RETAINED STUDY COHORT")
+print("========================================")
+print("Study samples in original projection:", len(pca[pca["Source"].eq("Study")]))
+print("Study samples retained after ancestry QC:", len(study))
+print(
+    "Study samples removed:",
+    len(pca[pca["Source"].eq("Study")]) - len(study)
+)
 
-    pca, kg, study, unknown = label_projected_pca(
-        pca,
-        meta,
-        panel
+# Combine retained study samples with all 1000G reference samples
+# for final plotting and labeled output.
+final_pca = pd.concat(
+    [kg, study],
+    ignore_index=True
+)
+
+print_pca_summary(
+    final_pca,
+    kg,
+    study,
+    unknown.iloc[0:0].copy()
+)
+
+final_pca.to_csv(
+    OUTDIR / "final_1000G_projection_labeled.csv",
+    index=False
+)
+
+
+plot_pairs = [
+    ("PC1", "PC2"),
+    ("PC1", "PC3"),
+    ("PC2", "PC3"),
+    ("PC1", "PC4"),
+    ("PC2", "PC4")
+]
+
+for pc_x, pc_y in plot_pairs:
+    plot_pca(
+        kg=kg,
+        study=study,
+        variance_pct=variance_pct,
+        pc_x=pc_x,
+        pc_y=pc_y,
+        outfile=OUTDIR / f"FINAL_{pc_x}_{pc_y}.png",
+        title=f"Final cleaned study cohort + 1000G: {pc_x} vs {pc_y}"
+    )
+# --------------------------------------------------------
+# Final population-level 1000G PCA plots
+# --------------------------------------------------------
+
+population_plot_pairs = [
+    ("PC1", "PC2"),
+    ("PC1", "PC3"),
+    ("PC2", "PC3")
+]
+
+for pc_x, pc_y in population_plot_pairs:
+
+    plot_population_pca(
+        kg=kg,
+        study=study,
+        variance_pct=variance_pct,
+        pc_x=pc_x,
+        pc_y=pc_y,
+        outfile=OUTDIR / f"FINAL_SAS_POPULATIONS_{pc_x}_{pc_y}.png",
+        title=f"South Asia cohorts + 1000G populations: {pc_x} vs {pc_y}",
+        superpop="SAS"
     )
 
-    # --------------------------------------------------------
-    # Load ancestry-QC retained study IDs
-    # --------------------------------------------------------
+    plot_population_pca(
+        kg=kg,
+        study=study,
+        variance_pct=variance_pct,
+        pc_x=pc_x,
+        pc_y=pc_y,
+        outfile=OUTDIR / f"FINAL_AFR_POPULATIONS_{pc_x}_{pc_y}.png",
+        title=f"African cohorts + 1000G populations: {pc_x} vs {pc_y}",
+        superpop="AFR"
+    )
+# --------------------------------------------------------
+# Population-level 1000G reference models
+# --------------------------------------------------------
 
-    keep = pd.read_csv(
-        INITIAL_KEEP_FILE,
-        sep=r"\s+",
-        header=None,
-        names=["FID", "IID"],
-        dtype=str
+all_1000g_pops = sorted(
+    kg["Population"]
+    .dropna()
+    .unique()
+    .tolist()
+)
+
+population_models, pooled_covariance, pooled_inv_cov = build_pooled_population_model(kg)
+
+print("\n========================================")
+print("POOLED 1KGP POPULATION MODEL")
+print("========================================")
+print("Populations:", len(population_models))
+print("Reference samples:", sum(x["n"] for x in population_models.values()))
+
+reference_distances = calculate_loo_reference_distances(
+    kg,
+    populations=all_1000g_pops
+)
+
+thresholds = calculate_reference_thresholds(
+    reference_distances
+)
+
+# --------------------------------------------------------
+# Population -> superpopulation lookup
+# --------------------------------------------------------
+
+pop_superpop = (
+    kg[
+        ["Population", "Superpopulation"]
+    ]
+    .drop_duplicates()
+)
+
+duplicate_pop_labels = pop_superpop[
+    pop_superpop["Population"].duplicated(keep=False)
+]
+
+if len(duplicate_pop_labels) > 0:
+    raise ValueError(
+        "A 1000G population maps to multiple superpopulation labels."
     )
 
-    keep["IID"] = (
-        keep["IID"]
-        .astype(str)
-        .str.strip()
+pop_to_superpop = dict(
+    zip(
+        pop_superpop["Population"],
+        pop_superpop["Superpopulation"]
+    )
+)
+
+# Names too
+pop_names = (
+    kg[
+        ["Population", "Population_name"]
+    ]
+    .drop_duplicates()
+)
+
+pop_to_name = dict(
+    zip(
+        pop_names["Population"],
+        pop_names["Population_name"]
+    )
+)
+
+superpop_names = (
+    kg[
+        ["Superpopulation", "Superpopulation_name"]
+    ]
+    .drop_duplicates()
+)
+
+superpop_to_name = dict(
+    zip(
+        superpop_names["Superpopulation"],
+        superpop_names["Superpopulation_name"]
+    )
+)
+
+# --------------------------------------------------------
+# Final nearest 1000G reference
+# --------------------------------------------------------
+
+results = []
+
+for _, row in study.iterrows():
+
+    distances = pooled_population_distances(
+        row,
+        all_1000g_pops,
+        population_models,
+        pooled_inv_cov
     )
 
-    retained_ids = set(keep["IID"])
-
-    study_before = len(study)
-
-    study = study[
-        study["IID"].isin(retained_ids)
-    ].copy()
-
-    print("\n========================================")
-    print("FINAL RETAINED STUDY COHORT")
-    print("========================================")
-    print("Study samples in original projection:", study_before)
-    print("Study samples retained after ancestry QC:", len(study))
-    print("Study samples removed:", study_before - len(study))
-
-    missing_from_projection = retained_ids - set(study["IID"])
-
-    if missing_from_projection:
+    if len(distances) == 0:
         raise ValueError(
-            f"{len(missing_from_projection)} retained study IDs are "
-            "missing from the original 1000G projection."
+            f"No 1000G population distances could be calculated for {row['IID']}"
         )
 
-    # Recombine retained study samples with all 1000G reference samples
-    # for final labeled output and visualization.
-    final_pca = pd.concat(
-        [kg, study],
-        ignore_index=True
+    ordered = sorted(
+        distances.items(),
+        key=lambda x: x[1]
     )
 
-    print_pca_summary(
-        final_pca,
-        kg,
-        study,
-        unknown.iloc[0:0].copy()
+    nearest_pop = ordered[0][0]
+    nearest_distance = ordered[0][1]
+
+    second_pop = ordered[1][0] if len(ordered) > 1 else pd.NA
+    second_distance = ordered[1][1] if len(ordered) > 1 else np.nan
+
+    nearest_superpop = pop_to_superpop.get(nearest_pop, pd.NA)
+
+    second_superpop = (
+        pop_to_superpop.get(second_pop, pd.NA)
+        if pd.notna(second_pop)
+        else pd.NA
     )
 
-    final_pca.to_csv(
-        OUTDIR / "final_1000G_projection_labeled.csv",
-        index=False
-    )
+    threshold = thresholds.get(nearest_pop, np.nan)
 
-    plot_pairs = [
-        ("PC1", "PC2"),
-        ("PC1", "PC3"),
-        ("PC2", "PC3"),
-        ("PC1", "PC4"),
-        ("PC2", "PC4")
-    ]
-
-    for pc_x, pc_y in plot_pairs:
-        plot_pca(
-            kg=kg,
-            study=study,
-            variance_pct=variance_pct,
-            pc_x=pc_x,
-            pc_y=pc_y,
-            outfile=OUTDIR / f"FINAL_{pc_x}_{pc_y}.png",
-            title=f"Final cleaned study cohort + 1000G: {pc_x} vs {pc_y}"
+    percentile = (
+        empirical_percentile(
+            nearest_distance,
+            reference_distances[nearest_pop]
         )
-    # --------------------------------------------------------
-    # Final population-level 1000G PCA plots
-    # --------------------------------------------------------
-
-    population_plot_pairs = [
-        ("PC1", "PC2"),
-        ("PC1", "PC3"),
-        ("PC2", "PC3")
-    ]
-
-    for pc_x, pc_y in population_plot_pairs:
-
-        plot_population_pca(
-            kg=kg,
-            study=study,
-            variance_pct=variance_pct,
-            pc_x=pc_x,
-            pc_y=pc_y,
-            outfile=OUTDIR / f"FINAL_SAS_POPULATIONS_{pc_x}_{pc_y}.png",
-            title=f"South Asia cohorts + 1000G populations: {pc_x} vs {pc_y}",
-            superpop="SAS"
-        )
-
-        plot_population_pca(
-            kg=kg,
-            study=study,
-            variance_pct=variance_pct,
-            pc_x=pc_x,
-            pc_y=pc_y,
-            outfile=OUTDIR / f"FINAL_AFR_POPULATIONS_{pc_x}_{pc_y}.png",
-            title=f"African cohorts + 1000G populations: {pc_x} vs {pc_y}",
-            superpop="AFR"
-        )
-    # --------------------------------------------------------
-    # Population-level 1000G reference models
-    # --------------------------------------------------------
-
-    all_1000g_pops = sorted(
-        kg["Population"]
-        .dropna()
-        .unique()
-        .tolist()
+        if nearest_pop in reference_distances
+        else np.nan
     )
 
-    population_models, pooled_covariance, pooled_inv_cov = build_pooled_population_model(kg)
-
-    print("\n========================================")
-    print("POOLED 1KGP POPULATION MODEL")
-    print("========================================")
-    print("Populations:", len(population_models))
-    print("Reference samples:", sum(x["n"] for x in population_models.values()))
-
-    reference_distances = calculate_loo_reference_distances(
-        kg,
-        populations=all_1000g_pops
+    distance_ratio = (
+        nearest_distance / threshold
+        if np.isfinite(threshold) and threshold > 0
+        else np.nan
     )
 
-    thresholds = calculate_reference_thresholds(
-        reference_distances
-    )
+    expected_superpop = row["Expected_superpop"]
+    superpop_concordant = expected_superpop == nearest_superpop
 
-    # --------------------------------------------------------
-    # Population -> superpopulation lookup
-    # --------------------------------------------------------
+    result = {
+        "IID": row["IID"],
+        "merge_site": row["merge_site"],
+        "Expected_superpop": expected_superpop,
 
-    pop_superpop = (
-        kg[
-            ["Population", "Superpopulation"]
-        ]
-        .drop_duplicates()
-    )
+        "Nearest_1KGP_Pop": nearest_pop,
+        "Nearest_1KGP_Pop_Name": pop_to_name.get(nearest_pop, pd.NA),
 
-    duplicate_pop_labels = pop_superpop[
-        pop_superpop["Population"].duplicated(keep=False)
-    ]
+        "Nearest_1KGP_SuperPop": nearest_superpop,
+        "Nearest_1KGP_SuperPop_Name": superpop_to_name.get(
+            nearest_superpop,
+            pd.NA
+        ),
 
-    if len(duplicate_pop_labels) > 0:
-        raise ValueError(
-            "A 1000G population maps to multiple superpopulation labels."
-        )
+        "Nearest_1KGP_PooledMahalanobis": nearest_distance,
 
-    pop_to_superpop = dict(
-        zip(
-            pop_superpop["Population"],
-            pop_superpop["Superpopulation"]
-        )
-    )
+        "Second_1KGP_Pop": second_pop,
+        "Second_1KGP_Pop_Name": pop_to_name.get(second_pop, pd.NA),
 
-    # Names too
-    pop_names = (
-        kg[
-            ["Population", "Population_name"]
-        ]
-        .drop_duplicates()
-    )
+        "Second_1KGP_SuperPop": second_superpop,
+        "Second_1KGP_SuperPop_Name": superpop_to_name.get(
+            second_superpop,
+            pd.NA
+        ),
 
-    pop_to_name = dict(
-        zip(
-            pop_names["Population"],
-            pop_names["Population_name"]
-        )
-    )
+        "Second_1KGP_Mahalanobis": second_distance,
 
-    superpop_names = (
-        kg[
-            ["Superpopulation", "Superpopulation_name"]
-        ]
-        .drop_duplicates()
-    )
+        "Nearest_vs_Second_Delta": second_distance - nearest_distance,
 
-    superpop_to_name = dict(
-        zip(
-            superpop_names["Superpopulation"],
-            superpop_names["Superpopulation_name"]
-        )
-    )
-
-    # --------------------------------------------------------
-    # Final nearest 1000G reference
-    # --------------------------------------------------------
-
-    results = []
-
-    for _, row in study.iterrows():
-
-        distances = pooled_population_distances(
-            row,
-            all_1000g_pops,
-            population_models,
-            pooled_inv_cov
-        )
-
-        if len(distances) == 0:
-            raise ValueError(
-                f"No 1000G population distances could be calculated for {row['IID']}"
-            )
-
-        ordered = sorted(
-            distances.items(),
-            key=lambda x: x[1]
-        )
-
-        nearest_pop = ordered[0][0]
-        nearest_distance = ordered[0][1]
-
-        second_pop = ordered[1][0] if len(ordered) > 1 else pd.NA
-        second_distance = ordered[1][1] if len(ordered) > 1 else np.nan
-
-        nearest_superpop = pop_to_superpop.get(nearest_pop, pd.NA)
-
-        second_superpop = (
-            pop_to_superpop.get(second_pop, pd.NA)
-            if pd.notna(second_pop)
-            else pd.NA
-        )
-
-        threshold = thresholds.get(nearest_pop, np.nan)
-
-        percentile = (
-            empirical_percentile(
-                nearest_distance,
-                reference_distances[nearest_pop]
-            )
-            if nearest_pop in reference_distances
+        "Nearest_vs_Second_Ratio": (
+            second_distance / nearest_distance
+            if nearest_distance > 0
             else np.nan
-        )
+        ),
 
-        distance_ratio = (
+        "Nearest_1KGP_Threshold": threshold,
+        "Nearest_1KGP_Empirical_Percentile": percentile,
+        "Nearest_1KGP_DistanceRatio": distance_ratio,
+
+        "SuperPop_concordant": superpop_concordant
+    }
+
+    for pop, distance in distances.items():
+        result[f"PooledMahalanobis_{pop}"] = distance
+
+    results.append(result)
+
+ancestry = pd.DataFrame(results)
+
+ancestry.to_csv(
+    OUTDIR / "final_1KGP_nearest_reference.csv",
+    index=False
+)
+
+# --------------------------------------------------------
+# Expected-group nearest reference too
+# --------------------------------------------------------
+
+plausible_results = []
+
+for _, row in study.iterrows():
+
+    expected = row["Expected_superpop"]
+
+    if expected == "AFR":
+        candidate_pops = AFR_POPS
+
+    elif expected == "SAS":
+        candidate_pops = SAS_POPS
+
+    else:
+        continue
+
+    distances = pooled_population_distances(
+        row,
+        candidate_pops,
+        population_models,
+        pooled_inv_cov
+    )
+
+    if len(distances) == 0:
+        continue
+
+    ordered = sorted(
+        distances.items(),
+        key=lambda x: x[1]
+    )
+
+    nearest_pop = ordered[0][0]
+    nearest_distance = ordered[0][1]
+    threshold = thresholds.get(nearest_pop, np.nan)
+
+    plausible_results.append({
+        "IID": row["IID"],
+        "Nearest_Plausible_1KGP_Pop": nearest_pop,
+        "Nearest_Plausible_1KGP_Pop_Name": pop_to_name.get(
+            nearest_pop,
+            pd.NA
+        ),
+        "Nearest_Plausible_1KGP_Mahalanobis": nearest_distance,
+        "Nearest_Plausible_1KGP_Threshold": threshold,
+        "Nearest_Plausible_1KGP_DistanceRatio": (
             nearest_distance / threshold
             if np.isfinite(threshold) and threshold > 0
             else np.nan
         )
+    })
 
-        expected_superpop = row["Expected_superpop"]
-        superpop_concordant = expected_superpop == nearest_superpop
+plausible = pd.DataFrame(plausible_results)
 
-        result = {
-            "IID": row["IID"],
-            "merge_site": row["merge_site"],
-            "Expected_superpop": expected_superpop,
+ancestry = ancestry.merge(
+    plausible,
+    on="IID",
+    how="left",
+    validate="one_to_one"
+)
 
-            "Nearest_1KGP_Pop": nearest_pop,
-            "Nearest_1KGP_Pop_Name": pop_to_name.get(nearest_pop, pd.NA),
+# --------------------------------------------------------
+# Global PCs
+# --------------------------------------------------------
 
-            "Nearest_1KGP_SuperPop": nearest_superpop,
-            "Nearest_1KGP_SuperPop_Name": superpop_to_name.get(
-                nearest_superpop,
-                pd.NA
-            ),
+pc_columns = [
+    f"PC{i}"
+    for i in range(1, 21)
+    if f"PC{i}" in study.columns
+]
 
-            "Nearest_1KGP_PooledMahalanobis": nearest_distance,
+global_pcs = study[
+    ["IID"] + pc_columns
+].copy()
 
-            "Second_1KGP_Pop": second_pop,
-            "Second_1KGP_Pop_Name": pop_to_name.get(second_pop, pd.NA),
+global_pcs = global_pcs.rename(
+    columns={
+        pc: f"Global_{pc}"
+        for pc in pc_columns
+    }
+)
 
-            "Second_1KGP_SuperPop": second_superpop,
-            "Second_1KGP_SuperPop_Name": superpop_to_name.get(
-                second_superpop,
-                pd.NA
-            ),
+# --------------------------------------------------------
+# Ultimate metadata
+# --------------------------------------------------------
 
-            "Second_1KGP_Mahalanobis": second_distance,
+final_ids = set(study["IID"])
 
-            "Nearest_vs_Second_Delta": second_distance - nearest_distance,
+ultimate = meta[
+    meta["id"].isin(final_ids)
+].copy()
 
-            "Nearest_vs_Second_Ratio": (
-                second_distance / nearest_distance
-                if nearest_distance > 0
-                else np.nan
-            ),
+print("\n========================================")
+print("ULTIMATE METADATA MERGE")
+print("========================================")
 
-            "Nearest_1KGP_Threshold": threshold,
-            "Nearest_1KGP_Empirical_Percentile": percentile,
-            "Nearest_1KGP_DistanceRatio": distance_ratio,
+print("Filtered metadata rows:", len(ultimate))
+print("Final study PCA samples:", len(study))
 
-            "SuperPop_concordant": superpop_concordant
-        }
+ultimate = ultimate.merge(
+    global_pcs,
+    left_on="id",
+    right_on="IID",
+    how="left",
+    validate="one_to_one"
+)
 
-        for pop, distance in distances.items():
-            result[f"PooledMahalanobis_{pop}"] = distance
+ultimate = ultimate.drop(columns=["IID"])
 
-        results.append(result)
+ultimate = ultimate.merge(
+    ancestry,
+    left_on="id",
+    right_on="IID",
+    how="left",
+    validate="one_to_one",
+    suffixes=("", "_PCA")
+)
 
-    ancestry = pd.DataFrame(results)
+ultimate = ultimate.drop(columns=["IID"])
 
-    ancestry.to_csv(
-        OUTDIR / "final_1KGP_nearest_reference.csv",
-        index=False
+if "merge_site_PCA" in ultimate.columns:
+    ultimate = ultimate.drop(columns=["merge_site_PCA"])
+
+if "Global_PC1" in ultimate.columns:
+    missing_pc = ultimate["Global_PC1"].isna().sum()
+else:
+    missing_pc = len(ultimate)
+
+if missing_pc > 0:
+    raise ValueError(
+        f"{missing_pc} final metadata rows are missing final global PCA values."
     )
 
-    # --------------------------------------------------------
-    # Expected-group nearest reference too
-    # --------------------------------------------------------
+missing_annotation = ultimate["Nearest_1KGP_Pop"].isna().sum()
 
-    plausible_results = []
-
-    for _, row in study.iterrows():
-
-        expected = row["Expected_superpop"]
-
-        if expected == "AFR":
-            candidate_pops = AFR_POPS
-
-        elif expected == "SAS":
-            candidate_pops = SAS_POPS
-
-        else:
-            continue
-
-        distances = pooled_population_distances(
-            row,
-            candidate_pops,
-            population_models,
-            pooled_inv_cov
-        )
-
-        if len(distances) == 0:
-            continue
-
-        ordered = sorted(
-            distances.items(),
-            key=lambda x: x[1]
-        )
-
-        nearest_pop = ordered[0][0]
-        nearest_distance = ordered[0][1]
-        threshold = thresholds.get(nearest_pop, np.nan)
-
-        plausible_results.append({
-            "IID": row["IID"],
-            "Nearest_Plausible_1KGP_Pop": nearest_pop,
-            "Nearest_Plausible_1KGP_Pop_Name": pop_to_name.get(
-                nearest_pop,
-                pd.NA
-            ),
-            "Nearest_Plausible_1KGP_Mahalanobis": nearest_distance,
-            "Nearest_Plausible_1KGP_Threshold": threshold,
-            "Nearest_Plausible_1KGP_DistanceRatio": (
-                nearest_distance / threshold
-                if np.isfinite(threshold) and threshold > 0
-                else np.nan
-            )
-        })
-
-    plausible = pd.DataFrame(plausible_results)
-
-    ancestry = ancestry.merge(
-        plausible,
-        on="IID",
-        how="left",
-        validate="one_to_one"
+if missing_annotation > 0:
+    raise ValueError(
+        f"{missing_annotation} final metadata rows are missing 1KGP reference annotation."
     )
+# --------------------------------------------------------
+# ADD MATERNAL WEIGHT
+# --------------------------------------------------------
 
-    # --------------------------------------------------------
-    # Global PCs
-    # --------------------------------------------------------
+weight = pd.read_csv("MOMI_derived_data.csv", low_memory=False)
 
-    pc_columns = [
-        f"PC{i}"
-        for i in range(1, 21)
-        if f"PC{i}" in study.columns
-    ]
+weight["MAT_WEIGHT"] = pd.to_numeric(weight["MAT_WEIGHT"], errors="coerce")
+weight = weight[weight["MAT_WEIGHT"].notna()].copy()
 
-    global_pcs = study[
-        ["IID"] + pc_columns
-    ].copy()
+# Keep first non-missing weight per mother/pregnancy (Is the earliest Enrolment by VDT_ENR)
+weight = weight.drop_duplicates(["SITE_CODE", "ORIG_ID"], keep="first")
+weight = weight[["SITE_CODE", "ORIG_ID", "MAT_WEIGHT"]]
 
-    global_pcs = global_pcs.rename(
-        columns={
-            pc: f"Global_{pc}"
-            for pc in pc_columns
-        }
+weight["SITE_CODE"] = weight["SITE_CODE"].astype(str).str.strip()
+weight["ORIG_ID"] = weight["ORIG_ID"].astype(str).str.strip()
+
+ultimate["SITE_CODE_momi"] = ultimate["SITE_CODE_momi"].astype(str).str.strip()
+ultimate["ORIG_ID_momi"] = ultimate["ORIG_ID_momi"].astype(str).str.strip()
+
+ultimate = ultimate.merge(
+    weight,
+    left_on=["SITE_CODE_momi", "ORIG_ID_momi"],
+    right_on=["SITE_CODE", "ORIG_ID"],
+    how="left",
+    validate="one_to_one"
+)
+
+ultimate = ultimate.drop(columns=["SITE_CODE", "ORIG_ID"])
+
+print("\nMaternal weights added:", ultimate["MAT_WEIGHT"].notna().sum())
+print("Maternal weights missing:", ultimate["MAT_WEIGHT"].isna().sum())
+ultimate = ultimate.rename(columns={"merge_site": "site"})
+ultimate.to_csv(
+    ULTIMATE_METADATA_FILE,
+    index=False
+)
+
+# --------------------------------------------------------
+# Final summaries
+# --------------------------------------------------------
+
+print("\n========================================")
+print("FINAL 1KGP REFERENCE SUMMARY")
+print("========================================")
+
+print("\nNearest superpopulation:")
+print(
+    ultimate["Nearest_1KGP_SuperPop"]
+    .value_counts(dropna=False)
+    .sort_index()
+)
+
+print("\nNearest 1000G population:")
+print(
+    ultimate["Nearest_1KGP_Pop"]
+    .value_counts(dropna=False)
+    .sort_index()
+)
+
+print("\nExpected vs nearest 1000G superpopulation:")
+print(
+    pd.crosstab(
+        ultimate["Expected_superpop"],
+        ultimate["Nearest_1KGP_SuperPop"],
+        dropna=False
     )
+)
 
-    # --------------------------------------------------------
-    # Ultimate metadata
-    # --------------------------------------------------------
+print("\nSuperpopulation concordance:")
+print(
+    ultimate["SuperPop_concordant"]
+    .value_counts(dropna=False)
+)
 
-    final_ids = set(study["IID"])
+print("\nFinal mothers by site:")
+print(
+    ultimate["site"]
+    .value_counts()
+    .sort_index()
+)
 
-    ultimate = meta[
-        meta["id"].isin(final_ids)
-    ].copy()
+print("\n========================================")
+print("FINAL GLOBAL PCA PIPELINE COMPLETE")
+print("========================================")
 
-    print("\n========================================")
-    print("ULTIMATE METADATA MERGE")
-    print("========================================")
+print("\nUltimate metadata:")
+print(ULTIMATE_METADATA_FILE)
 
-    print("Filtered metadata rows:", len(ultimate))
-    print("Final study PCA samples:", len(study))
-
-    ultimate = ultimate.merge(
-        global_pcs,
-        left_on="id",
-        right_on="IID",
-        how="left",
-        validate="one_to_one"
-    )
-
-    ultimate = ultimate.drop(columns=["IID"])
-
-    ultimate = ultimate.merge(
-        ancestry,
-        left_on="id",
-        right_on="IID",
-        how="left",
-        validate="one_to_one",
-        suffixes=("", "_PCA")
-    )
-
-    ultimate = ultimate.drop(columns=["IID"])
-
-    if "merge_site_PCA" in ultimate.columns:
-        ultimate = ultimate.drop(columns=["merge_site_PCA"])
-
-    if "Global_PC1" in ultimate.columns:
-        missing_pc = ultimate["Global_PC1"].isna().sum()
-    else:
-        missing_pc = len(ultimate)
-
-    if missing_pc > 0:
-        raise ValueError(
-            f"{missing_pc} final metadata rows are missing final global PCA values."
-        )
-
-    missing_annotation = ultimate["Nearest_1KGP_Pop"].isna().sum()
-
-    if missing_annotation > 0:
-        raise ValueError(
-            f"{missing_annotation} final metadata rows are missing 1KGP reference annotation."
-        )
-    # --------------------------------------------------------
-    # ADD MATERNAL WEIGHT
-    # --------------------------------------------------------
-
-    weight = pd.read_csv("MOMI_derived_data.csv", low_memory=False)
-
-    weight["MAT_WEIGHT"] = pd.to_numeric(weight["MAT_WEIGHT"], errors="coerce")
-    weight = weight[weight["MAT_WEIGHT"].notna()].copy()
-
-    # Keep first non-missing weight per mother/pregnancy (Is the earliest Enrolment by VDT_ENR)
-    weight = weight.drop_duplicates(["SITE_CODE", "ORIG_ID"], keep="first")
-    weight = weight[["SITE_CODE", "ORIG_ID", "MAT_WEIGHT"]]
-
-    weight["SITE_CODE"] = weight["SITE_CODE"].astype(str).str.strip()
-    weight["ORIG_ID"] = weight["ORIG_ID"].astype(str).str.strip()
-
-    ultimate["SITE_CODE_momi"] = ultimate["SITE_CODE_momi"].astype(str).str.strip()
-    ultimate["ORIG_ID_momi"] = ultimate["ORIG_ID_momi"].astype(str).str.strip()
-
-    ultimate = ultimate.merge(
-        weight,
-        left_on=["SITE_CODE_momi", "ORIG_ID_momi"],
-        right_on=["SITE_CODE", "ORIG_ID"],
-        how="left",
-        validate="one_to_one"
-    )
-
-    ultimate = ultimate.drop(columns=["SITE_CODE", "ORIG_ID"])
-
-    print("\nMaternal weights added:", ultimate["MAT_WEIGHT"].notna().sum())
-    print("Maternal weights missing:", ultimate["MAT_WEIGHT"].isna().sum())
-    ultimate = ultimate.rename(columns={"merge_site": "site"})
-    ultimate.to_csv(
-        ULTIMATE_METADATA_FILE,
-        index=False
-    )
-
-    # --------------------------------------------------------
-    # Final summaries
-    # --------------------------------------------------------
-
-    print("\n========================================")
-    print("FINAL 1KGP REFERENCE SUMMARY")
-    print("========================================")
-
-    print("\nNearest superpopulation:")
-    print(
-        ultimate["Nearest_1KGP_SuperPop"]
-        .value_counts(dropna=False)
-        .sort_index()
-    )
-
-    print("\nNearest 1000G population:")
-    print(
-        ultimate["Nearest_1KGP_Pop"]
-        .value_counts(dropna=False)
-        .sort_index()
-    )
-
-    print("\nExpected vs nearest 1000G superpopulation:")
-    print(
-        pd.crosstab(
-            ultimate["Expected_superpop"],
-            ultimate["Nearest_1KGP_SuperPop"],
-            dropna=False
-        )
-    )
-
-    print("\nSuperpopulation concordance:")
-    print(
-        ultimate["SuperPop_concordant"]
-        .value_counts(dropna=False)
-    )
-
-    print("\nFinal mothers by site:")
-    print("\nFinal mothers by site:")
-    print(
-        ultimate["site"]
-        .value_counts()
-        .sort_index()
-    )
-
-    print("\n========================================")
-    print("FINAL GLOBAL PCA PIPELINE COMPLETE")
-    print("========================================")
-
-    print("\nUltimate metadata:")
-    print(ULTIMATE_METADATA_FILE)
-
-    print("\nFinal nearest-reference table:")
-    print(OUTDIR / "final_1KGP_nearest_reference.csv")
+print("\nFinal nearest-reference table:")
+print(OUTDIR / "final_1KGP_nearest_reference.csv")
 
