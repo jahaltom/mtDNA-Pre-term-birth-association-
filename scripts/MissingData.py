@@ -107,12 +107,34 @@ print("Surviving features:", len(surviving_features))
 # SAVE SURVIVING FEATURES TO TXT
 # ============================================================
 
-with open("SurvivingFeatures.txt", "w") as f:
-    for feature in surviving_features:
+columnCat = [
+    'TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE',
+    'TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID',
+    'EPILEPSY','BABY_SEX','MainHap','SMOKE_HIST','SMOK_FREQ',
+    'population','site','SNIFF_TOBA','PASSIVE_SMOK','ALCOHOL','SMOK_TYP'
+]
+
+columnCont = [
+    'PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT',
+    'BMI','SNIFF_FREQ','ALCOHOL_FREQ','SMOK_YR'
+]
+
+surviving_cat = [x for x in columnCat if x in surviving_features]
+surviving_cont = [x for x in columnCont if x in surviving_features]
+
+with open("SurvivingFeatures_Categorical.txt", "w") as f:
+    for feature in surviving_cat:
         f.write(feature + "\n")
 
-print("\nSaved surviving feature list:")
-print("SurvivingFeatures.txt")
+with open("SurvivingFeatures_Continuous.txt", "w") as f:
+    for feature in surviving_cont:
+        f.write(feature + "\n")
+
+print("\nSaved surviving categorical features:")
+print("SurvivingFeatures_Categorical.txt")
+
+print("\nSaved surviving continuous features:")
+print("SurvivingFeatures_Continuous.txt")
 
 
 # Plot the clustered heatmap with row colors for the site categories
