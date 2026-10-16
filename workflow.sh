@@ -7,57 +7,59 @@
 
 source /home/haltomj/miniconda3/etc/profile.d/conda.sh
 
-
-conda activate ML
-
-
-
-
 target=TARGET
-
-
-
-
-
 
 conda activate plink
 
 
+# ============================================================
+# GENOTYPE QC
+# ============================================================
 
-plink \
-  --bfile /scr1/users/haltomj/PTB/plink2 \
+plink2  \
+  --bfile /scr1/users/haltomj/PTB/Data/qc/maternal_ptb_globalPCA \
   --keep IDs.txt \
   --chr 1-22 \
   --snps-only just-acgt \
-  --biallelic-only strict \
+  --max-alleles 2 \
   --geno 0.05 \
   --mind 0.05 \
   --maf 0.01 \
   --hwe 1e-6 midp \
   --threads 8 \
-  --make-bed --out nDNA_final > qc.log 2>&1
+  --make-bed \
+  --out nDNA_final > qc.log 2>&1
 
 
+# ============================================================
+# PCA
+# ============================================================
 
-mkdir PCA
-# PCA for ancestry covariates
-plink --bfile nDNA_final --pca 10 --out PCA/out
+mkdir -p PCA
 
-# QC summary stats
-plink --bfile nDNA_final --missing --freq --out nDNA_stats
+plink2  \
+  --bfile nDNA_final \
+  --pca 10 \
+  --out PCA/out
 
 
+# ============================================================
+# QC SUMMARY STATS
+# ============================================================
 
+plink2  \
+  --bfile nDNA_final \
+  --missing \
+  --freq \
+  --out nDNA_stats
+
+
+# ============================================================
+# PYTHON STEPS
+# ============================================================
 
 conda activate ML
+
 python scripts/outlierPCA.py
 
-
-
-
-
-
-
-
-# Call the Python script with the column string as an argument
 python scripts/WeibullFiltering.py "$target" > out.txt
