@@ -30,6 +30,11 @@ VARIANT_QC_PREFIX = f"qc/joint_variant_qc{SUFFIX}"
 SAMPLE_QC_PREFIX = f"qc/joint_sample_qc{SUFFIX}"
 LD_PREFIX = f"qc/joint_ld{SUFFIX}"
 PCA_PREFIX = f"pca/joint_global{SUFFIX}"
+PANEL_FILE = "metadata/1KGP.metadata.tsv"
+
+REFERENCE_PCA_PREFIX = f"pca/1000G_reference{SUFFIX}"
+PROJECTION_PREFIX = f"pca/1000G_projection{SUFFIX}"
+KG_KEEP_FILE = f"pca/1000G_reference{SUFFIX}.keep"
 
 JOINT_MISSING_PREFIX = f"qc/joint_missing{SUFFIX}"
 POSTVAR_MISSING_PREFIX = f"qc/joint_variant_qc_missing{SUFFIX}"
@@ -433,18 +438,47 @@ rule LDPrune:
 
 
 # ============================================================
-# GLOBAL JOINT PCA
+# CREATE 1000 GENOMES KEEP FILE
+#
+# PCA axes are defined using ONLY 1000 Genomes samples.
 # ============================================================
 
-rule GlobalPCA:
+rule Create1KGKeep:
+    input:
+        panel=PANEL_FILE
+    output:
+        KG_KEEP_FILE
+    shell:
+        r"""
+        mkdir -p pca
+
+        awk 'BEGIN{{FS=OFS="\t"}} NR>1 {{print $1,$1}}' \
+          {input.panel} \
+          > {output}
+        """
+
+
+# ============================================================
+# 1000 GENOMES REFERENCE PCA
+#
+# Use the same QC-filtered and LD-pruned SNPs as the study
+# analysis, but calculate PCA axes using only 1000G samples.
+#
+# allele-wts produces SNP loadings required for projection.
+# ============================================================
+
+rule ReferencePCA:
     input:
         pgen=f"{SAMPLE_QC_PREFIX}.pgen",
         pvar=f"{SAMPLE_QC_PREFIX}.pvar",
         psam=f"{SAMPLE_QC_PREFIX}.psam",
-        prune=f"{LD_PREFIX}.prune.in"
+        prune=f"{LD_PREFIX}.prune.in",
+        keep=KG_KEEP_FILE
     output:
-        eigenvec=f"{PCA_PREFIX}.eigenvec",
-        eigenval=f"{PCA_PREFIX}.eigenval"
+        eigenvec=f"{REFERENCE_PCA_PREFIX}.eigenvec",
+        eigenval=f"{REFERENCE_PCA_PREFIX}.eigenval",
+        weights=f"{REFERENCE_PCA_PREFIX}.eigenvec.allele",
+        acount=f"{REFERENCE_PCA_PREFIX}.acount"
     threads:
         8
     shell:
@@ -453,8 +487,100 @@ rule GlobalPCA:
 
         {PLINK2} \
           --pfile {SAMPLE_QC_PREFIX} \
+          --keep {input.keep} \
           --extract {input.prune} \
-          --pca 20 approx \
+          --freq counts \
+          --pca allele-wts 20 approx vcols=chrom,ref,alt \
           --threads {threads} \
-          --out {PCA_PREFIX}
+          --out {REFERENCE_PCA_PREFIX}
+        """
+
+
+# ============================================================
+# PROJECT JOINT DATASET ONTO 1000G PCA
+#
+# Project both study and 1000G samples onto PCA axes calculated
+# from the 1000G reference only.
+#
+# The 1000G allele frequencies are reused for standardization.
+# ============================================================
+
+rule ProjectOnto1KGP:
+    input:
+        pgen=f"{SAMPLE_QC_PREFIX}.pgen",
+        pvar=f"{SAMPLE_QC_PREFIX}.pvar",
+        psam=f"{SAMPLE_QC_PREFIX}.psam",
+        prune=f"{LD_PREFIX}.prune.in",
+        weights=f"{REFERENCE_PCA_PREFIX}.eigenvec.allele",
+        acount=f"{REFERENCE_PCA_PREFIX}.acount",
+        eigenval=f"{REFERENCE_PCA_PREFIX}.eigenval"
+    output:
+        sscore=f"{PROJECTION_PREFIX}.sscore",
+        eigenvec=f"{PCA_PREFIX}.eigenvec",
+        eigenval=f"{PCA_PREFIX}.eigenval"
+    shell:
+        r"""
+        {PLINK2} \
+          --pfile {SAMPLE_QC_PREFIX} \
+          --extract {input.prune} \
+          --read-freq {input.acount} \
+          --score {input.weights} \
+                  2 5 \
+                  header-read \
+                  no-mean-imputation \
+                  variance-standardize \
+          --score-col-nums 6-25 \
+          --out {PROJECTION_PREFIX}
+
+        cp {input.eigenval} {output.eigenval}
+
+        python - <<'PY'
+import pandas as pd
+
+src = "{output.sscore}"
+dst = "{output.eigenvec}"
+
+df = pd.read_csv(src, sep=r"\s+")
+
+if "#FID" in df.columns:
+    df = df.rename(columns={{"#FID": "FID"}})
+
+if "#IID" in df.columns:
+    df = df.rename(columns={{"#IID": "IID"}})
+
+pc_cols = []
+
+for i in range(1, 21):
+    avg = f"PC{{i}}_AVG"
+    summ = f"PC{{i}}_SUM"
+
+    if avg in df.columns:
+        pc_cols.append(avg)
+    elif summ in df.columns:
+        pc_cols.append(summ)
+    else:
+        raise ValueError(
+            f"Could not find projected PC{{i}} column in {{src}}. "
+            f"Columns: {{df.columns.tolist()}}"
+        )
+
+out = df[["FID", "IID"] + pc_cols].copy()
+
+out = out.rename(
+    columns={{
+        col: f"PC{{i}}"
+        for i, col in enumerate(pc_cols, start=1)
+    }}
+)
+
+out.to_csv(
+    dst,
+    sep="\t",
+    index=False
+)
+
+print("Projected PCA written:", dst)
+print("Samples:", len(out))
+print("Columns:", out.columns.tolist())
+PY
         """
