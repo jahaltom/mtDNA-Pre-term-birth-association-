@@ -29,7 +29,7 @@ MERGED_PREFIX = f"merged/joint_1000G_cohort{SUFFIX}"
 VARIANT_QC_PREFIX = f"qc/joint_variant_qc{SUFFIX}"
 SAMPLE_QC_PREFIX = f"qc/joint_sample_qc{SUFFIX}"
 LD_PREFIX = f"qc/joint_ld{SUFFIX}"
-PCA_PREFIX = f"pca/joint_global{SUFFIX}"
+PCA_PREFIX = f"pca/1000G_projection{SUFFIX}"
 PANEL_FILE = "metadata/1KGP.metadata.tsv"
 
 REFERENCE_PCA_PREFIX = f"pca/1000G_reference{SUFFIX}"
@@ -497,7 +497,7 @@ rule ReferencePCA:
 
 
 # ============================================================
-# PROJECT JOINT DATASET ONTO 1000G PCA
+# PROJECT QC DATASET ONTO 1000G REFERENCE PCA
 #
 # Project both study and 1000G samples onto PCA axes calculated
 # from the 1000G reference only.
