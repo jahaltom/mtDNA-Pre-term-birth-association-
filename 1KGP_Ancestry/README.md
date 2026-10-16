@@ -281,7 +281,7 @@ The maternal PLINK keep file (`maternal_ptb.keep`) generated during metadata pre
   --out qc/maternal_ptb
 
 # These should match.
-wc -l qc/maternal_ptb.keep
+wc -l metadata/qc/maternal_ptb.keep
 wc -l qc/maternal_ptb.fam
 ```
 
