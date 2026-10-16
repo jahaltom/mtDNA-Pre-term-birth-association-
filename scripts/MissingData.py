@@ -25,7 +25,7 @@ row_colors = row_labels.map(site_colors)
 df = md[['PW_AGE', 'PW_EDUCATION', 'MAT_HEIGHT', 'MAT_WEIGHT', 'BMI', 'ALCOHOL_FREQ', 'SMOK_YR', 'SNIFF_FREQ',
          'TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
          'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK', 'CHRON_HTN',
-         'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX', 'MainHap',
+         'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX',
          'ALCOHOL', 'SMOKE_HIST', 'SMOK_FREQ', 'SMOK_TYP', 'SNIFF_TOBA']]
 
 
@@ -110,8 +110,8 @@ print("Surviving features:", len(surviving_features))
 columnCat = [
     'TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE',
     'TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID',
-    'EPILEPSY','BABY_SEX','MainHap','SMOKE_HIST','SMOK_FREQ',
-    'population','site','SNIFF_TOBA','PASSIVE_SMOK','ALCOHOL','SMOK_TYP'
+    'EPILEPSY','BABY_SEX','SMOKE_HIST','SMOK_FREQ',
+    'SNIFF_TOBA','PASSIVE_SMOK','ALCOHOL','SMOK_TYP'
 ]
 
 columnCont = [
