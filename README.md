@@ -21,6 +21,10 @@ Takes in (momi_mothers_ultimate.csv), and assigns main/sub-haplogroups. It sets 
 python  scripts/MetadataMerge.py
 ```
 Takes in Metadata.C.tsv or Metadata.M.tsv and analyzes the dataset for missing data using features of interest. Outputs heatmap (MissingDataHeatmap.png). Missing data is in yellow.
+
+- Removes samples where gestational age "GAGEBRTH" or  PTB (0 or 1) is na. Also removes samples with missing data in any of the input columns. Makes (IDs.txt) to be used for PCA.
+
+- 
 ```
 python scripts/MissingDataHeatmap.py Metadata.M.tsv
 ```
@@ -46,7 +50,7 @@ sed -i "s/TARGET/$target/g" workflow.sh
 
 sbatch workflow.sh
 ```
-- Removes samples where gestational age "GAGEBRTH" or  PTB (0 or 1) is na. Also removes samples with missing data in any of the input columns. Makes (IDs.txt) to be used for PCA. 
+
 - Using nDNA plink files:  
 
 | Step                      | Filter              | Meaning                            |
