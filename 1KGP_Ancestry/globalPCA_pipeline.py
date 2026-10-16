@@ -1394,47 +1394,63 @@ print(ULTIMATE_METADATA_FILE)
 print("\nFinal nearest-reference table:")
 print(OUTDIR / "final_1KGP_nearest_reference.csv")
 
-df=ultimate.copy()
-site_col = "site"
-pop_col = "Nearest_1KGP_Pop"
+# --------------------------------------------------------
+# 1000G population breakdown by study site
+# --------------------------------------------------------
 
-# Counts
-counts = (
-    df.groupby([site_col, pop_col])
-      .size()
-      .reset_index(name="N")
-)
-
-# Percent within each site
-counts["Percent"] = (
-    counts["N"] /
-    counts.groupby(site_col)["N"].transform("sum")
-    * 100
-)
-
-counts["Percent"] = counts["Percent"].round(2)
-
-print("\n========================================")
-print("1000G POPULATION BREAKDOWN BY STUDY SITE")
-print("========================================\n")
-
-for site, g in counts.groupby(site_col):
-    total = g["N"].sum()
-
-    print(f"\n{site} (N={total})")
-    print("-" * 60)
-
-    print(
-        g.sort_values("N", ascending=False)
-         [[pop_col, "N", "Percent"]]
-         .to_string(index=False)
+def summarize_population_by_site(df, pop_col, outfile):
+    counts = (
+        df.groupby(["site", pop_col], dropna=False)
+          .size()
+          .reset_index(name="N")
     )
 
-# Also save full table
-counts.to_csv(
-    "pca/global_qc/1KGP_population_breakdown_by_site.csv",
-    index=False
+    counts["Percent"] = (
+        counts["N"]
+        / counts.groupby("site")["N"].transform("sum")
+        * 100
+    ).round(2)
+
+    print("\n========================================")
+    print(f"{pop_col} BREAKDOWN BY STUDY SITE")
+    print("========================================")
+
+    for site, g in counts.groupby("site"):
+        total = g["N"].sum()
+
+        print(f"\n{site} (N={total})")
+        print("-" * 60)
+
+        print(
+            g.sort_values(
+                ["N", pop_col],
+                ascending=[False, True]
+            )[
+                [pop_col, "N", "Percent"]
+            ].to_string(index=False)
+        )
+
+    counts.to_csv(
+        OUTDIR / outfile,
+        index=False
+    )
+
+    print("\nSaved:")
+    print(OUTDIR / outfile)
+
+    return counts
+
+
+# Nearest population across all 1000G populations
+all_pop_breakdown = summarize_population_by_site(
+    ultimate,
+    pop_col="Nearest_1KGP_Pop",
+    outfile="1KGP_population_breakdown_by_site.csv"
 )
 
-print("\nSaved:")
-print("pca/global_qc/1KGP_population_breakdown_by_site.csv")
+# Nearest population restricted to expected AFR/SAS populations
+plausible_pop_breakdown = summarize_population_by_site(
+    ultimate,
+    pop_col="Nearest_Plausible_1KGP_Pop",
+    outfile="1KGP_plausible_population_breakdown_by_site.csv"
+)
