@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 # SETTINGS
 # ============================================================
 
-METADATA_FILE = "momi_mothers_merged.csv"
-PANEL_FILE = "1KGP.metadata.tsv"
+METADATA_FILE = "metadata/momi_mothers_merged.csv"
+PANEL_FILE = "metadata/1KGP.metadata.tsv"
 
 INITIAL_PCA_FILE = "pca/joint_global.eigenvec"
 INITIAL_EIGENVAL_FILE = "pca/joint_global.eigenval"
@@ -25,7 +25,7 @@ OUTDIR = Path("pca/global_qc")
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
 INITIAL_KEEP_FILE = "qc/maternal_ptb_globalPCA.keep"
-ULTIMATE_METADATA_FILE = "momi_mothers_ultimate.csv"
+ULTIMATE_METADATA_FILE = "metadata/momi_mothers_ultimate.csv"
 
 DISTANCE_PCS = ["PC1", "PC2", "PC3", "PC4", "PC5"]
 
