@@ -11,8 +11,7 @@ source /home/haltomj/miniconda3/etc/profile.d/conda.sh
 conda activate ML
 
 
-#Input file
-file="Metadata.M.tsv"
+
 
 # Define Categorical features
 #Excluded: 'SNIFF_TOBA','PASSIVE_SMOK','ALCOHOL','SMOK_TYP'
@@ -33,8 +32,6 @@ columnCont_string=$( echo "${columnsCont[*]}")
 
 
 
-#Removes samples where gestational age "GAGEBRTH" or  PTB (0 or 1) is na. Also removes samples with missing data in any of the input columns.
-python scripts/removeMissingData.py $file "$columnCat_string" "$columnCont_string"
 
 
 
