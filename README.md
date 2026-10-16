@@ -30,21 +30,10 @@ python scripts/MissingData.py
 
 
 #### workflow.sh
-- Use the missing data plot to exclude Categorical/Continuous features from those in workflow.sh (columnCat and columnCont).
-- Specify target (MainHap,SubHap,SuperHap). Target must also be in columnCat.
+- Specify target (MainHap,SubHap,SuperHap). 
 ```
-#Excluded: 'SNIFF_TOBA','PASSIVE_SMOK','ALCOHOL','SMOK_TYP'
-columnCat="('TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE','TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID','EPILEPSY','BABY_SEX','MainHap','SMOKE_HIST','SMOK_FREQ','population','site')"
-
-#Excluded:  'SNIFF_FREQ','ALCOHOL_FREQ','SMOK_YR'
-columnCont="('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI')"
-
 target="MainHap"
-
-sed -i "s/CAT/$columnCat/g" workflow.sh
-sed -i "s/CONT/$columnCont/g" workflow.sh
 sed -i "s/TARGET/$target/g" workflow.sh
-
 sbatch workflow.sh
 ```
 
@@ -56,7 +45,7 @@ sbatch workflow.sh
 | `--keep IDs.txt  `        | input               | subset samples by IDs.txt          |
 | `--chr 1-22`              | autosomes only      | drops chr M, X, Y                  |
 | `--snps-only just-acgt`   | variant type        | drop indels and non-ACGT calls     |
-| `--biallelic-only strict` | allele structure    | keeps only clean biallelic SNPs    |
+| `--max-alleles` | allele structure    | keeps only clean biallelic SNPs    |
 | `--geno 0.05`             | variant missingness | removes SNPs with > 5 % missing    |
 | `--mind 0.05`             | sample missingness  | removes samples with > 5 % missing |
 | `--maf 0.01`              | allele frequency    | keeps MAF ≥ 1 %                    |
@@ -69,8 +58,8 @@ sbatch workflow.sh
 - PCA outlieres removed
 	- 	Calculates site-wise Euclidean distance (Using top N PCs needed to reach ~85% variance). Flags the top 5% as outliers per site
 	- 	Creates a before/after PCA plot
-- Fits a Weibull distribution to GAGEBRTH, defines 1st and 99th percentile cutoffs, and filters samples outside this range. It summarizes pre-term vs. normal birth counts per categorical class, removes low-count classes (<20 total) or where there is not at least 1 term and 1 pre-term birth, and drops categorical variables entirely if only one class would remain. It reports which categorical variables are retained for workflow2.sh and PTB #s(in CategoricalVariablesToKeepTable.tsv), flags binary variables and multi-class categorical for feature selection, and outputs Weibull parameters, cutoffs, and plots. For the multi-site analysis: Haplogroup must be present in ALL sites,in EACH site: >= 5 total, >= 1 PTB, >= 1 term births, and overall across all sites: >= 20 total, >= 4 PTB.
-For the single-site analysis:overall: >= 20 total and >= 4 PTB. Finally, it saves the filtered metadata (Metadata.Weibull.tsv), writes IDs2.txt for downstream nDNA selection,a FinalCategoricalClassSummary.tsv is also produced, and plots both filtered/unfiltered distributions and all continuous and categorical features are ploted against PTB and GAGEBRTH (in plotsAll) labeled by site. Makes a report (out.txt) which will indicate which variables to keep/exclude in future modeling. 
+- Fits a Weibull distribution to GAGEBRTH_NEW, defines 1st and 99th percentile cutoffs, and filters samples outside this range. It summarizes pre-term vs. normal birth counts per categorical class, removes low-count classes (<20 total) or where there is not at least 1 term and 1 pre-term birth, and drops categorical variables entirely if only one class would remain. It reports which categorical variables are retained for workflow2.sh and PTB #s(in CategoricalVariablesToKeepTable.tsv), flags binary variables and multi-class categorical for feature selection, and outputs Weibull parameters, cutoffs, and plots. For the multi-site analysis: Haplogroup must be present in ALL sites,in EACH site: >= 5 total, >= 1 PTB, >= 1 term births, and overall across all sites: >= 20 total, >= 4 PTB.
+For the single-site analysis:overall: >= 20 total and >= 4 PTB. Finally, it saves the filtered metadata (Metadata.Weibull.tsv), writes IDs2.txt for downstream nDNA selection,a FinalCategoricalClassSummary.tsv is also produced, and plots both filtered/unfiltered distributions and all continuous and categorical features are ploted against PTB and GAGEBRTH_NEW (in plotsAll) labeled by site. Makes a report (out.txt) which will indicate which variables to keep/exclude in future modeling. 
 
 
 
