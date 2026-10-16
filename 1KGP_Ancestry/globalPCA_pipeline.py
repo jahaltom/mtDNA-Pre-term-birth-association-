@@ -1305,7 +1305,7 @@ if missing_annotation > 0:
 # ADD MATERNAL WEIGHT
 # --------------------------------------------------------
 
-weight = pd.read_csv("MOMI_derived_data.csv", low_memory=False)
+weight = pd.read_csv("metadata/MOMI_derived_data.csv", low_memory=False)
 
 weight["MAT_WEIGHT"] = pd.to_numeric(weight["MAT_WEIGHT"], errors="coerce")
 weight = weight[weight["MAT_WEIGHT"].notna()].copy()
