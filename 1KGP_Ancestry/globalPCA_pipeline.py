@@ -15,11 +15,11 @@ import matplotlib.pyplot as plt
 METADATA_FILE = "metadata/momi_mothers_merged.csv"
 PANEL_FILE = "metadata/1KGP.metadata.tsv"
 
-INITIAL_PCA_FILE = "pca/joint_global.eigenvec"
-INITIAL_EIGENVAL_FILE = "pca/joint_global.eigenval"
+INITIAL_PCA_FILE = "pca/1000G_projection.eigenvec"
+INITIAL_EIGENVAL_FILE = "pca/1000G_projection.eigenval"
 
-FINAL_PCA_FILE = "pca/joint_global_final.eigenvec"
-FINAL_EIGENVAL_FILE = "pca/joint_global_final.eigenval"
+FINAL_PCA_FILE = "pca/1000G_projection_final.eigenvec"
+FINAL_EIGENVAL_FILE = "pca/1000G_projection_final.eigenval"
 
 OUTDIR = Path("pca/global_qc")
 OUTDIR.mkdir(parents=True, exist_ok=True)
@@ -64,7 +64,7 @@ SAS_POPS = ["BEB", "GIH", "ITU", "PJL", "STU"]
 # ============================================================
 
 parser = argparse.ArgumentParser(
-    description="Global 1000G PCA ancestry QC and final maternal metadata annotation."
+    description="1000G reference PCA projection ancestry QC and final maternal metadata annotation."
 )
 
 parser.add_argument(
@@ -241,7 +241,7 @@ def read_1000g_panel():
     return panel
 
 
-def label_joint_pca(pca, meta, panel):
+def label_projected_pca(pca, meta, panel):
     pca = pca.merge(panel, on="IID", how="left", validate="many_to_one")
 
     study_labels = meta[
@@ -537,7 +537,7 @@ def plot_population_pca(kg, study, variance_pct, pc_x, pc_y, outfile, title, sup
             zorder=3
         )
 
-  
+
 
     ax.set_xlabel(f"{pc_x} ({variance_pct[pc_x_index]:.2f}%)")
     ax.set_ylabel(f"{pc_y} ({variance_pct[pc_y_index]:.2f}%)")
@@ -556,7 +556,7 @@ def plot_population_pca(kg, study, variance_pct, pc_x, pc_y, outfile, title, sup
     print("Saved plot:", outfile)
 def print_pca_summary(pca, kg, study, unknown):
     print("\n========================================")
-    print("JOINT PCA SUMMARY")
+    print("1000G REFERENCE PCA PROJECTION SUMMARY")
     print("========================================")
 
     print("Total PCA samples:", len(pca))
@@ -592,12 +592,12 @@ if args.stage == "initial":
     pca = read_pca(INITIAL_PCA_FILE)
     eigenvalues, variance_pct = read_eigenvalues(INITIAL_EIGENVAL_FILE)
 
-    pca, kg, study, unknown = label_joint_pca(pca, meta, panel)
+    pca, kg, study, unknown = label_projected_pca(pca, meta, panel)
 
     print_pca_summary(pca, kg, study, unknown)
 
     pca.to_csv(
-        OUTDIR / "initial_joint_global_labeled.csv",
+        OUTDIR / "initial_1000G_projection_labeled.csv",
         index=False
     )
 
@@ -888,7 +888,7 @@ if args.stage == "initial":
     print("\nNEXT STEP:")
     print(
         "Create qc/maternal_ptb_globalPCA with this keep file, "
-        "then rerun the joint 1000G PCA to generate:"
+        "then rerun the 1000G reference PCA and projection to generate:"
     )
     print(FINAL_PCA_FILE)
     print(FINAL_EIGENVAL_FILE)
@@ -907,7 +907,7 @@ elif args.stage == "final":
     if not Path(FINAL_PCA_FILE).exists():
         raise FileNotFoundError(
             f"Final PCA file does not exist: {FINAL_PCA_FILE}\n"
-            "Run the second joint PCA first."
+            "Run the second 1000G reference PCA and projection first."
         )
 
     if not Path(FINAL_EIGENVAL_FILE).exists():
@@ -918,12 +918,12 @@ elif args.stage == "final":
     pca = read_pca(FINAL_PCA_FILE)
     eigenvalues, variance_pct = read_eigenvalues(FINAL_EIGENVAL_FILE)
 
-    pca, kg, study, unknown = label_joint_pca(pca, meta, panel)
+    pca, kg, study, unknown = label_projected_pca(pca, meta, panel)
 
     print_pca_summary(pca, kg, study, unknown)
 
     pca.to_csv(
-        OUTDIR / "final_joint_global_labeled.csv",
+        OUTDIR / "final_1000G_projection_labeled.csv",
         index=False
     )
 
@@ -990,7 +990,7 @@ elif args.stage == "final":
     )
 
     population_models, pooled_covariance, pooled_inv_cov = build_pooled_population_model(kg)
-    
+
     print("\n========================================")
     print("POOLED 1KGP POPULATION MODEL")
     print("========================================")
@@ -1319,22 +1319,22 @@ elif args.stage == "final":
     # --------------------------------------------------------
     # ADD MATERNAL WEIGHT
     # --------------------------------------------------------
-    
+
     weight = pd.read_csv("MOMI_derived_data.csv", low_memory=False)
-    
+
     weight["MAT_WEIGHT"] = pd.to_numeric(weight["MAT_WEIGHT"], errors="coerce")
     weight = weight[weight["MAT_WEIGHT"].notna()].copy()
-    
+
     # Keep first non-missing weight per mother/pregnancy (Is the earliest Enrolment by VDT_ENR)
     weight = weight.drop_duplicates(["SITE_CODE", "ORIG_ID"], keep="first")
     weight = weight[["SITE_CODE", "ORIG_ID", "MAT_WEIGHT"]]
-    
+
     weight["SITE_CODE"] = weight["SITE_CODE"].astype(str).str.strip()
     weight["ORIG_ID"] = weight["ORIG_ID"].astype(str).str.strip()
-    
+
     ultimate["SITE_CODE_momi"] = ultimate["SITE_CODE_momi"].astype(str).str.strip()
     ultimate["ORIG_ID_momi"] = ultimate["ORIG_ID_momi"].astype(str).str.strip()
-    
+
     ultimate = ultimate.merge(
         weight,
         left_on=["SITE_CODE_momi", "ORIG_ID_momi"],
@@ -1342,9 +1342,9 @@ elif args.stage == "final":
         how="left",
         validate="one_to_one"
     )
-    
+
     ultimate = ultimate.drop(columns=["SITE_CODE", "ORIG_ID"])
-    
+
     print("\nMaternal weights added:", ultimate["MAT_WEIGHT"].notna().sum())
     print("Maternal weights missing:", ultimate["MAT_WEIGHT"].isna().sum())
     ultimate = ultimate.rename(columns={"merge_site": "site"})
@@ -1407,3 +1407,4 @@ elif args.stage == "final":
 
     print("\nFinal nearest-reference table:")
     print(OUTDIR / "final_1KGP_nearest_reference.csv")
+
