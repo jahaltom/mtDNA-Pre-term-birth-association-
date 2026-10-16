@@ -1338,6 +1338,8 @@ ultimate.to_csv(
     index=False
 )
 
+
+
 # --------------------------------------------------------
 # Final summaries
 # --------------------------------------------------------
@@ -1392,3 +1394,47 @@ print(ULTIMATE_METADATA_FILE)
 print("\nFinal nearest-reference table:")
 print(OUTDIR / "final_1KGP_nearest_reference.csv")
 
+df=ultimate.copy()
+site_col = "site"
+pop_col = "Nearest_1KGP_Pop"
+
+# Counts
+counts = (
+    df.groupby([site_col, pop_col])
+      .size()
+      .reset_index(name="N")
+)
+
+# Percent within each site
+counts["Percent"] = (
+    counts["N"] /
+    counts.groupby(site_col)["N"].transform("sum")
+    * 100
+)
+
+counts["Percent"] = counts["Percent"].round(2)
+
+print("\n========================================")
+print("1000G POPULATION BREAKDOWN BY STUDY SITE")
+print("========================================\n")
+
+for site, g in counts.groupby(site_col):
+    total = g["N"].sum()
+
+    print(f"\n{site} (N={total})")
+    print("-" * 60)
+
+    print(
+        g.sort_values("N", ascending=False)
+         [[pop_col, "N", "Percent"]]
+         .to_string(index=False)
+    )
+
+# Also save full table
+counts.to_csv(
+    "pca/global_qc/1KGP_population_breakdown_by_site.csv",
+    index=False
+)
+
+print("\nSaved:")
+print("pca/global_qc/1KGP_population_breakdown_by_site.csv")
