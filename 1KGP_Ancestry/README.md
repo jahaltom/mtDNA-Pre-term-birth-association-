@@ -446,15 +446,15 @@ python globalPCA_pipeline.py --stage initial
 
 Initial projected PCA:
 
-![Before ancestry QC](pca/global_qc/BEFORE_PC1_PC2.png)
+![Before ancestry QC](plots/BEFORE_PC1_PC2.png)
 
 Samples flagged by the ancestry-QC criterion are outlined in black:
 
-![PCA with ancestry outliers flagged](pca/global_qc/BEFORE_FLAGGED_PC1_PC2.png)
+![PCA with ancestry outliers flagged](plots/BEFORE_FLAGGED_PC1_PC2.png)
 
 PCA visualization after removing flagged ancestry outliers:
 
-![After ancestry QC](pca/global_qc/AFTER_REMOVAL_PC1_PC2.png)
+![After ancestry QC](plots/AFTER_REMOVAL_PC1_PC2.png)
 
 
 ### CREATE ANCESTRY-CLEAN MATERNAL COHORT
