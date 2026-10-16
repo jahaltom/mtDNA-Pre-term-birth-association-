@@ -20,9 +20,7 @@ Takes in (momi_mothers_ultimate.csv), and assigns main/sub-haplogroups. It sets 
 ```
 python  scripts/MetadataMerge.py
 ```
-Takes in Metadata.M.tsv and analyzes the dataset for missing data using features of interest. Outputs heatmap (MissingDataHeatmap.png). Missing data is in yellow.
-Removes samples where gestational age "GAGEBRTH" or  PTB (0 or 1) is na. Also removes samples with missing data in any of the input columns. Makes (IDs.txt) to be used for PCA.
-
+Assesses missingness in selected metadata features by study site. Features with >90% missingness in any site are excluded and the surviving feature list is saved to SurvivingFeatures.txt. A missingness heatmap is generated (MissingDataHeatmap.png). Samples missing GAGEBRTH, PTB, or any surviving feature are removed. The filtered metadata are saved as Metadata.MissRem.tsv, and IDs.txt is created for downstream PCA/PLINK analysis.
 
 ```
 python scripts/MissingData.py
