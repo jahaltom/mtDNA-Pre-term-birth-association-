@@ -12,7 +12,7 @@
 
 
 #### MissingData.py
-Assesses missingness in selected metadata features by study site. Features with >90% missingness in any site are excluded and the surviving feature list is saved to SurvivingFeatures.txt. A missingness heatmap is generated (MissingDataHeatmap.png). Samples missing GAGEBRTH_NEW, PTB, or any surviving feature are removed. The filtered metadata are saved as Metadata.MissRem.tsv, and IDs.txt is created for downstream PCA/PLINK analysis.
+Assesses missingness in selected metadata features by study site. Features with >90% missingness in any site are excluded and the surviving feature list is saved to SurvivingFeatures_Categorical.txt and SurvivingFeatures_Continuous.txt. A missingness heatmap is generated (MissingDataHeatmap.png). Samples missing GAGEBRTH_NEW, PTB, or any surviving feature are removed. The filtered metadata are saved as Metadata.MissRem.tsv, and IDs.txt is created for downstream PCA/PLINK analysis.
 
 
 #### outlierPCA.py
