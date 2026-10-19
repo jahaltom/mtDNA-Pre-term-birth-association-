@@ -171,7 +171,8 @@ columnCat <- c(
   "HH_ELECTRICITY",
   "TB",
   "THYROID",
-  "TYP_HOUSE"
+  "TYP_HOUSE",
+  "biospecimen"
 )
 
 columnCont <- c(
@@ -187,7 +188,8 @@ columnCont <- c(
   "PC2",
   "PC3",
   "PC4",
-  "PC5"
+  "PC5",
+  "mtcn"
 )
 
 
