@@ -168,7 +168,7 @@ print(
 categorical_json = {
     "categorical_to_keep": categorical_to_keep,
     "binary_categorical": columns_with_two_classes,
-    "multiclass_categorical": columns_with_moreThantwo_class
+    "multiclass_categorical": columns_with_moreThantwo_classes
 }
 
 with open("scripts/CategoricalVariables.json", "w") as f:
