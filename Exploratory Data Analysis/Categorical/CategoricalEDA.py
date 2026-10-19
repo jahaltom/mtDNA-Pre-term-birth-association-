@@ -18,7 +18,7 @@ def cramers_v(contingency_table):
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
 # Clean and select categorical variables
-with open("scripts/CategoricalVariables.json") as f:
+with open("../../scripts/CategoricalVariables.json") as f:
     features = json.load(f)
 
 categorical_columns = features["categorical_to_keep"]
