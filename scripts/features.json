@@ -1,0 +1,18 @@
+{
+  "categorical": [
+    'TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE',
+    'TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID',
+    'EPILEPSY','BABY_SEX','SMOKE_HIST','SMOK_FREQ',
+    'SNIFF_TOBA','PASSIVE_SMOK','ALCOHOL','SMOK_TYP','site','population','Nearest_Plausible_1KGP_Pop','biospecimen'
+  ],
+  "continuous": [
+    'PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT',
+    'BMI','SNIFF_FREQ','ALCOHOL_FREQ','SMOK_YR','mtcn'
+  ]
+}
+
+
+
+
+
+
