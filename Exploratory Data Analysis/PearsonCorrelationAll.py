@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sys
-
+import json
 
 
 with open("scripts/features.json") as f:
