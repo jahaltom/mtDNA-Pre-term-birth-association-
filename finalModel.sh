@@ -44,12 +44,12 @@ conda activate plink
 
 
 
-plink \
+plink2 \
   --bfile /scr1/users/haltomj/PTB/plink2 \
   --keep IDs.txt \
   --chr 1-22 \
   --snps-only just-acgt \
-  --biallelic-only strict \
+  --max-alleles 2 \
   --geno 0.05 \
   --mind 0.05 \
   --maf 0.01 \
@@ -61,10 +61,10 @@ plink \
 
 mkdir PCA
 # PCA for ancestry covariates
-plink --bfile nDNA_final --pca 10 --out PCA/out
+plink2 --bfile nDNA_final --pca 10 --out PCA/out
 
 # QC summary stats
-plink --bfile nDNA_final --missing --freq --out nDNA_stats
+plink2 --bfile nDNA_final --missing --freq --out nDNA_stats
 
 
 
