@@ -13,11 +13,19 @@ variance_cutoff = 0.85  # % cumulative variance to use
 outlier_quantile = 0.95  # top 5% distance outliers per site
 
 # --- Load PCA ---
-header = ["FID", "IID"] + [f"PC{i}" for i in range(1, 11)]
-pca = pd.read_csv(eigenvec_path, delim_whitespace=True, header=None)
-pca.columns = header
+pca = pd.read_csv(eigenvec_path, sep=r"\s+")
+
+if "#FID" in pca.columns:
+    pca = pca.rename(columns={"#FID": "FID"})
+
 pca = pca.drop(columns=["FID"]).rename(columns={"IID": "id"})
 
+pc_cols_all = [col for col in pca.columns if col.startswith("PC")]
+
+pca[pc_cols_all] = pca[pc_cols_all].apply(
+    pd.to_numeric,
+    errors="raise"
+)
 # --- Load Eigenvalues and compute variance explained ---
 eigenvals = np.loadtxt(eigenval_path)
 pct_var = eigenvals / eigenvals.sum()
@@ -31,7 +39,10 @@ df = pd.merge(meta, pca, on="id")
 
 # --- Calculate Euclidean distance using top N PCs ---
 pc_cols = [f"PC{i}" for i in range(1, N + 1)]
-df["PC_dist"] = np.linalg.norm(df[pc_cols].values, axis=1)
+df["PC_dist"] = np.linalg.norm(
+    df[pc_cols].to_numpy(dtype=float),
+    axis=1
+)
 
 # --- Flag top 5% outliers per site ---
 def flag_outliers(site_df):
