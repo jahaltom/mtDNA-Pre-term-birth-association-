@@ -4,7 +4,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import ListedColormap
 import sys
+import json
 
+with open("scripts/features.json") as f:
+    features = json.load(f)
+
+columnCat = features["categorical"]
+columnCont = features["continuous"]
 
 # Load the data
 md = pd.read_csv('Metadata.M.tsv', sep='\t')
@@ -21,12 +27,10 @@ site_colors = {site: site_palette[i] for i, site in enumerate(unique_sites)}
 # Map site categories to colors
 row_colors = row_labels.map(site_colors)
 
-# Select relevant columns for the heatmap
-df = md[['PW_AGE', 'PW_EDUCATION', 'MAT_HEIGHT', 'MAT_WEIGHT', 'BMI', 'ALCOHOL_FREQ', 'SMOK_YR', 'SNIFF_FREQ',
-         'TYP_HOUSE', 'HH_ELECTRICITY', 'FUEL_FOR_COOK', 'DRINKING_SOURCE',
-         'TOILET', 'WEALTH_INDEX', 'PASSIVE_SMOK', 'CHRON_HTN',
-         'DIABETES', 'TB', 'THYROID', 'EPILEPSY', 'BABY_SEX',
-         'ALCOHOL', 'SMOKE_HIST', 'SMOK_FREQ', 'SMOK_TYP', 'SNIFF_TOBA']]
+
+
+
+df = md[columnCat + columnCont]
 
 
 # Replace -88 with -77 (if necessary)
@@ -107,17 +111,6 @@ print("Surviving features:", len(surviving_features))
 # SAVE SURVIVING FEATURES TO TXT
 # ============================================================
 
-columnCat = [
-    'TYP_HOUSE','HH_ELECTRICITY','FUEL_FOR_COOK','DRINKING_SOURCE',
-    'TOILET','WEALTH_INDEX','CHRON_HTN','DIABETES','TB','THYROID',
-    'EPILEPSY','BABY_SEX','SMOKE_HIST','SMOK_FREQ',
-    'SNIFF_TOBA','PASSIVE_SMOK','ALCOHOL','SMOK_TYP'
-]
-
-columnCont = [
-    'PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT',
-    'BMI','SNIFF_FREQ','ALCOHOL_FREQ','SMOK_YR'
-]
 
 surviving_cat = [x for x in columnCat if x in surviving_features]
 surviving_cont = [x for x in columnCont if x in surviving_features]
