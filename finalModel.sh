@@ -74,7 +74,7 @@ python ../scripts/outlierPCA.py
 
 
 # Call the Python script with the column string as an argument
-python ../scripts/WeibullFiltering.py "$columnCat_string" "$columnCont_string"  "$target"> out.txt
+python ../scripts/WeibullFiltering.py  "$target"> out.txt
 
 
 
@@ -86,12 +86,11 @@ conda activate plink
 
 
 
-plink --bfile nDNA_final --keep IDs2.txt --make-bed --out nDNA_final2
+plink2 --bfile nDNA_final --keep IDs2.txt --make-bed --out nDNA_final2
 
-mkdir PCA2
+mkdir -p PCA2
 #Run plink PCA
-plink --bfile nDNA_final2 --pca 10 --out PCA2/cleaned
-
+plink2  --bfile nDNA_final2 --pca 10 --out PCA2/cleaned
 
 
 
