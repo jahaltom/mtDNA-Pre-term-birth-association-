@@ -45,7 +45,7 @@ conda activate plink
 
 
 plink2 \
-  --bfile /scr1/users/haltomj/PTB/plink2 \
+  --bfile /scr1/users/haltomj/PTB/Data/qc/maternal_ptb_globalPCA \
   --keep IDs.txt \
   --chr 1-22 \
   --snps-only just-acgt \
