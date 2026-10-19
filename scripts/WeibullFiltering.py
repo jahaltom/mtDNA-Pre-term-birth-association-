@@ -5,7 +5,7 @@ from scipy.stats import weibull_min
 import sys
 import os
 import seaborn as sns
-
+import json
 
 # Show all rows
 pd.set_option('display.max_rows', None)
@@ -123,19 +123,58 @@ except:
 
 
 #categorical variables to keep
-print("Categorical variables to keep for workflow2.sh")
-print(str(set(results[results["Column"].duplicated(keep=False)]["Column"].to_list())).replace(" ", ""))
 print("Categorical variables excluded from future model")
 print(featToExclude)
 print("Categorical variable classes removed from data")
 print(classToRemove) 
+# categorical variables to keep
+categorical_to_keep = sorted(
+    results[
+        results["Column"].duplicated(keep=False)
+    ]["Column"].unique().tolist()
+)
+
+print("Categorical variables to keep for workflow2.sh")
+print(categorical_to_keep)
+
 # Count the number of unique classes for each categorical variable
-class_counts = results.groupby('Column')['Value'].nunique()
+class_counts = results.groupby("Column")["Value"].nunique()
+
 # Identify columns with exactly two unique classes
-columns_with_two_classes = class_counts[class_counts == 2].index.tolist()
-print("Binary categorical variables for feature selection.  Will be used as binary variables for Feature selection:", str(columns_with_two_classes).replace(" ", ""))
-columns_with_moreThantwo_classes = class_counts[class_counts > 2].index.tolist()
-print("Multi-class categorical variables for feature selection::", str(columns_with_moreThantwo_classes).replace(" ", ""))
+columns_with_two_classes = (
+    class_counts[class_counts == 2]
+    .index
+    .tolist()
+)
+
+print(
+    "Binary categorical variables for feature selection:",
+    columns_with_two_classes
+)
+
+# Identify columns with more than two unique classes
+columns_with_moreThantwo_classes = (
+    class_counts[class_counts > 2]
+    .index
+    .tolist()
+)
+
+print(
+    "Multi-class categorical variables for feature selection:",
+    columns_with_moreThantwo_classes
+)
+
+# Save as JSON
+categorical_json = {
+    "categorical_to_keep": categorical_to_keep,
+    "binary_categorical": columns_with_two_classes,
+    "multiclass_categorical": columns_with_moreThantwo_class
+}
+
+with open("CategoricalVariables.json", "w") as f:
+    json.dump(categorical_json, f, indent=2)
+
+print("Saved: CategoricalVariables.json")
 
 
 
