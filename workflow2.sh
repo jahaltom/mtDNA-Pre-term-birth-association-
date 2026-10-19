@@ -11,17 +11,9 @@ source /home/haltomj/miniconda3/etc/profile.d/conda.sh
 conda activate ML
 
 
-# Define Categorical features
-columnsCat=CAT
-# Define Continuous  features
-columnsCont=CONT
 
 #Target
 target=TARGET
-
-# Convert the array to a comma-separated string
-columnCat_string=$( echo "${columnsCat[*]}")
-columnCont_string=$( echo "${columnsCont[*]}")
 
 
 
@@ -50,15 +42,15 @@ python  scripts/CombinePCA.py
 
 cp Metadata.Final.tsv "Exploratory Data Analysis"
 cd "Exploratory Data Analysis"
-python PearsonCorrelationAll.py "$columnCat_string" "$columnCont_string" 
+python PearsonCorrelationAll.py 
 
 mv Metadata.Final.tsv Continuous/
 cd Continuous
-python ContinuousEDA.py "$columnCont_string" "$target"
+python ContinuousEDA.py "$target"
 
 mv Metadata.Final.tsv ../Categorical/
 cd ../Categorical
-python CategoricalEDA.py "$columnCat_string"
+python CategoricalEDA.py
 rm Metadata.Final.tsv
 
 
