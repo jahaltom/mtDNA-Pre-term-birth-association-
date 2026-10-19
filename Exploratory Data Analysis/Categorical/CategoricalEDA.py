@@ -6,6 +6,7 @@ from scipy.stats import chi2_contingency, fisher_exact, f_oneway, kruskal
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.tools.tools import add_constant
 import sys
+import json
 
 # Define functions
 def cramers_v(contingency_table):
@@ -17,7 +18,10 @@ def cramers_v(contingency_table):
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
 # Clean and select categorical variables
-categorical_columns = sys.argv[1].split(',')
+with open("scripts/CategoricalVariables.json") as f:
+    features = json.load(f)
+
+categorical_columns = features["categorical_to_keep"]
 
 # Initialize results storage
 results = []
