@@ -42,7 +42,7 @@ md =pd.read_csv("MetadataOutlierRemoved.tsv",sep='\t')
 
 
 # Step 1: Fit the Weibull distribution to the data
-shape, loc, scale = weibull_min.fit(md["GAGEBRTH"], floc=0)  # Fix location to 0
+shape, loc, scale = weibull_min.fit(md["GAGEBRTH_NEW"], floc=0)  # Fix location to 0
 print(f"Weibull Parameters: Shape={shape}, Scale={scale}, Location={loc}")
 
 # Step 2: Define cutoff thresholds for outlier detection
@@ -53,7 +53,7 @@ upper_cutoff = weibull_min.ppf(0.99, shape, loc=loc, scale=scale)  # 99th percen
 print(f"Lower Cutoff: {lower_cutoff}, Upper Cutoff: {upper_cutoff}")
 
 # Step 3: Filter the data
-filtered_data = md[(md["GAGEBRTH"] >= lower_cutoff) & (md["GAGEBRTH"] <= upper_cutoff)]
+filtered_data = md[(md["GAGEBRTH_NEW"] >= lower_cutoff) & (md["GAGEBRTH_NEW"] <= upper_cutoff)]
 
 
 
@@ -312,16 +312,16 @@ final_cat_summary.to_csv(
 
 
 # Step 4: Plot the original data, filtered data, and Weibull distribution
-x = np.linspace(min(md["GAGEBRTH"]), max(md["GAGEBRTH"]), 1000)
+x = np.linspace(min(md["GAGEBRTH_NEW"]), max(md["GAGEBRTH_NEW"]), 1000)
 weibull_pdf = weibull_min.pdf(x, shape, loc=loc, scale=scale)
 
 plt.figure(figsize=(12, 6))
 
 # Original Data
-plt.hist(md["GAGEBRTH"], bins=50, density=True, alpha=0.5, label="Original Data", color="blue")
+plt.hist(md["GAGEBRTH_NEW"], bins=50, density=True, alpha=0.5, label="Original Data", color="blue")
 
 # Filtered Data
-plt.hist(filtered_data["GAGEBRTH"], bins=50, density=True, alpha=0.5, label="Filtered Data", color="green")
+plt.hist(filtered_data["GAGEBRTH_NEW"], bins=50, density=True, alpha=0.5, label="Filtered Data", color="green")
 
 # Weibull PDF Line
 plt.plot(x, weibull_pdf, 'r-', label="Weibull Fit (PDF)", linewidth=2)
@@ -352,7 +352,7 @@ os.makedirs(output_dir, exist_ok=True)
 # Settings
 # -----------------------------
 SITE_COL = "site"
-GA_COL = "GAGEBRTH"
+GA_COL = "GAGEBRTH_NEW"
 PTB_COL = "PTB"
 
 sns.set_theme(style="whitegrid")
@@ -381,7 +381,7 @@ for col in contFeat:
     plt.legend(title="Site", bbox_to_anchor=(1.05, 1), loc="upper left")
     plt.tight_layout()
 
-    plt.savefig(f"{output_dir}GAGEBRTHScatter_{col}.All_BySite.png", dpi=300)
+    plt.savefig(f"{output_dir}GAGEBRTH_NEWScatter_{col}.All_BySite.png", dpi=300)
     plt.close()
 
     # -------------------------
@@ -470,7 +470,7 @@ for col in catigoricalFeat:
     plt.legend(title="Site", bbox_to_anchor=(1.05, 1), loc="upper left")
     plt.tight_layout()
 
-    plt.savefig(f"{output_dir}GAGEBRTH_Box_By_{col}.All_BySite.png", dpi=300)
+    plt.savefig(f"{output_dir}GAGEBRTH_NEW_Box_By_{col}.All_BySite.png", dpi=300)
     plt.close()
 
 print(f"Saved plots to: {output_dir}")
