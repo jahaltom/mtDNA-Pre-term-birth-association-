@@ -12,7 +12,7 @@ import sys
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
 
-with open("scripts/features.json") as f:
+with open("../../scripts/features.json") as f:
     features = json.load(f)
 
 continuous_columns = features["continuous"]
