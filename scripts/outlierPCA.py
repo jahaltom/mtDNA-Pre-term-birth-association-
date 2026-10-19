@@ -16,7 +16,7 @@ outlier_quantile = 0.95  # top 5% distance outliers per site
 header = ["FID", "IID"] + [f"PC{i}" for i in range(1, 11)]
 pca = pd.read_csv(eigenvec_path, delim_whitespace=True, header=None)
 pca.columns = header
-pca = pca.drop(columns=["FID"]).rename(columns={"IID": "Sample_ID"})
+pca = pca.drop(columns=["FID"]).rename(columns={"IID": "id"})
 
 # --- Load Eigenvalues and compute variance explained ---
 eigenvals = np.loadtxt(eigenval_path)
@@ -27,7 +27,7 @@ print(f"Using top {N} PCs to capture {cum_var[N-1]*100:.2f}% variance")
 
 # --- Load metadata and merge ---
 meta = pd.read_csv(metadata_path, sep="\t")
-df = pd.merge(meta, pca, on="Sample_ID")
+df = pd.merge(meta, pca, on="id")
 
 # --- Calculate Euclidean distance using top N PCs ---
 pc_cols = [f"PC{i}" for i in range(1, N + 1)]
