@@ -1,0 +1,504 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import weibull_min
+import sys
+import os
+import seaborn as sns
+import json
+
+# Show all rows
+pd.set_option('display.max_rows', None)
+
+# Show all columns
+pd.set_option('display.max_columns', None)
+
+# Read surviving categorical features
+catigoricalFeat= [item for item in sys.argv[1].split(',') if item != '']  #
+
+contFeat= [item for item in sys.argv[2].split(',') if item != '']  #
+
+# Target haplogroup variable still comes from command-line argument 1
+target = sys.argv[3]
+
+# Make sure target is included in categorical features
+if target not in catigoricalFeat:
+    catigoricalFeat.append(target)
+
+md =pd.read_csv("MetadataOutlierRemoved.tsv",sep='\t')
+
+
+
+
+# Step 1: Fit the Weibull distribution to the data
+shape, loc, scale = weibull_min.fit(md["GAGEBRTH_NEW"], floc=0)  # Fix location to 0
+print(f"Weibull Parameters: Shape={shape}, Scale={scale}, Location={loc}")
+
+# Step 2: Define cutoff thresholds for outlier detection
+lower_cutoff = weibull_min.ppf(0.01, shape, loc=loc, scale=scale)  # 1st percentile
+upper_cutoff = weibull_min.ppf(0.99, shape, loc=loc, scale=scale)  # 99th percentile
+
+
+print(f"Lower Cutoff: {lower_cutoff}, Upper Cutoff: {upper_cutoff}")
+
+# Step 3: Filter the data
+filtered_data = md[(md["GAGEBRTH_NEW"] >= lower_cutoff) & (md["GAGEBRTH_NEW"] <= upper_cutoff)]
+
+
+
+
+#############################      More filtering
+#For each categorical variable class, determine the number of pre-term births and normal births (PTB=1 normal=0) and the % of PTB=1. 
+#Remove rows(samples) corresponding to a class from a categorical variable that total counts (PTB=1 normal=0) < 20. 
+#If only 1 class would remain after the prior filtering, don't exclude any samples and simply exclude the categorical variable 
+#from any future model. Reports categorical variables to keep/exclude for future models 
+#(Those kept are in CategoricalVariablesToKeepTable.tsv). Also reports those classes removed due to low counts.
+
+results = []
+troubleClass=[]
+
+# Loop through each column
+for col in catigoricalFeat:
+    unique_values = filtered_data[col].drop_duplicates().to_list()
+    for value in unique_values:
+        # Calculate counts
+        ptb_counts = filtered_data[filtered_data[col] == value]["PTB"].value_counts()
+        # Ensure there are no missing categories (0 or 1)
+        ptb_counts = ptb_counts.reindex([0, 1], fill_value=0)
+        total_counts = ptb_counts.sum() 
+
+        has_both_outcomes = (ptb_counts[0] >= 1) and (ptb_counts[1] >= 1)
+
+        if (total_counts < 20) or (not has_both_outcomes):
+            troubleClass.append({
+                "Column": col,
+                "Value": value,
+                "PTB_0_Count": ptb_counts[0],
+                "PTB_1_Count": ptb_counts[1],
+                "PTB_1_Percentage": ptb_counts[1] / total_counts * 100
+            })
+        else:
+            results.append({
+                "Column": col,
+                "Value": value,
+                "PTB_0_Count": ptb_counts[0],
+                "PTB_1_Count": ptb_counts[1],
+                "PTB_1_Percentage": ptb_counts[1] / total_counts * 100
+            })
+#Unfiltered Categorical Variables
+print("Unfiltered Categorical Variables")
+print(pd.concat([pd.DataFrame(troubleClass),pd.DataFrame(results)]).sort_values(by=['Column','Value']))
+#df for troublesome classes
+troubleClass= pd.DataFrame(troubleClass)
+print("Troublesome classes") 
+print(troubleClass)
+##Construct final table for categorical variables
+results= pd.DataFrame(results)
+# Identify categorical variables where there is only 1 class. These will not be used for future model.
+featToExclude = results[~results["Column"].duplicated(keep=False)]["Column"].to_list()
+# Remove categorical variables where there is only 1 class. 
+final=results[results["Column"].duplicated(keep=False)].sort_values(by=['Column','Value']) 
+final.to_csv('CategoricalVariablesToKeepTable.tsv', index=False, sep="\t") 
+
+
+try: #df of troublesome classes to remove 
+    classToRemove = troubleClass[~troubleClass['Column'].isin(featToExclude)]
+    classToRemove=classToRemove[classToRemove["Column"] != target]
+    # Remove unwanted class's
+    for idx, row in classToRemove.iterrows():
+        filtered_data = filtered_data[filtered_data[row['Column']] != row['Value']]
+except:
+    classToRemove="Nothing got removed"
+
+
+#categorical variables to keep
+print("Categorical variables excluded from future model")
+print(featToExclude)
+print("Categorical variable classes removed from data")
+print(classToRemove) 
+# categorical variables to keep
+categorical_to_keep = sorted(
+    results[
+        results["Column"].duplicated(keep=False)
+    ]["Column"].unique().tolist()
+)
+
+print("Categorical variables to keep for workflow2.sh")
+print(categorical_to_keep)
+
+# Count the number of unique classes for each categorical variable
+class_counts = results.groupby("Column")["Value"].nunique()
+
+# Identify columns with exactly two unique classes
+columns_with_two_classes = (
+    class_counts[class_counts == 2]
+    .index
+    .tolist()
+)
+
+print(
+    "Binary categorical variables for feature selection:",
+    columns_with_two_classes
+)
+
+# Identify columns with more than two unique classes
+columns_with_moreThantwo_classes = (
+    class_counts[class_counts > 2]
+    .index
+    .tolist()
+)
+
+print(
+    "Multi-class categorical variables for feature selection:",
+    columns_with_moreThantwo_classes
+)
+
+# Save as JSON
+categorical_json = {
+    "categorical_to_keep": categorical_to_keep,
+    "binary_categorical": columns_with_two_classes,
+    "multiclass_categorical": columns_with_moreThantwo_classes
+}
+
+with open("scripts/CategoricalVariables.json", "w") as f:
+    json.dump(categorical_json, f, indent=2)
+
+print("Saved: CategoricalVariables.json")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Finds haplogroups that are well-supported for the CURRENT dataset.
+# Multi-site analysis:
+#   - must be present in ALL sites
+#   - in EACH site: >= min_n_per_site total, >= min_events_per_site PTB, >= min_terms_per_site term births
+#   - overall: >= min_n_total total, >= min_events_total PTB
+# Single-site analysis:
+#   - overall: >= min_n_total total, >= min_events_total PTB
+
+
+# --- RULES ---
+n_sites = filtered_data["site"].nunique()
+min_n_total = 20
+min_events_total = 4
+# per-site rules for pooled multi-site PTB analyses
+min_n_per_site = 5
+min_events_per_site = 1
+min_terms_per_site = 1
+
+# hap × site counts within the CURRENT dataset
+counts = (
+    filtered_data.groupby([target, "site"])["PTB"]
+    .agg(
+        n="size",
+        ptb=lambda x: (x == 1).sum(),
+        term=lambda x: (x == 0).sum()
+    )
+    .reset_index()
+)
+
+# overall hap counts
+totals = (
+    filtered_data.groupby(target)["PTB"]
+    .agg(
+        n="size",
+        ptb=lambda x: (x == 1).sum(),
+        term=lambda x: (x == 0).sum()
+    )
+    .reset_index()
+)
+
+if n_sites == 1:
+    # single-site: only overall thresholds matter
+    keep_haps = sorted(
+        totals.loc[
+            (totals["n"] >= min_n_total) &
+            (totals["ptb"] >= min_events_total),
+            target
+        ].tolist()
+    )
+else:
+    # multi-site: hap must pass thresholds in EVERY site and be present in ALL sites
+    per_site_ok = counts[
+        (counts["n"] >= min_n_per_site) &
+        (counts["ptb"] >= min_events_per_site) &
+        (counts["term"] >= min_terms_per_site)
+    ]
+    # haplogroups that pass per-site rules in all sites
+    haps_all_sites_ok = set(
+        per_site_ok.groupby(target)["site"].nunique()
+        .loc[lambda s: s == n_sites]
+        .index
+    )
+    # haplogroups that pass overall rules
+    haps_good_size = set(
+        totals.loc[
+            (totals["n"] >= min_n_total) &
+            (totals["ptb"] >= min_events_total),
+            target
+        ]
+    )
+    keep_haps = sorted(haps_all_sites_ok & haps_good_size)
+
+print("Keeping haplogroups:", keep_haps)
+
+
+
+print("\nDropping unsupported haplogroups...")
+
+n_before = len(filtered_data)
+
+filtered_data = filtered_data[
+    filtered_data[target].isin(keep_haps)
+].copy()
+
+n_after = len(filtered_data)
+
+print(f"Rows before: {n_before}")
+print(f"Rows after:  {n_after}")
+print(f"Dropped:     {n_before - n_after}")
+
+# optional: quick peek at new label counts
+print("\nCounts after recode:")
+print(filtered_data[target].value_counts().head(20))
+
+# optional: inspect the hap × site table before/after
+print("\nPer-site counts used for filtering:")
+print(counts.sort_values([target, "site"]).to_string(index=False))
+
+
+
+
+
+
+
+
+
+
+
+filtered_data.to_csv('Metadata.Weibull.tsv', index=False, sep="\t") 
+#Need dummy column for plink PCA
+filtered_data["Dummy"]=0
+filtered_data[["Dummy","id"]].to_csv("IDs2.txt", index=False,header=False,sep='\t') 
+
+
+
+
+final_cat_summary = []
+
+for col in catigoricalFeat:
+
+    for value in sorted(filtered_data[col].dropna().unique()):
+
+        ptb_counts = (
+            filtered_data[filtered_data[col] == value]["PTB"]
+            .value_counts()
+            .reindex([0,1], fill_value=0)
+        )
+
+        total = ptb_counts.sum()
+
+        final_cat_summary.append({
+            "Column": col,
+            "Value": value,
+            "Term_Count": ptb_counts[0],
+            "PTB_Count": ptb_counts[1],
+            "Total": total,
+            "PTB_Percent": round(ptb_counts[1] / total * 100, 2)
+        })
+
+final_cat_summary = pd.DataFrame(final_cat_summary)
+
+
+print("\nFinal Categorical Variables After All Filtering")
+print(final_cat_summary.sort_values(["Column","Value"]))
+
+final_cat_summary.to_csv(
+    "FinalCategoricalClassSummary.tsv",
+    sep="\t",
+    index=False
+)
+
+
+
+
+
+
+
+
+
+
+
+# Step 4: Plot the original data, filtered data, and Weibull distribution
+x = np.linspace(min(md["GAGEBRTH_NEW"]), max(md["GAGEBRTH_NEW"]), 1000)
+weibull_pdf = weibull_min.pdf(x, shape, loc=loc, scale=scale)
+
+plt.figure(figsize=(12, 6))
+
+# Original Data
+plt.hist(md["GAGEBRTH_NEW"], bins=50, density=True, alpha=0.5, label="Original Data", color="blue")
+
+# Filtered Data
+plt.hist(filtered_data["GAGEBRTH_NEW"], bins=50, density=True, alpha=0.5, label="Filtered Data", color="green")
+
+# Weibull PDF Line
+plt.plot(x, weibull_pdf, 'r-', label="Weibull Fit (PDF)", linewidth=2)
+
+# Add labels, legend, and title
+plt.xlabel("Gestational Age (days)")
+plt.ylabel("Density")
+plt.title("Gestational Age Distribution with Weibull Fit")
+plt.legend()
+plt.grid(True)
+# Add the cutoffs to the plot
+plt.axvline(lower_cutoff, color='orange', linestyle='--', label="1st Percentile Cutoff")
+plt.axvline(upper_cutoff, color='purple', linestyle='--', label="99th Percentile Cutoff")
+plt.show()
+plt.savefig("weibullFiltering.png", bbox_inches="tight")
+plt.clf()
+
+
+
+
+# -----------------------------
+# Output directory
+# -----------------------------
+output_dir = "plotsAll/"
+os.makedirs(output_dir, exist_ok=True)
+
+# -----------------------------
+# Settings
+# -----------------------------
+SITE_COL = "site"
+GA_COL = "GAGEBRTH_NEW"
+PTB_COL = "PTB"
+
+sns.set_theme(style="whitegrid")
+
+# -----------------------------
+# Continuous features
+# -----------------------------
+for col in contFeat:
+
+    # -------------------------
+    # Scatter: continuous feature vs GA, colored by site
+    # -------------------------
+    plt.figure(figsize=(7, 5))
+
+    sns.scatterplot(
+        data=filtered_data,
+        x=col,
+        y=GA_COL,
+        hue=SITE_COL,
+        alpha=0.6
+    )
+
+    plt.title(f"{col} vs. Gestational Age by Site")
+    plt.xlabel(col)
+    plt.ylabel("Gestational Age at Birth (days)")
+    plt.legend(title="Site", bbox_to_anchor=(1.05, 1), loc="upper left")
+    plt.tight_layout()
+
+    plt.savefig(f"{output_dir}GAGEBRTH_NEWScatter_{col}.All_BySite.png", dpi=300)
+    plt.close()
+
+    # -------------------------
+    # Boxplot: continuous feature by PTB, colored by site
+    # -------------------------
+    plt.figure(figsize=(7, 5))
+
+    sns.boxplot(
+        data=filtered_data,
+        x=PTB_COL,
+        y=col,
+        hue=SITE_COL
+    )
+
+    plt.title(f"{col} by PTB Status and Site")
+    plt.xlabel("PTB Status (0 = Full-term, 1 = Preterm)")
+    plt.ylabel(col)
+    plt.legend(title="Site", bbox_to_anchor=(1.05, 1), loc="upper left")
+    plt.tight_layout()
+
+    plt.savefig(f"{output_dir}PTBBox_{col}.All_BySite.png", dpi=300)
+    plt.close()
+
+
+# -----------------------------
+# Categorical features: PTB rate by category and site
+# -----------------------------
+for col in catigoricalFeat:
+    if col in [target, SITE_COL]:
+        continue
+
+    plot_df = (
+        filtered_data
+        .groupby([col, SITE_COL])[PTB_COL]
+        .agg(["mean", "count"])
+        .reset_index()
+        .rename(columns={"mean": "PTB_Rate", "count": "N"})
+    )
+
+    plot_df["PTB_Rate_Percent"] = plot_df["PTB_Rate"] * 100
+
+    plt.figure(figsize=(9, 5))
+
+    ax = sns.barplot(
+        data=plot_df,
+        x=col,
+        y="PTB_Rate_Percent",
+        hue=SITE_COL
+    )
+
+    plt.xticks(rotation=45, ha="right")
+    plt.ylabel("PTB rate (%)")
+    plt.xlabel(col)
+    plt.title(f"PTB Rate by {col} and Site")
+    plt.legend(title="Site", bbox_to_anchor=(1.05, 1), loc="upper left")
+
+    # Optional N labels above bars
+    for container in ax.containers:
+        ax.bar_label(container, fmt="%.1f", fontsize=8, padding=2)
+
+    plt.tight_layout()
+    plt.savefig(f"{output_dir}PTBRate_By_{col}.All_BySite.png", dpi=300)
+    plt.close()
+
+
+# -----------------------------
+# Categorical features: GA by category and site
+# -----------------------------
+for col in catigoricalFeat:
+    if col in [target, SITE_COL]:
+        continue
+
+    plt.figure(figsize=(9, 5))
+
+    sns.boxplot(
+        data=filtered_data,
+        x=col,
+        y=GA_COL,
+        hue=SITE_COL
+    )
+
+    plt.xticks(rotation=45, ha="right")
+    plt.ylabel("Gestational Age at Birth (days)")
+    plt.xlabel(col)
+    plt.title(f"Gestational Age by {col} and Site")
+    plt.legend(title="Site", bbox_to_anchor=(1.05, 1), loc="upper left")
+    plt.tight_layout()
+
+    plt.savefig(f"{output_dir}GAGEBRTH_NEW_Box_By_{col}.All_BySite.png", dpi=300)
+    plt.close()
+
+print(f"Saved plots to: {output_dir}")
