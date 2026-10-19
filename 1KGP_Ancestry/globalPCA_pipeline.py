@@ -426,8 +426,8 @@ def plot_pca(kg, study, variance_pct, pc_x, pc_y, outfile, title, flagged_ids=No
         ax.scatter(
             g[pc_x],
             g[pc_y],
-            s=18,
-            alpha=0.35,
+            s=16,
+            alpha=0.25,
             label=f"1000G {superpop}"
         )
 
@@ -435,10 +435,11 @@ def plot_pca(kg, study, variance_pct, pc_x, pc_y, outfile, title, flagged_ids=No
         ax.scatter(
             g[pc_x],
             g[pc_y],
-            s=28,
-            alpha=0.70,
+            s=20,
+            alpha=0.30,
             marker="x",
-            label=site
+            label=site,
+            rasterized=True
         )
 
     if flagged_ids is not None:
@@ -506,10 +507,9 @@ def plot_population_pca(kg, study, variance_pct, pc_x, pc_y, outfile, title, sup
             g[pc_x],
             g[pc_y],
             s=28,
-            facecolors="none",
-            edgecolors=f"C{i}",
-            linewidths=1.1,
-            alpha=0.9,
+            color=f"C{i}",
+            alpha=0.25,
+            linewidths=0,
             marker="o",
             label=f"1000G {population}",
             zorder=3
