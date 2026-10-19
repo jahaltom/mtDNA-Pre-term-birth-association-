@@ -21,12 +21,11 @@ conda activate plink
 
 
 
-plink --bfile nDNA_final --keep IDs2.txt --make-bed --out nDNA_final2
+plink2 --bfile nDNA_final --keep IDs2.txt --make-bed --out nDNA_final2
 
 mkdir PCA2
 #Run plink PCA
-plink --bfile nDNA_final2 --pca 10 --out PCA2/cleaned
-
+plink2 --bfile nDNA_final2 --pca 10 --out PCA2/cleaned
 
 
 
@@ -36,7 +35,7 @@ python  scripts/CombinePCA.py
 
 
 
-
+conda activate ML
 
 ##EDA!
 
