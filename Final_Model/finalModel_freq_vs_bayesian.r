@@ -199,8 +199,8 @@ columnCont <- c(
 
 df_raw <- read_tsv(INFILE, show_col_types = FALSE)
 
-ga_mean_raw <- mean(df_raw$GAGEBRTH, na.rm = TRUE)
-ga_sd_raw   <- sd(df_raw$GAGEBRTH, na.rm = TRUE)
+ga_mean_raw <- mean(df_raw$GAGEBRTH_NEW, na.rm = TRUE)
+ga_sd_raw   <- sd(df_raw$GAGEBRTH_NEW, na.rm = TRUE)
 
 
 # ---------------------------------
@@ -235,7 +235,7 @@ df <- df_raw %>%
     ),
 
     # GA outcome scaled
-    GAGEBRTH = as.numeric(scale(GAGEBRTH))
+    GAGEBRTH_NEW = as.numeric(scale(GAGEBRTH_NEW))
   )
 
 
@@ -258,7 +258,7 @@ writeLines(
     paste("Reference:", ref_name),
     paste("Original reference requested:", DEFAULT_Ref),
     paste("Covariates:", covariates),
-    paste("GA formula:", paste("GAGEBRTH ~ MainHap +", covariates)),
+    paste("GA formula:", paste("GAGEBRTH_NEW ~ MainHap +", covariates)),
     paste("PTB formula:", paste("PTB ~ MainHap +", covariates)),
     paste("Raw GA mean:", ga_mean_raw),
     paste("Raw GA SD:", ga_sd_raw)
@@ -383,7 +383,7 @@ ctrl_ptb <- list(adapt_delta = 0.995,  max_treedepth = 13)
 # GA frequentist models: Gaussian + Student-t
 # ============================
 
-ga_formula <- as.formula(paste("GAGEBRTH ~ MainHap +", covariates))
+ga_formula <- as.formula(paste("GAGEBRTH_NEW ~ MainHap +", covariates))
 
 # ---- GA Gaussian ----
 ga_tmb_gaussian <- glmmTMB(
@@ -520,7 +520,7 @@ if (!inherits(emm_ptb, "try-error")) {
 
 # GA (Student-t) on standardized outcome, with back-transform to days
 brm_ga <- brm(
-  as.formula(paste("GAGEBRTH ~ MainHap +", covariates)), 
+  as.formula(paste("GAGEBRTH_NEW ~ MainHap +", covariates)), 
   data = df, family = student(),
   prior = pri_ga,
   chains = 4, iter = 4000, cores = 4,
@@ -825,8 +825,8 @@ site_summary <- df_raw %>%
     n_ptb    = sum(PTB == 1, na.rm = TRUE),
     ptb_rate = mean(PTB == 1, na.rm = TRUE),
 
-    mean_ga  = mean(GAGEBRTH, na.rm = TRUE),
-    sd_ga    = sd(GAGEBRTH, na.rm = TRUE),
+    mean_ga  = mean(GAGEBRTH_NEW, na.rm = TRUE),
+    sd_ga    = sd(GAGEBRTH_NEW, na.rm = TRUE),
 
     across(
       all_of(summary_cont),
