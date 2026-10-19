@@ -3,7 +3,7 @@ import numpy as np
  
         
 
-###########The subject ID in samples.tab  is BABY, PArticipant and ORIG_ID in momi_combined.data.tsv!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 #Read in metadata
 df=pd.read_csv('momi_mothers_ultimate.csv')  
