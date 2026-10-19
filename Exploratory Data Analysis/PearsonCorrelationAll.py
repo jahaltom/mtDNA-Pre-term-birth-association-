@@ -5,13 +5,13 @@ import sys
 import json
 
 
-with open("scripts/features.json") as f:
+with open("../scripts/features.json") as f:
     features = json.load(f)
 
 continuous_columns = features["continuous"]
 continuous_columns=continuous_columns + ["PC1", "PC2", "PC3", "PC4", "PC5"]
 
-with open("scripts/CategoricalVariables.json") as f:
+with open("../scripts/CategoricalVariables.json") as f:
     features = json.load(f)
 
 categorical_columns = features["categorical_to_keep"]
