@@ -20,7 +20,7 @@ dfFinal.to_csv("Metadata.Final.tsv", index=False,sep="\t")
 
 
 
-######PCA/MDS plots
+######PCA plots
 
 # Read eigenvalues
 eigenvalues = pd.read_csv("PCA2/cleaned.eigenval", header=None)
