@@ -35,7 +35,7 @@ python  scripts/CombinePCA.py
 
 
 
-conda activate ML
+
 
 ##EDA!
 
