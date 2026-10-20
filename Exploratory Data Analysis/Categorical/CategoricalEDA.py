@@ -41,7 +41,7 @@ for column in categorical_columns:
         cramers_v_value = cramers_v(contingency_table)
         results.append((column, 'Chi2', p, cramers_v_value))
     # ANOVA and Kruskal-Wallis
-    groups = [df[df[column] == level]['GAGEBRTH'].dropna() for level in df[column].unique()]
+    groups = [df[df[column] == level]['GAGEBRTH_NEW_NEW'].dropna() for level in df[column].unique()]
     if len(groups) > 1:
         anova_p = f_oneway(*groups).pvalue if all(len(g) > 1 for g in groups) else None
         kruskal_p = kruskal(*groups).pvalue if all(len(g) > 1 for g in groups) else None
@@ -59,7 +59,7 @@ for test_type in ['Chi2', 'ANOVA', 'Kruskal-Wallis','Fisher']:
 results_df.to_csv("Categorical_Analysis_Results.csv", index=False)
 
 
-df=df[categorical_columns  + ["PTB","GAGEBRTH"]]
+df=df[categorical_columns  + ["PTB","GAGEBRTH_NEW_NEW"]]
 
 
 
