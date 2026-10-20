@@ -5,10 +5,12 @@ import sys
 import json
 
 
-with open("../scripts/features.json") as f:
-    features = json.load(f)
-
-continuous_columns = features["continuous"]
+with open("../SurvivingFeatures_Continuous.txt") as f:
+    continuous_columns = [
+        line.strip()
+        for line in f
+        if line.strip()
+    ]
 continuous_columns=continuous_columns + ["PC1", "PC2", "PC3", "PC4", "PC5"]
 
 with open("../scripts/CategoricalVariables.json") as f:
