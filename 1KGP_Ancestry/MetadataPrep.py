@@ -1522,12 +1522,23 @@ momi[
 
 # ============================================================
 # ZAMBIA SUBCOHORT IN MOMI
+#
+# IMPORTANT:
+# Only classify pregnancies that actually belong to
+# GAPPS-Zambia. Other sites can have ORIG_ID values beginning
+# with 17 or 30, so prefix alone cannot define Zambia.
 # ============================================================
 
-momi[
+momi["Zambia_subcohort"] = pd.NA
+
+zambia_momi = momi["site"].eq("GAPPS-Zambia")
+
+momi.loc[
+    zambia_momi,
     "Zambia_subcohort"
 ] = (
-    momi[
+    momi.loc[
+        zambia_momi,
         "merge_ORIG_ID"
     ]
     .apply(
@@ -1535,11 +1546,11 @@ momi[
     )
 )
 
-
-mz = momi[
-    "Zambia_subcohort"
-].notna()
-
+mz = (
+    zambia_momi
+    &
+    momi["Zambia_subcohort"].notna()
+)
 
 momi.loc[
     mz,
@@ -1550,7 +1561,6 @@ momi.loc[
         "Zambia_subcohort"
     ]
 )
-
 
 # ============================================================
 # VERIFY MOMI KEY UNIQUENESS
@@ -1631,7 +1641,21 @@ if len(mother_dup) > 0:
         "See mother_duplicate_keys.tsv."
     )
 
+# ============================================================
+# DEBUG: SAVE EXACT DATAFRAMES ENTERING MOMI-MOTHER MERGE
+# ============================================================
 
+momi.to_csv(
+    "DEBUG_momi_immediately_before_merge.csv",
+    index=False
+)
+
+mothers.to_csv(
+    "DEBUG_mothers_immediately_before_merge.csv",
+    index=False
+)
+
+print("\nSaved exact pre-merge MOMI and mother dataframes.")
 # ============================================================
 # MERGE MOMI WITH MOTHERS
 # ============================================================
