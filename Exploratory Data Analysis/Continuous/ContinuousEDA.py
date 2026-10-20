@@ -22,7 +22,7 @@ continuous_vars = continuous_columns + ["PC1","PC2","PC3","PC4","PC5","PC6","PC7
 
 # Subset  continuous variables. Add in haplogroups (one-hot encoded)
 haplogroups= pd.get_dummies(df[sys.argv[1]], drop_first=False).columns.to_list()
-df = pd.concat([df[continuous_vars + ['PTB', 'GAGEBRTH']], pd.get_dummies(df[sys.argv[1]], drop_first=False).astype(int)],axis=1)
+df = pd.concat([df[continuous_vars + ['PTB', 'GAGEBRTH_NEW']], pd.get_dummies(df[sys.argv[1]], drop_first=False).astype(int)],axis=1)
 
 
 
@@ -35,7 +35,7 @@ dfCont = df.copy(deep=True)
 output_dir = "plots/"
 os.makedirs(output_dir, exist_ok=True)
 
-# Compute and visualize correlation matrix for GAGEBRTH
+# Compute and visualize correlation matrix for GAGEBRTH_NEW
 plt.figure(figsize=(12, 10))
 corr_matrix = dfCont.corr()
 sns.heatmap(corr_matrix, annot=False, cmap='coolwarm', center=0)
@@ -72,17 +72,17 @@ df_results = pd.DataFrame({
 })
 df_results.to_csv("Point-Biserial-PTB.csv", index=False)
 
-# Analyze Pearson Correlation for GAGEBRTH (Continuous Target)
-print("\nPearson Correlation with GAGEBRTH (Continuous Target):")
+# Analyze Pearson Correlation for GAGEBRTH_NEW (Continuous Target)
+print("\nPearson Correlation with GAGEBRTH_NEW (Continuous Target):")
 p_values_ga = []
 r_values_ga = []
 for col in continuous_vars:
-    r, p = pearsonr(dfCont['GAGEBRTH'], dfCont[col])
+    r, p = pearsonr(dfCont['GAGEBRTH_NEW'], dfCont[col])
     p_values_ga.append(p)
     r_values_ga.append(r)
 
 
-# Apply Bonferroni Correction for GAGEBRTH
+# Apply Bonferroni Correction for GAGEBRTH_NEW
 corrected_ga = multipletests(p_values_ga, alpha=0.05, method='bonferroni')
 print("\nCorrected P-Values (Bonferroni):")
 df_results = pd.DataFrame({
@@ -92,7 +92,7 @@ df_results = pd.DataFrame({
     'corrected_p_value': corrected_ga[1],
     'significant': corrected_ga[0]
 })
-df_results.to_csv("PearsonCorr-GAGEBRTH.csv", index=False)
+df_results.to_csv("PearsonCorr-GAGEBRTH_NEW.csv", index=False)
 
 
 
@@ -105,14 +105,14 @@ significant_vars=set(significant_vars)
 
 
 for col in significant_vars:
-    # Scatter plots for GAGEBRTH
+    # Scatter plots for GAGEBRTH_NEW
     plt.figure(figsize=(6, 4))
-    sns.regplot(x=df[col], y=df['GAGEBRTH'], scatter_kws={'alpha': 0.6})
-    plt.title(f"{col} vs. GAGEBRTH")
+    sns.regplot(x=df[col], y=df['GAGEBRTH_NEW'], scatter_kws={'alpha': 0.6})
+    plt.title(f"{col} vs. GAGEBRTH_NEW")
     plt.xlabel(col)
-    plt.ylabel("GAGEBRTH (Gestational Age in Days)")
+    plt.ylabel("GAGEBRTH_NEW (Gestational Age in Days)")
     plt.tight_layout()
-    plt.savefig(f"{output_dir}GAGEBRTHScatter_{col}.png")
+    plt.savefig(f"{output_dir}GAGEBRTH_NEWScatter_{col}.png")
     plt.close()
     # Box plots for PTB
     plt.figure(figsize=(6, 4))
