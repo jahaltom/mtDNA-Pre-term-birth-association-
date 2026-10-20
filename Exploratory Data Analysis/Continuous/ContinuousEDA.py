@@ -12,7 +12,7 @@ import json
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
 
-with open("SurvivingFeatures_Continuous.txt") as f:
+with open("../../SurvivingFeatures_Continuous.txt") as f:
     continuous_columns = [
         line.strip()
         for line in f
