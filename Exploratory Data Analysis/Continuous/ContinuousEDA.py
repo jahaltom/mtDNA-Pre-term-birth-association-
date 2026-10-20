@@ -12,10 +12,12 @@ import json
 df = pd.read_csv("Metadata.Final.tsv", sep='\t')
 
 
-with open("../../scripts/features.json") as f:
-    features = json.load(f)
-
-continuous_columns = features["continuous"]
+with open("SurvivingFeatures_Continuous.txt") as f:
+    continuous_columns = [
+        line.strip()
+        for line in f
+        if line.strip()
+    ]
 
 # Define continuous variables
 continuous_vars = continuous_columns + ["PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10"]
