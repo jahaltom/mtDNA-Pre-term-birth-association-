@@ -532,6 +532,65 @@ def plot_population_pca(kg, study, variance_pct, pc_x, pc_y, outfile, title, sup
     plt.close()
 
     print("Saved plot:", outfile)
+# ============================================================
+# PLOT 1000G ONLY - COLORED BY SUPERPOPULATION
+# ============================================================
+
+def plot_1000g_superpop_only(
+    kg,
+    variance_pct,
+    pc_x,
+    pc_y,
+    outfile,
+    title
+):
+
+    pc_x_index = int(pc_x.replace("PC", "")) - 1
+    pc_y_index = int(pc_y.replace("PC", "")) - 1
+
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    for superpop, g in kg.groupby("Superpopulation"):
+
+        ax.scatter(
+            g[pc_x],
+            g[pc_y],
+            s=20,
+            alpha=0.35,
+            marker="o",
+            linewidths=0,
+            label=superpop,
+            rasterized=True
+        )
+
+    ax.set_xlabel(
+        f"{pc_x} ({variance_pct[pc_x_index]:.2f}%)"
+    )
+
+    ax.set_ylabel(
+        f"{pc_y} ({variance_pct[pc_y_index]:.2f}%)"
+    )
+
+    ax.set_title(title)
+
+    ax.legend(
+        title="1KGP Superpopulation",
+        bbox_to_anchor=(1.02, 1),
+        loc="upper left",
+        fontsize=9
+    )
+
+    plt.tight_layout()
+
+    plt.savefig(
+        outfile,
+        dpi=300,
+        bbox_inches="tight"
+    )
+
+    plt.close()
+
+    print("Saved 1000G-only superpopulation plot:", outfile)
 def print_pca_summary(pca, kg, study, unknown):
     print("\n========================================")
     print("1000G REFERENCE PCA PROJECTION SUMMARY")
@@ -575,6 +634,28 @@ eigenvalues, variance_pct = read_eigenvalues(EIGENVAL_FILE)
 pca, kg, study, unknown = label_projected_pca(pca, meta, panel)
 
 print_pca_summary(pca, kg, study, unknown)
+# ============================================================
+# 1000G-ONLY SUPERPOPULATION PCA PLOTS
+# ============================================================
+
+kg_superpop_plot_pairs = [
+    ("PC1", "PC2"),
+    ("PC1", "PC3"),
+    ("PC2", "PC3"),
+    ("PC1", "PC4"),
+    ("PC2", "PC4")
+]
+
+for pc_x, pc_y in kg_superpop_plot_pairs:
+
+    plot_1000g_superpop_only(
+        kg=kg,
+        variance_pct=variance_pct,
+        pc_x=pc_x,
+        pc_y=pc_y,
+        outfile=OUTDIR / f"1000G_ONLY_SUPERPOP_{pc_x}_{pc_y}.png",
+        title=f"1000 Genomes superpopulations: {pc_x} vs {pc_y}"
+    )
 
 pca.to_csv(
     OUTDIR / "initial_1000G_projection_labeled.csv",
