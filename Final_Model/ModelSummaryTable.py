@@ -18,8 +18,11 @@ rate_file = "hap_site_ptb_table.csv"
 # -----------------------
 populations = [
     "African",
-    "AMANHI-Pemba",
-    "GAPPS-Zambia"
+    "GAPPS-Zambia",
+    "IPOP",
+    "ZAPPS1",
+    "ZAPPS2",
+    "AMANHI-Pemba"
 ]
 # populations = [
 #     "AMANHI-Bangladesh",
