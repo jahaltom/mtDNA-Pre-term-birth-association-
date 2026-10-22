@@ -55,26 +55,44 @@ plink2 \
   --maf 0.01 \
   --hwe 1e-6 midp \
   --threads 8 \
-  --make-bed --out nDNA_final > qc.log 2>&1
+  --make-bed --out nDNA_cleaned > qc.log 2>&1
 
 
 
-mkdir PCA
+#mkdir PCA
 # PCA for ancestry covariates
-plink2 --bfile nDNA_final --pca 10 --out PCA/out
+#plink2 --bfile nDNA_cleaned --pca 10 --out PCA/out
 
 # QC summary stats
-plink2 --bfile nDNA_final --missing --freq --out nDNA_stats
+plink2 --bfile nDNA_cleaned --missing --freq --out nDNA_stats
+
 
 
 
 
 conda activate ML
-python ../scripts/outlierPCA.py
+#python ../scripts/outlierPCA.py
+
+
+python - <<'PY'
+import pandas as pd
+
+meta = pd.read_csv("Metadata.MissRem.tsv", sep="\t")
+fam = pd.read_csv("nDNA_cleaned.fam", sep=r"\s+", header=None)
+
+keep = set(fam[1].astype(str))
+meta = meta[meta["id"].astype(str).isin(keep)].copy()
+
+meta.to_csv("Metadata.cleaned.tsv", sep="\t", index=False)
+
+print("Kept:", len(meta))
+PY
+
+
 
 
 # Call the Python script with the column string as an argument
-python ../scripts/WeibullFiltering.2.py  "$columnCat_string" "$columnCont_string" "$target"> out.txt
+python ../scripts/WeibullFiltering.py  "Final" "$target" "$columnCat_string" "$columnCont_string" > out.txt
 
 
 
@@ -86,11 +104,11 @@ conda activate plink
 
 
 
-plink2 --bfile nDNA_final --keep IDs2.txt --make-bed --out nDNA_final2
+plink2 --bfile nDNA_cleaned --keep IDs2.txt --make-bed --out nDNA_final
 
-mkdir -p PCA2
+mkdir -p PCA
 #Run plink PCA
-plink2  --bfile nDNA_final2 --pca 10 --out PCA2/cleaned
+plink2  --bfile nDNA_final --pca 10 --out PCA/out
 
 
 
