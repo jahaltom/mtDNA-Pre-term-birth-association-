@@ -42,8 +42,22 @@ upper_cutoff = weibull_min.ppf(0.99, shape, loc=loc, scale=scale)  # 99th percen
 print(f"Lower Cutoff: {lower_cutoff}, Upper Cutoff: {upper_cutoff}")
 
 # Step 3: Filter the data
-filtered_data = md[(md["GAGEBRTH_NEW"] >= lower_cutoff) & (md["GAGEBRTH_NEW"] <= upper_cutoff)]
+#filtered_data = md[(md["GAGEBRTH_NEW"] >= lower_cutoff) & (md["GAGEBRTH_NEW"] <= upper_cutoff)]
 
+# ============================================================
+# PRIMARY PTB ANALYSIS
+# Keep biologically plausible gestational ages
+# Do NOT remove true extreme PTB cases using Weibull percentiles
+# ============================================================
+
+filtered_data = md[
+    md["GAGEBRTH_NEW"].between(140, 300)
+].copy()
+
+print(
+    "Removed implausible GA values:",
+    len(md) - len(filtered_data)
+)
 
 
 
