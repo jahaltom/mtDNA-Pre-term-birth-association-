@@ -20,7 +20,7 @@ Takes in (momi_mothers_ultimate.csv), and assigns main/sub-haplogroups. It sets 
 ```
 python  scripts/MetadataMerge.py
 ```
-Takes in Metadata.M.tsv and assesses missingness in selected metadata features by study site. Features with >90% missingness in any site are excluded and the surviving feature list is saved to SurvivingFeatures_Categorical.txt and SurvivingFeatures_Continuous.txt. A missingness heatmap is generated (MissingDataHeatmap.png). Samples missing GAGEBRTH_NEW, PTB, or any surviving feature are removed. The filtered metadata are saved as Metadata.MissRem.tsv, and IDs.txt is created for downstream PCA/PLINK analysis. Uses features.json to specify categorical and continuous features.
+Takes in Metadata.M.tsv and assesses missingness in selected metadata features by study site. Uses features.json to specify selected categorical and continuous features. Features with >90% missingness in any site are excluded and the surviving feature list is saved to SurvivingFeatures_Categorical.txt and SurvivingFeatures_Continuous.txt. A missingness heatmap is generated (MissingDataHeatmap.png). Samples missing GAGEBRTH_NEW, PTB, or any surviving feature are removed. The filtered metadata are saved as Metadata.MissRem.tsv, and IDs.txt is created for downstream PCA/PLINK analysis. 
 
 ```
 python scripts/MissingData.py
@@ -30,7 +30,7 @@ python scripts/MissingData.py
 
 
 #### workflow.sh
-- Specify target (MainHap,SubHap,SuperHap). 
+- Specify target (MainHap,SubHap,SuperHap) and run. 
 ```
 target="MainHap"
 sed -i "s/TARGET/$target/g" workflow.sh
@@ -54,7 +54,7 @@ sbatch workflow.sh
 | `--out nDNA_final`        | prefix              | output name for filtered data      |
 
 - Makes qc.log and QC summery stats file nDNA_stats
-- Fits a Weibull distribution to GAGEBRTH_NEW, defines 1st and 99th percentile cutoffs, and filters samples outside this range. It summarizes pre-term vs. normal birth counts per categorical class, removes low-count classes (<20 total) or where there is not at least 1 term and 1 pre-term birth, and drops categorical variables entirely if only one class would remain. It reports which categorical variables are retained for workflow2.sh and PTB #s(in CategoricalVariablesToKeepTable.tsv), flags binary variables and multi-class categorical for feature selection, and outputs Weibull parameters, cutoffs, and plots. For the multi-site analysis: Haplogroup must be present in ALL sites,in EACH site: >= 5 total, >= 1 PTB, >= 1 term births, and overall across all sites: >= 20 total, >= 4 PTB.
+- Fits a Weibull distribution to GAGEBRTH_NEW, defines 1st and 99th percentile cutoffs. It summarizes pre-term vs. normal birth counts per categorical class, removes low-count classes (<20 total) or where there is not at least 1 term and 1 pre-term birth, and drops categorical variables entirely if only one class would remain. It reports which categorical variables are retained for workflow2.sh and PTB #s(in CategoricalVariablesToKeepTable.tsv), flags binary variables and multi-class categorical for feature selection, and outputs Weibull parameters, cutoffs, and plots. For the multi-site analysis: Haplogroup must be present in ALL sites,in EACH site: >= 5 total, >= 1 PTB, >= 1 term births, and overall across all sites: >= 20 total, >= 4 PTB.
 For the single-site analysis:overall: >= 20 total and >= 4 PTB. Finally, it saves the filtered metadata (Metadata.Weibull.tsv), writes IDs2.txt for downstream nDNA selection,a FinalCategoricalClassSummary.tsv is also produced, and plots both filtered/unfiltered distributions and all continuous and categorical features are ploted against PTB and GAGEBRTH_NEW (in plotsAll) labeled by site. Makes a report (out.txt) which will indicate which variables to keep/exclude in future modeling. Also makes json files used later. 
 - Subset nDNA plink files by selecting for samples from previous dataset (IDs2.txt). 
 - Runs plink PCA (Outputs results into PCA)
