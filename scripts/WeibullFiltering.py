@@ -13,24 +13,29 @@ pd.set_option('display.max_rows', None)
 # Show all columns
 pd.set_option('display.max_columns', None)
 
-# Read surviving categorical features
-with open("SurvivingFeatures_Categorical.txt") as f:
-    catigoricalFeat = [
-        line.strip()
-        for line in f
-        if line.strip()
-    ]
 
-# Read surviving continuous features
-with open("SurvivingFeatures_Continuous.txt") as f:
-    contFeat = [
-        line.strip()
-        for line in f
-        if line.strip()
-    ]
-
+if sys.argv[1] == "Inital":
+    # Read surviving categorical features
+    with open("SurvivingFeatures_Categorical.txt") as f:
+        catigoricalFeat = [
+            line.strip()
+            for line in f
+            if line.strip()
+        ]
+    
+    # Read surviving continuous features
+    with open("SurvivingFeatures_Continuous.txt") as f:
+        contFeat = [
+            line.strip()
+            for line in f
+            if line.strip()
+        ]
+else:
+    catigoricalFeat= [item for item in sys.argv[3].split(',') if item != '']  #
+    contFeat= [item for item in sys.argv[4].split(',') if item != '']  #
+    
 # Target haplogroup variable still comes from command-line argument 1
-target = sys.argv[1]
+target = sys.argv[2]
 
 # Make sure target is included in categorical features
 if target not in catigoricalFeat:
