@@ -53,7 +53,7 @@ python scripts/WeibullFiltering.py "Inital" "$target" > out.txt
 
 
 
-
+conda activate plink
 
 plink2 --bfile nDNA_cleaned --keep IDs2.txt --make-bed --out nDNA_final
 
