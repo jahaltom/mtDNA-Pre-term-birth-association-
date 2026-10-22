@@ -20,7 +20,7 @@ Takes in (momi_mothers_ultimate.csv), and assigns main/sub-haplogroups. It sets 
 ```
 python  scripts/MetadataMerge.py
 ```
-Assesses missingness in selected metadata features by study site. Features with >90% missingness in any site are excluded and the surviving feature list is saved to SurvivingFeatures_Categorical.txt and SurvivingFeatures_Continuous.txt. A missingness heatmap is generated (MissingDataHeatmap.png). Samples missing GAGEBRTH_NEW, PTB, or any surviving feature are removed. The filtered metadata are saved as Metadata.MissRem.tsv, and IDs.txt is created for downstream PCA/PLINK analysis. Uses features.json to specify categorical and continuous features.
+Takes in Metadata.M.tsv and assesses missingness in selected metadata features by study site. Features with >90% missingness in any site are excluded and the surviving feature list is saved to SurvivingFeatures_Categorical.txt and SurvivingFeatures_Continuous.txt. A missingness heatmap is generated (MissingDataHeatmap.png). Samples missing GAGEBRTH_NEW, PTB, or any surviving feature are removed. The filtered metadata are saved as Metadata.MissRem.tsv, and IDs.txt is created for downstream PCA/PLINK analysis. Uses features.json to specify categorical and continuous features.
 
 ```
 python scripts/MissingData.py
@@ -53,39 +53,13 @@ sbatch workflow.sh
 | `--make-bed`              | output              | writes new binary dataset          |
 | `--out nDNA_final`        | prefix              | output name for filtered data      |
 
-- Runs plink PCA
 - Makes qc.log and QC summery stats file nDNA_stats
-- PCA outlieres removed
-	- 	Calculates site-wise Euclidean distance (Using top N PCs needed to reach ~85% variance). Flags the top 5% as outliers per site
-	- 	Creates a before/after PCA plot
 - Fits a Weibull distribution to GAGEBRTH_NEW, defines 1st and 99th percentile cutoffs, and filters samples outside this range. It summarizes pre-term vs. normal birth counts per categorical class, removes low-count classes (<20 total) or where there is not at least 1 term and 1 pre-term birth, and drops categorical variables entirely if only one class would remain. It reports which categorical variables are retained for workflow2.sh and PTB #s(in CategoricalVariablesToKeepTable.tsv), flags binary variables and multi-class categorical for feature selection, and outputs Weibull parameters, cutoffs, and plots. For the multi-site analysis: Haplogroup must be present in ALL sites,in EACH site: >= 5 total, >= 1 PTB, >= 1 term births, and overall across all sites: >= 20 total, >= 4 PTB.
 For the single-site analysis:overall: >= 20 total and >= 4 PTB. Finally, it saves the filtered metadata (Metadata.Weibull.tsv), writes IDs2.txt for downstream nDNA selection,a FinalCategoricalClassSummary.tsv is also produced, and plots both filtered/unfiltered distributions and all continuous and categorical features are ploted against PTB and GAGEBRTH_NEW (in plotsAll) labeled by site. Makes a report (out.txt) which will indicate which variables to keep/exclude in future modeling. Also makes json files used later. 
-
-
-
-#### workflow2.sh
-- Looking at out.txt from above, place "Categorical variables to keep for workflow2.sh" in columnCat below.
-- Look for outliers in categorical/continuous features in plotsAll. 
-- Carry same continuous features down from input into workflow.sh.
-- Update workflow2.sh and run.
-- Specify target (MainHap,SubHap, PhyloHap)
-```
-columnCat="('TYP_HOUSE','HH_ELECTRICITY','TOILET','WEALTH_INDEX','THYROID','CHRON_HTN','DIABETES','TB','FUEL_FOR_COOK','MainHap','DRINKING_SOURCE','BABY_SEX','population','site')"
-columnCont="('PW_AGE','PW_EDUCATION','MAT_HEIGHT','MAT_WEIGHT','BMI')"
-target="MainHap"
-
-sed -i "s/CAT/$columnCat/g" workflow2.sh
-sed -i "s/CONT/$columnCont/g" workflow2.sh
-sed -i "s/TARGET/$target/g" workflow2.sh
-
-sbatch workflow2.sh
-```
-
-
 - Subset nDNA plink files by selecting for samples from previous dataset (IDs2.txt). 
-- Runs plink PCA (Outputs results into PCA2)
+- Runs plink PCA (Outputs results into PCA)
 - Combine PCA results with metadata and plot PCA
-##### Launches Exploratory Data Analysis (EDA)!
+- Launches Exploratory Data Analysis (see Exploratory Data Analysis directory)
 
 
 #### Feature Selection 
