@@ -49,7 +49,7 @@ plink2  \
 
 conda activate ML
 
-python scripts/WeibullFiltering.py "$target" > out.txt
+python scripts/WeibullFiltering.py "Inital" "$target" > out.txt
 
 
 
