@@ -30,6 +30,10 @@ if sys.argv[1] == "Inital":
             for line in f
             if line.strip()
         ]
+    # Add PC1–PC10
+    for pc in [f"PC{i}" for i in range(1, 11)]:
+        if pc not in contFeat:
+            contFeat.append(pc)
 else:
     catigoricalFeat= [item for item in sys.argv[3].split(',') if item != '']  #
     contFeat= [item for item in sys.argv[4].split(',') if item != '']  #
