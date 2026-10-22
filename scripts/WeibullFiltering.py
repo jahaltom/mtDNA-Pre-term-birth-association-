@@ -36,7 +36,7 @@ target = sys.argv[1]
 if target not in catigoricalFeat:
     catigoricalFeat.append(target)
 
-md =pd.read_csv("MetadataOutlierRemoved.tsv",sep='\t')
+md =pd.read_csv("Metadata.cleaned.tsv",sep='\t')
 
 
 
