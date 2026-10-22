@@ -28,19 +28,8 @@ plink2  \
   --hwe 1e-6 midp \
   --threads 8 \
   --make-bed \
-  --out nDNA_final > qc.log 2>&1
+  --out nDNA_cleaned > qc.log 2>&1
 
-
-# ============================================================
-# PCA
-# ============================================================
-
-mkdir -p PCA
-
-plink2  \
-  --bfile nDNA_final \
-  --pca 10 \
-  --out PCA/out
 
 
 # ============================================================
@@ -48,7 +37,7 @@ plink2  \
 # ============================================================
 
 plink2  \
-  --bfile nDNA_final \
+  --bfile nDNA_cleaned \
   --missing \
   --freq \
   --out nDNA_stats
@@ -60,6 +49,40 @@ plink2  \
 
 conda activate ML
 
-python scripts/outlierPCA.py
-
 python scripts/WeibullFiltering.py "$target" > out.txt
+
+
+
+
+
+plink2 --bfile nDNA_cleaned --keep IDs2.txt --make-bed --out nDNA_final
+
+mkdir PCA
+#Run plink PCA
+plink2 --bfile nDNA_final --pca 10 --out PCA/out
+
+
+
+conda activate ML
+python  scripts/CombinePCA.py
+
+
+
+
+
+
+##EDA!
+
+cp Metadata.Final.tsv "Exploratory Data Analysis"
+cd "Exploratory Data Analysis"
+python PearsonCorrelationAll.py 
+
+mv Metadata.Final.tsv Continuous/
+cd Continuous
+python ContinuousEDA.py "$target"
+
+mv Metadata.Final.tsv ../Categorical/
+cd ../Categorical
+python CategoricalEDA.py
+rm Metadata.Final.tsv
+
