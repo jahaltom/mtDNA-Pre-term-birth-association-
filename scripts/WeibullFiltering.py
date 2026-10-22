@@ -191,11 +191,13 @@ categorical_json = {
     "multiclass_categorical": columns_with_moreThantwo_classes
 }
 
-with open("scripts/CategoricalVariables.json", "w") as f:
-    json.dump(categorical_json, f, indent=2)
 
-print("Saved: CategoricalVariables.json")
-
+if sys.argv[1] == "Inital":
+    with open("scripts/CategoricalVariables.json", "w") as f:
+        json.dump(categorical_json, f, indent=2)
+    
+    print("Saved: CategoricalVariables.json")
+    
 
 
 
