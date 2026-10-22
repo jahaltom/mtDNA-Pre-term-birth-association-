@@ -44,14 +44,18 @@ df["BMI"] = np.where(
 
 
 
-# Function to categorize population based on site
-def categorize_population(site):
-    if 'Pemba' in site or 'Zambia' in site:
-        return 'African'
-    else:
-        return 'South Asian'
-# Apply function to create a new column
-df['population'] = df['site'].apply(categorize_population)
+AFRICAN_SITES = {
+    "AMANHI-Pemba",
+    "IPOP",
+    "ZAPPS1",
+    "ZAPPS2",
+}
+
+df["population"] = np.where(
+    df["site"].isin(AFRICAN_SITES),
+    "African",
+    "South Asian"
+)
 
 
 
