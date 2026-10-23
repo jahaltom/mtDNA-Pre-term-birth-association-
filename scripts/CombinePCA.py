@@ -6,13 +6,11 @@ import numpy as np
 
 
 
-header=["FID","IID"]+[f"PC{i}" for i in range(1, 11)]
-pca = pd.read_csv("PCA/out.eigenvec",sep='\s+',header=None)
-pca.columns=header
-pca = pca.drop(columns=['FID'])
+
+pca = pd.read_csv("PCA/out.eigenvec",sep='\s+')
+pca = pca.drop(columns=['#FID'])
 pca = pca.rename(columns={"IID":"id"})
 md = pd.read_csv("Metadata.Weibull.tsv",sep='\t')  
-md = md.drop(columns=[f"PC{i}" for i in range(1, 11)])
 dfFinal=pd.merge(md,pca,on=["id"])     
 dfFinal.to_csv("Metadata.Final.tsv", index=False,sep="\t") 
 
