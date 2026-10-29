@@ -150,7 +150,7 @@ categorical_to_keep = sorted(
     ]["Column"].unique().tolist()
 )
 
-print("Categorical variables to keep for workflow2.sh")
+print("Categorical variables to keep for EDA")
 print(categorical_to_keep)
 
 # Count the number of unique classes for each categorical variable
