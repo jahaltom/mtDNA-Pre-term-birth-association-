@@ -54,8 +54,18 @@ sbatch workflow.sh
 | `--out nDNA_final`        | prefix              | output name for filtered data      |
 
 - Makes qc.log and QC summery stats file nDNA_stats
-- Fits a Weibull distribution to GAGEBRTH_NEW, defines 1st and 99th percentile cutoffs. It summarizes pre-term vs. normal birth counts per categorical class, removes low-count classes (<20 total) or where there is not at least 1 term and 1 pre-term birth, and drops categorical variables entirely if only one class would remain. It reports which categorical variables are retained for workflow2.sh and PTB #s(in CategoricalVariablesToKeepTable.tsv), flags binary variables and multi-class categorical for feature selection, and outputs Weibull parameters, cutoffs, and plots. For the multi-site analysis: Haplogroup must be present in ALL sites,in EACH site: >= 5 total, >= 1 PTB, >= 1 term births, and overall across all sites: >= 20 total, >= 4 PTB.
-For the single-site analysis:overall: >= 20 total and >= 4 PTB. Finally, it saves the filtered metadata (Metadata.Weibull.tsv), writes IDs2.txt for downstream nDNA selection,a FinalCategoricalClassSummary.tsv is also produced, and plots both filtered/unfiltered distributions and all continuous and categorical features are ploted against PTB and GAGEBRTH_NEW (in plotsAll) labeled by site. Makes a report (out.txt) which will indicate which variables to keep/exclude in future modeling. Also makes json files used later. 
+- Subsets Metadata.MissRem.tsv to match plink samples above and saves ot Metadata.cleaned.tsv., 
+
+
+- Initial run: reads candidate categorical and continuous features from SurvivingFeatures_Categorical.txt and SurvivingFeatures_Continuous.txt. Final-model runs: use user-specified feature lists supplied by finalModel.sh.
+- Fits a Weibull distribution to GAGEBRTH_NEW and reports the fitted parameters and 1st/99th percentile cutoffs for diagnostic purposes only. Weibull percentiles are not used to exclude samples. Samples are restricted only to biologically plausible gestational ages of 140–300 days.   
+- Evaluates support for non-target categorical variables. Classes with <20 observations or without at least one PTB and one term birth are excluded. Categorical variables are excluded from downstream feature selection if fewer than two supported classes remain. Retained categorical variables are classified as binary or multiclass and written to JSON/summary files.
+- Applies separate support criteria to the target haplogroup variable. For multi-site analyses, a haplogroup must be present in every site and have ≥5 samples, ≥1 PTB, and ≥1 term birth within each site, plus ≥20 samples and ≥4 PTBs overall. For single-site analyses, haplogroups require ≥20 samples and ≥4 PTBs overall.
+- Saves the resulting metadata as Metadata.Weibull.tsv and writes IDs2.txt for downstream nDNA subsetting. CategoricalVariablesToKeepTable.tsv and FinalCategoricalClassSummary.tsv contain categorical-variable and PTB-count summaries.
+- Generates diagnostic plots of gestational age, PTB status, continuous features, and categorical features, stratified by site, in plotsAll/. A summary of retained/excluded variables and target haplogroups is written to out.txt.
+
+
+
 - Subset nDNA plink files by selecting for samples from previous dataset (IDs2.txt). 
 - Runs plink PCA (Outputs results into PCA)
 - Combine PCA results with metadata and plot PCA
