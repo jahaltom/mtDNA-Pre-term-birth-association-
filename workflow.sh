@@ -43,13 +43,28 @@ plink2  \
   --out nDNA_stats
 
 
+conda activate ML 
+python - <<'PY'
+import pandas as pd
+
+meta = pd.read_csv("Metadata.MissRem.tsv", sep="\t")
+fam = pd.read_csv("nDNA_cleaned.fam", sep=r"\s+", header=None)
+
+keep = set(fam[1].astype(str))
+meta = meta[meta["id"].astype(str).isin(keep)].copy()
+
+meta.to_csv("Metadata.cleaned.tsv", sep="\t", index=False)
+
+print("Kept:", len(meta))
+PY
+
 # ============================================================
 # PYTHON STEPS
 # ============================================================
 
-conda activate ML
 
-python scripts/WeibullFiltering.py "Inital" "$target" > out.txt
+
+python scripts/DataFiltering.py "Initial" "$target" > out.txt
 
 
 
