@@ -188,7 +188,7 @@ categorical_json = {
 }
 
 
-if sys.argv[1] == "Inital":
+if sys.argv[1] == "Initial":
     with open("scripts/CategoricalVariables.json", "w") as f:
         json.dump(categorical_json, f, indent=2)
     
