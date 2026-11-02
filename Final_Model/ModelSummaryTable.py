@@ -78,7 +78,22 @@ def prep_rate_table(rate_path, population_name):
         rate_df["population"] = "African"
         rate_df["ptb_rate"] = rate_df["n_ptb"] / rate_df["n_total"]
         
+
+    if population_name == "GAPPS-Zambia":
+        rate_df = (
+            rate_df
+            .groupby("haplogroup", as_index=False)
+            .agg(
+                n_total=("n_total", "sum"),
+                n_ptb=("n_ptb", "sum")
+            )
+        )
     
+        rate_df["population"] = "GAPPS-Zambia"
+        rate_df["ptb_rate"] = (
+            rate_df["n_ptb"] /
+            rate_df["n_total"]
+        )
     if population_name == "BangladeshCombo":
         rate_df = (
             rate_df
