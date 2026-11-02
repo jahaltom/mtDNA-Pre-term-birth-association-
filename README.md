@@ -30,11 +30,13 @@ python scripts/MissingData.py
 
 
 #### workflow.sh
-- Specify target (MainHap,SubHap,SuperHap) and run. 
+- Specify target (MainHap,SubHap,SuperHap) and run.
+  
 ```
 target="MainHap"
 sed -i "s/TARGET/$target/g" workflow.sh
 sbatch workflow.sh
+
 ```
 
 - Using nDNA plink files:  
