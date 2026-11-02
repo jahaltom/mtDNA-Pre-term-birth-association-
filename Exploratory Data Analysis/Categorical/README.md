@@ -1,6 +1,6 @@
 # CategoricalEDA.py
 
-- Takes in Metadata.Final.tsv and categorical variables
+- Takes in Metadata.Final.tsv and categorical variables CategoricalVariables.json.
 - For each categorical column:
     - For PTB; 
         - Performs Chi-Square and cramers v.
