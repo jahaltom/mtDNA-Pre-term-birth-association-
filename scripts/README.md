@@ -27,7 +27,7 @@ Takes in Metadata.M.tsv and assesses missingness in selected metadata features b
 
 
 #### CombinePCA.py:    
-- Takes in eigenvec and adds this data to (Metadata.Weibull.tsv). 
+- Takes in eigenvec and adds this data to (Metadata.Filtered.tsv). 
 - Outputs (Metadata.Final.tsv). 
 - Takes in eigenval(for PCA), and makes PCA plots.
 - Lables Main/Sub haplogroup and site.
