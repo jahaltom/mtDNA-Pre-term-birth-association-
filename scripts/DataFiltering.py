@@ -315,7 +315,7 @@ print(counts.sort_values([target, "site"]).to_string(index=False))
 
 
 
-filtered_data.to_csv('Metadata.Weibull.tsv', index=False, sep="\t") 
+filtered_data.to_csv('Metadata.Filtered.tsv', index=False, sep="\t") 
 #Need dummy column for plink PCA
 filtered_data["Dummy"]=0
 filtered_data[["Dummy","id"]].to_csv("IDs2.txt", index=False,header=False,sep='\t') 
