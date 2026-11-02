@@ -1,5 +1,5 @@
 # ContinuousEDA.py
-- Takes in Metadata.Final.tsv and continuous columns. 
+- Takes in Metadata.Final.tsv and continuous columns SurvivingFeatures_Continuous.txt. 
 
 - Target MainHap(Or SuperHap or SubHap) is one hot encoded and and 1st is not dropped.
   
