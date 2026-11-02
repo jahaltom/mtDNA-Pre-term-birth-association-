@@ -15,7 +15,7 @@
 
 
 
-## Metadata curration and filtering. 
+## Metadata curation and filtering. 
 Takes in (momi_mothers_ultimate.csv), and assigns main/sub-haplogroups. It sets ALCOHOL_FREQ, SMOK_FREQ, and SNIFF_FREQ to 0 when ALCOHOL, SMOKE_HIST, and SNIFF_TOBA are "never," calculates BMI, and categorizes population by site. Makes SuperHap, SuperHap2, and PhyloHap (for south asian only) classification based on mtDNA phylogeny https://forensicgenomics.github.io/mitoLeaf/. All other haplogroups classified as "Other". Use MainHap and SubHap for African. Writes all to Metadata.M.tsv.
 ```
 python  scripts/MetadataMerge.py
