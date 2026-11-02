@@ -16,26 +16,14 @@ Takes in Metadata.M.tsv and assesses missingness in selected metadata features b
 
 
 
-#### WeibullFiltering.py:
-- Takes in ( Categorical/Continuous features)  
-- Fits the Weibull distribution to the data for "GAGEBRTH".
-   - Defines lower/upper cutoff thresholds, in days, for outlier detection (1st percentile and 99th percentile).
-   - Filters the data on these threshholds (>= lower_cutoff) & <= upper_cutoff). 
-- For each categorical variable class, determine the number of pre-term births and normal births (PTB=1 normal=0) and the % of PTB=1. Remove rows(samples) corresponding to a class from a categorical variable that total counts (PTB=1 normal=0) < 20 or where there is not at least 1 term and 1 pre-term birth. If only 1 class would remain after the prior filtering, don't exclude any samples and simply exclude the categorical variable from any future model. Reports categorical variables to keep/exclude for workflow2.sh (Those kept are in CategoricalVariablesToKeepTable.tsv). Also reports those classes removed due to low counts.
-- Also reports categorical variables with exactly two classes (binary). These will be used as binary variables for Feature selection. Outputs Multi-class categorical variables for feature selection.
-- Reports Weibull parameters (Shape, Scale, and Location) and upper/lower cutoffs in days.
-  
-- Multi-site analysis:
-   - Haplogroup must be present in ALL sites
-   - in EACH site: >= 5 total, >= 1 PTB, >= 1 term births
-   - overall: >= 20 total, >= 4 PTB
-- Single-site analysis:
-   - overall: >= 20 total, >= 4 PTB
+#### DataFiltering.py:
+- Initial run: reads candidate categorical and continuous features from SurvivingFeatures_Categorical.txt and SurvivingFeatures_Continuous.txt. Final-model runs: use user-specified feature lists supplied by finalModel.sh.
+- Fits a Weibull distribution to GAGEBRTH_NEW and reports the fitted parameters and 1st/99th percentile cutoffs for diagnostic purposes only. Weibull percentiles are not used to exclude samples. Samples are restricted only to biologically plausible gestational ages of 140–300 days.   
+- Evaluates support for non-target categorical variables. Classes with <20 observations or without at least one PTB and one term birth are excluded. Categorical variables are excluded from downstream feature selection if fewer than two supported classes remain. Retained categorical variables are recorded for next step in workflow (EDA) and are classified as binary or multiclass for feature selection and written to JSON/summary files.
+- Applies separate support criteria to the target haplogroup variable. For multi-site analyses, a haplogroup must be present in every site and have ≥5 samples, ≥1 PTB, and ≥1 term birth within each site, plus ≥20 samples and ≥4 PTBs overall. For single-site analyses, haplogroups require ≥20 samples and ≥4 PTBs overall.
+- Saves the resulting metadata as Metadata.Weibull.tsv and writes IDs2.txt for downstream nDNA subsetting. CategoricalVariablesToKeepTable.tsv and FinalCategoricalClassSummary.tsv contain categorical-variable and PTB-count summaries before and after haplogroup filtering (respectfully).
+- Plots the original data, filtered data, and Weibull distribution (weibullFiltering.png). Generates diagnostic plots of gestational age, PTB status, continuous features, and categorical features, stratified by site, in plotsAll/. A summary of retained/excluded variables and target haplogroups is written to out.txt.
 
-
-- Outputs filtered metadata as (Metadata.Weibull.tsv). Also outputs (IDs2.txt) which are only Sample_IDs  from (Metadata.Weibull.tsv) which will be used for sample selection form the nDNA plink data. A FinalCategoricalClassSummary.tsv is also produced. 
-- Plots the original data, filtered data, and Weibull distribution. Includes lower_cutoff and upper_cutoff in plot (weibullFiltering.png).
-- All continuous and categorical  features are ploted against PTB and GAGEBRTH (in plotsAll) labeled by site. 
 
 
 #### CombinePCA.py:    
