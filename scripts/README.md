@@ -15,15 +15,6 @@
 Takes in Metadata.M.tsv and assesses missingness in selected metadata features by study site. Uses features.json to specify selected categorical and continuous features. Features with >90% missingness in any site are excluded and the surviving feature list is saved to SurvivingFeatures_Categorical.txt and SurvivingFeatures_Continuous.txt. A missingness heatmap is generated (MissingDataHeatmap.png). Samples missing GAGEBRTH_NEW, PTB, or any surviving feature are removed. The filtered metadata are saved as Metadata.MissRem.tsv, and IDs.txt is created for downstream PCA/PLINK analysis. 
 
 
-#### outlierPCA.py
-- Loads PLINK .eigenvec and .eigenval
-- Computes how many PCs are needed to reach ~85% variance
-- Calculates site-wise Euclidean distance
-- Flags the top 5% as outliers per site
-- Saves a MetadataOutlierRemoved.tsv file
-- Creates a before/after PCA plot
-
-
 
 #### WeibullFiltering.py:
 - Takes in ( Categorical/Continuous features)  
