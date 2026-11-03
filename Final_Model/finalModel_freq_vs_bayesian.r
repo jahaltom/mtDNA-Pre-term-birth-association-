@@ -516,6 +516,252 @@ if (!inherits(emm_ptb, "try-error")) {
             row.names = FALSE)
 }
 
+
+
+# ============================================================
+# PTB HAPLOGROUP × SITE INTERACTION ANALYSIS
+# ============================================================
+# Only run when there is more than one site.
+# This is a heterogeneity/sensitivity analysis, not the primary model.
+
+if (n_distinct(df$site) > 1) {
+
+  message("Running MainHap × site interaction analysis")
+
+  # ----------------------------------------------------------
+  # Remove site terms from the user covariate string because
+  # MainHap * site already contains a fixed site effect.
+  # Also remove a possible (1 | site) random intercept.
+  # ----------------------------------------------------------
+
+  int_covariates <- covariates
+
+  int_covariates <- gsub(
+    "\\(1\\s*\\|\\s*site\\)",
+    "",
+    int_covariates
+  )
+
+  # Split remaining covariates
+  int_vars <- trimws(unlist(strsplit(int_covariates, "\\+")))
+
+  # Remove empty entries and fixed 'site'
+  int_vars <- int_vars[
+    int_vars != "" &
+    int_vars != "site"
+  ]
+
+  # Rebuild covariate string
+  int_cov_string <- paste(int_vars, collapse = " + ")
+
+
+  # ----------------------------------------------------------
+  # Build additive and interaction formulas
+  # ----------------------------------------------------------
+
+  if (length(int_vars) > 0) {
+
+    ptb_formula_additive <- as.formula(
+      paste(
+        "PTB ~ MainHap + site +",
+        int_cov_string
+      )
+    )
+
+    ptb_formula_interaction <- as.formula(
+      paste(
+        "PTB ~ MainHap * site +",
+        int_cov_string
+      )
+    )
+
+  } else {
+
+    ptb_formula_additive <- as.formula(
+      "PTB ~ MainHap + site"
+    )
+
+    ptb_formula_interaction <- as.formula(
+      "PTB ~ MainHap * site"
+    )
+  }
+
+
+  message(
+    "Additive model: ",
+    deparse(ptb_formula_additive)
+  )
+
+  message(
+    "Interaction model: ",
+    deparse(ptb_formula_interaction)
+  )
+
+
+  # ----------------------------------------------------------
+  # Fit additive model
+  # ----------------------------------------------------------
+
+  ptb_tmb_additive <- glmmTMB(
+    ptb_formula_additive,
+    data = df,
+    family = binomial()
+  )
+
+
+  # ----------------------------------------------------------
+  # Fit interaction model
+  # ----------------------------------------------------------
+
+  ptb_tmb_interaction <- glmmTMB(
+    ptb_formula_interaction,
+    data = df,
+    family = binomial()
+  )
+
+
+  # ----------------------------------------------------------
+  # GLOBAL TEST:
+  # Does adding MainHap × site improve model fit?
+  # ----------------------------------------------------------
+
+  interaction_lrt <- anova(
+    ptb_tmb_additive,
+    ptb_tmb_interaction
+  )
+
+  write.csv(
+    as.data.frame(interaction_lrt),
+    file.path(
+      OUTDIR,
+      "ptb_MainHap_site_interaction_LRT.csv"
+    ),
+    row.names = TRUE
+  )
+
+  print(interaction_lrt)
+
+
+  # ----------------------------------------------------------
+  # Interaction model coefficients
+  # ----------------------------------------------------------
+
+  interaction_tidy <- broom.mixed::tidy(
+    ptb_tmb_interaction,
+    effects = "fixed",
+    conf.int = TRUE
+  ) %>%
+    mutate(
+      OR = exp(estimate),
+      OR_low = exp(conf.low),
+      OR_high = exp(conf.high)
+    )
+
+  write_csv(
+    interaction_tidy,
+    file.path(
+      OUTDIR,
+      "ptb_MainHap_site_interaction_coefficients.csv"
+    )
+  )
+
+
+  # ----------------------------------------------------------
+  # ADJUSTED HAPLOGROUP ESTIMATES WITHIN EACH SITE
+  # ----------------------------------------------------------
+
+  emm_site <- emmeans(
+    ptb_tmb_interaction,
+    ~ MainHap | site,
+    type = "response"
+  )
+
+  write.csv(
+    as.data.frame(emm_site),
+    file.path(
+      OUTDIR,
+      "ptb_MainHap_site_emmeans_probs.csv"
+    ),
+    row.names = FALSE
+  )
+
+
+  # ----------------------------------------------------------
+  # HAPLOGROUP PAIRWISE COMPARISONS WITHIN EACH SITE
+  # ----------------------------------------------------------
+
+  emm_site_pairs <- pairs(
+    emm_site,
+    adjust = "BH"
+  )
+
+  write.csv(
+    as.data.frame(emm_site_pairs),
+    file.path(
+      OUTDIR,
+      "ptb_MainHap_site_emmeans_pairs_BH.csv"
+    ),
+    row.names = FALSE
+  )
+
+
+  # ----------------------------------------------------------
+  # Model comparison stats
+  # ----------------------------------------------------------
+
+  model_compare <- data.frame(
+    Model = c(
+      "Additive",
+      "MainHap_x_site"
+    ),
+
+    AIC = c(
+      AIC(ptb_tmb_additive),
+      AIC(ptb_tmb_interaction)
+    ),
+
+    BIC = c(
+      BIC(ptb_tmb_additive),
+      BIC(ptb_tmb_interaction)
+    ),
+
+    logLik = c(
+      as.numeric(logLik(ptb_tmb_additive)),
+      as.numeric(logLik(ptb_tmb_interaction))
+    )
+  )
+
+  write_csv(
+    model_compare,
+    file.path(
+      OUTDIR,
+      "ptb_MainHap_site_model_comparison.csv"
+    )
+  )
+
+
+  # ----------------------------------------------------------
+  # Diagnostics
+  # ----------------------------------------------------------
+
+  png(
+    file.path(
+      OUTDIR,
+      "ptb_MainHap_site_interaction_DHARMa.png"
+    ),
+    width = 1200,
+    height = 900
+  )
+
+  plot(
+    simulateResiduals(
+      ptb_tmb_interaction
+    )
+  )
+
+  dev.off()
+}
+
 # ============================
 # Bayesian: brms mirrors with robust priors/controls
 # ============================
