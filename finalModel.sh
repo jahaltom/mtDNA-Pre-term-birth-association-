@@ -92,7 +92,7 @@ PY
 
 
 # Call the Python script with the column string as an argument
-python ../scripts/WeibullFiltering.py  "Final" "$target" "$columnCat_string" "$columnCont_string" > out.txt
+python ../scripts/DataFiltering.py  "Final" "$target" "$columnCat_string" "$columnCont_string" > out.txt
 
 
 
