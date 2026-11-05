@@ -177,12 +177,8 @@ when included).
 
 ---
 
-## Prior Sensitivity Analysis
 
-
----
-
-### Bayesian Priors and Sampler Settings
+## Bayesian Priors and Sampler Settings
 #### Gestational Age (GA) Priors
 
 For the final Bayesian GA model,
