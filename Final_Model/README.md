@@ -645,3 +645,19 @@ This script generates publication-ready summary tables for maternal mtDNA haplog
 ![Pemba L3 Publication Table](Pemba_L2a_publication_table.png)
 
 
+## Selected PTB Forest Plot Generator
+
+A Python plotting script generates publication- and presentation-ready forest plots for selected maternal mtDNA haplogroup associations with preterm birth.
+
+The same script supports both:
+
+- `MainHap`
+- `SubHap`
+
+using the user setting:
+
+```python
+ANALYSIS = "MainHap"
+```
+![Plot](Figure_Selected_MainHap_PTB.png)
+
