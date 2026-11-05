@@ -13,11 +13,12 @@ using both **Frequentist** (`glmmTMB`) and **Bayesian** (`brms`) frameworks. The
 - Frequentist Gaussian and Student-t GA models
 - Bayesian posterior probability estimation
 - Prior sensitivity analyses for PTB
-- Multiple testing correction (Benjamini–Hochberg) is restricted to haplogroup (`MainHap`) effects.
+- Benjamini–Hochberg multiple-testing correction for haplogroup effects and site-specific pairwise haplogroup contrasts
 - Sparse-cell detection
 - Automated convergence diagnostics
+- Multi-site haplogroup × site interaction analyses to assess effect heterogeneity across study sites
 
-The same script supports pooled multi-site analyses, fixed-site analyses, random-site analyses, and single-site analyses by specifying the desired model formula at runtime.
+The same script supports pooled multi-site analyses, fixed-site analyses, random-site analyses, and single-site analyses by specifying the desired model formula at runtime. For datasets containing more than one study site, the pipeline also performs a secondary haplogroup × site interaction analysis to evaluate whether haplogroup associations differ across sites.
 
 ---
 
@@ -80,7 +81,7 @@ Model fit comparison:
 Formula:
 
 ```r
-GAGEBRTH ~ MainHap + covariates
+GAGEBRTH_NEW ~ MainHap + covariates
 ```
 
 #### Pre-Term Birth (PTB)
@@ -100,6 +101,38 @@ Outputs:
 - Pairwise comparisons
 
 ---
+
+#### Multi-site Haplogroup × Site Interaction Analysis
+
+For datasets containing more than one study site, an additional interaction analysis is performed to assess whether the association between mtDNA haplogroup and PTB differs across study sites.
+
+This analysis is treated as a **heterogeneity / sensitivity analysis**. The primary pooled analysis remains the additive haplogroup model.
+
+Two nested frequentist binomial models are fit (binomial):
+
+**Additive model**
+
+```r
+PTB ~ MainHap + site + covariates
+```
+**Interaction model** 
+
+```r
+PTB ~ MainHap * site + covariates
+```
+(MainHap * site) expands to:  MainHap + site + MainHap:site
+The interaction model includes both the main site effect and site-specific modification of the haplogroup effect.
+
+**Global test of effect heterogeneity**
+The additive and interaction models are compared using a likelihood-ratio test. The null hypothesis is that haplogroup effects are the same across sites.
+
+The omnibus interaction test is the primary test of site heterogeneity. Individual interaction coefficients are considered secondary and should not be interpreted in isolation when the omnibus interaction test is non-significant.
+Adjusted haplogroup estimates are obtained within each site and pairwise haplogroup comparisons are then calculated separately within each site. These estimates are useful for describing the direction and magnitude of haplogroup effects within each population, even when the global interaction test does not support statistically significant effect modification.
+**Model fit comparison**
+AIC, BIC, and log-likelihood are reported for both the additive and interaction models. Lower AIC/BIC values favor the simpler additive model unless the interaction meaningfully improves model fit.
+**Interaction-model diagnostics**
+DHARMa simulated residual diagnostics are generated for the interaction model to evaluate model adequacy.
+
 
 ### Bayesian Models (`brms`)
 
@@ -158,7 +191,7 @@ use
 ```
 normal(0, 0.5)
 ```
-Because GAGEBRTH is standardized prior to model fitting, this prior operates on the standardized gestational-age scale. Posterior estimates are later back-transformed to gestational days for interpretation.
+Because GAGEBRTH_NEW is standardized prior to model fitting, this prior operates on the standardized gestational-age scale. Posterior estimates are later back-transformed to gestational days for interpretation.
 
 Additional priors:
 ```
@@ -232,7 +265,7 @@ Metadata.Final.tsv
 ### Required Variables
 
 #### Outcomes
-- `GAGEBRTH`
+- `GAGEBRTH_NEW`
 - `PTB`
 
 #### mtDNA
@@ -250,6 +283,7 @@ Metadata.Final.tsv
 - `TB`
 - `THYROID`
 - `TYP_HOUSE`
+- `biospecimen`
 #### Continuous / Ordinal Covariates
 - `PW_AGE`
 - `PW_EDUCATION`
@@ -260,6 +294,7 @@ Metadata.Final.tsv
 - `WEALTH_INDEX`
 - `DRINKING_SOURCE`
 - `PC1–PC5`
+- `mtcn`
 
 
 
@@ -269,7 +304,7 @@ Metadata.Final.tsv
 ## Data preprocessing
 - Categorical variables converted to factors (as.factor)
 - Continuous and ordinal variables standardized (scale()) (mean 0, SD 1)
-- Gestational age (GAGEBRTH) standardized for model fitting and back-transformed to days for interpretation
+- Gestational age (GAGEBRTH_NEW) standardized for model fitting and back-transformed to days for interpretation
 
 ## Running the Pipeline
 
@@ -331,6 +366,12 @@ Encodes:
 | `ptb_glmmtmb_site_forest.png` | PTB odds-ratio forest plot |
 | `ptb_glmmtmb_emmeans_probs.csv` | Predicted PTB probabilities |
 | `ptb_glmmtmb_emmeans_pairs_BH.csv` | Pairwise BH-adjusted comparisons |
+| `ptb_MainHap_site_interaction_LRT.csv` | Likelihood-ratio test comparing additive and MainHap × site interaction models |
+| `ptb_MainHap_site_interaction_coefficients.csv` | Fixed-effect coefficients from the MainHap × site interaction model, including ORs and confidence intervals |
+| `ptb_MainHap_site_emmeans_probs.csv` | Adjusted haplogroup-specific PTB probabilities within each study site |
+| `ptb_MainHap_site_emmeans_pairs_BH.csv` | Site-specific pairwise haplogroup comparisons with BH adjustment |
+| `ptb_MainHap_site_model_comparison.csv` | AIC, BIC, and log-likelihood comparison of additive and interaction models |
+| `ptb_MainHap_site_interaction_DHARMa.png` | DHARMa residual diagnostics for the MainHap × site interaction model |
 
 ### Bayesian Results
 
@@ -429,11 +470,29 @@ Example:
 
 ### Multiple Testing
 
-Benjamini–Hochberg multiple-testing correction is applied only to
-MainHap coefficients in the frequentist (glmmTMB) models.
+Benjamini–Hochberg multiple-testing correction is applied to haplogroup-specific frequentist comparisons.
+For the primary glmmTMB analyses, BH adjustment is applied to MainHap effects.
+For the multi-site interaction analysis, BH adjustment is also applied to site-specific pairwise haplogroup contrasts generated using `emmeans`.
+The omnibus Haplogroup × site likelihood-ratio test is a single global heterogeneity test and is not BH-adjusted.
+Bayesian models use posterior probabilities and do not perform frequentist multiple-testing correction.
 
-Bayesian models use posterior probabilities and do not perform
-multiple-testing correction.
+
+
+
+### MainHap × Site Interaction
+
+The `Haplogroup × site` analysis evaluates whether the haplogroup–PTB association differs across study sites.
+
+The primary inference is based on the omnibus likelihood-ratio test comparing:
+
+```r
+PTB ~ MainHap + site + covariates
+```
+against:
+```r
+PTB ~ MainHap * site + covariates
+```
+A non-significant interaction test indicates that there is insufficient evidence that haplogroup effects differ across sites. In this situation, the additive pooled model remains the preferred primary model.
 
 ---
 
