@@ -608,8 +608,11 @@ ModelSummaryTable.py: A Python script was developed to automatically summarize r
 ```
 populations = [
     "African",
-    "AMANHI-Pemba",
-    "GAPPS-Zambia"
+    "GAPPS-Zambia",
+    "IPOP",
+    "ZAPPS1",
+    "ZAPPS2",
+    "AMANHI-Pemba"
 ]
 ```
 
