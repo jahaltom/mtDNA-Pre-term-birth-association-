@@ -60,8 +60,10 @@ flowchart TD
 
     E --> E1[Coefficient and posterior summary tables]
     E --> E2[Forest and diagnostic plots]
-    E --> E3[Convergence diagnostics]
-    E --> E4[Site and haplogroup summaries]
+    E --> E3[Haplogroup × Site Interaction summaries]
+    E --> E4[Convergence diagnostics]
+    E --> E5[Site and haplogroup summaries]
+    
 ```
 
 ## Statistical Framework
